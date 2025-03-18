@@ -39,5 +39,5 @@ Thesis Advisor: Sergio Abriola ([sabriola@dc.uba.ar](mailto:sabriola@dc.uba.ar))
 
 ---
 
-This **repositorie** will be updated as the thesis progresses. Any suggestions are welcome! 🚀
+This **repository** will be updated as the thesis progresses. Any suggestions are welcome! 🚀
 
