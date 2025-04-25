@@ -22,18 +22,24 @@ class SparseCNN(nn.Module):
     def forward(self,x):
         return self.classifier(self.features(x))
 
-def random_sparse(x, k=6):
-    # x: (B,1,16,16)
+def random_sparse(x, k=6, thr=0.5):
+    """
+    Deja sólo k píxeles con intensidad > thr.
+    El resto se pone a 0.
+    """
     x = x.clone()
     B = x.size(0)
     for i in range(B):
-        nz = (x[i,0]>0).nonzero(as_tuple=False)
-        if len(nz)==0: continue
+        nz = (x[i,0] > thr).nonzero(as_tuple=False)
+        if len(nz) == 0:
+            continue
         idx = nz[torch.randperm(len(nz))[:k]]
         mask = torch.zeros_like(x[i,0], dtype=torch.bool)
         mask[idx[:,0], idx[:,1]] = True
         x[i,0][~mask] = 0.0
     return x
+
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -43,9 +49,9 @@ def main():
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     tf = transforms.Compose([transforms.Resize(16), transforms.ToTensor()])
     train_ds = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=tf)
-    loader = DataLoader(train_ds, batch_size=256, shuffle=True, num_workers=2)
+    loader = DataLoader(train_ds, batch_size=128, shuffle=True, num_workers=2)
     model = SparseCNN().to(device)
-    opt = torch.optim.Adam(model.parameters(), lr=1e-3)
+    opt = torch.optim.Adam(model.parameters(), lr=1e-4)
     for epoch in range(args.epochs):
         for x,y in tqdm.tqdm(loader, leave=False):
             x,y = x.to(device), y.to(device)
