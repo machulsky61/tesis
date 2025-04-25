@@ -1,6 +1,6 @@
 import torch, argparse, tqdm
 from torchvision import datasets, transforms
-from experiments.train_judge import SparseCNN, random_sparse
+from debate_mnist.experiments.train_judge import SparseCNN, random_sparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--k', type=int, default=6)

@@ -51,7 +51,7 @@ class MCTSAgent:
 
     def _rollout(self, img, mask):
         with torch.no_grad():
-            masked = (img*mask.float()).unsqueeze(0).to(self.device)
+            masked = (img*mask.float()).unsqueeze(0).unsqueeze(0).to(self.device)
             logits = self.model(masked)
             pred = logits.argmax(dim=-1).item()
             return 1.0 if pred==self.goal else 0.0
