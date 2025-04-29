@@ -177,4 +177,4 @@ cython_debug/
 latex/
 
 # PyTorch MNIST dataset
-debate-mnist/data/MNIST/raw
+debate_mnist/data/MNIST/raw
