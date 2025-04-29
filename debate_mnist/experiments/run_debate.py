@@ -7,51 +7,29 @@ from debate_mnist.experiments.train_judge import SparseCNN
 import numpy as np, random
 
 def play(img, labelA, labelB, model, sims, k, agent_type, device):
-    """
-    Devuelve True si el juez elige la respuesta correcta tras k píxeles.
-    agent_type: 'mcts' o 'greedy'
-    """
-    orig = img.to(device).unsqueeze(0)          # (1,1,H,W) float32
-    mask = torch.zeros_like(orig, dtype=torch.bool, device=device)
-
-    # 3 turnos cada agente si k=6
+    orig = img.to(device).unsqueeze(0)         # (1,1,H,W)
     turns_each = k // 2
 
-    # Instanciar el tipo de agente pedido
     if agent_type == 'greedy':
-        AgentCls = GreedyAgent
-        agentA = AgentCls(model, k, maximize=True,  device=device)
-        agentB = AgentCls(model, k, maximize=False, device=device)
+        agentA = GreedyAgent(model, labelA, turns_each, device=device)
+        agentB = GreedyAgent(model, labelB, turns_each, device=device)
     else:
-        AgentCls = MCTSAgent
-        agentA = AgentCls(model, maximize=True,  sims=sims, k=turns_each, device=device)
-        agentB = AgentCls(model, maximize=False, sims=sims, k=turns_each, device=device)
+        agentA = MCTSAgent(model, labelA, sims=sims, k=turns_each, device=device)
+        agentB = MCTSAgent(model, labelB, sims=sims, k=turns_each, device=device)
 
-    # Reset con la imagen
     agentA.reset(orig)
     agentB.reset(orig)
+    mask = torch.zeros_like(orig, dtype=torch.bool)
 
-    # Turnos alternados
-    for turn in range(k):
-        if turn % 2 == 0:
-            move = agentA.play_turn()
-        else:
-            move = agentB.play_turn()
-        if move is None:            # sin candidatos
-            # print("·", end="", flush=True)      #  ❌  no jugó
-            continue
-        # print("X", end="", flush=True)          #  ✅  colocó píxel
-        r, c = move
+    for t in range(k):
+        rc = agentA.play_turn() if t % 2 == 0 else agentB.play_turn()
+        if rc is None: continue
+        r, c = rc
         mask[0,0,r,c] = True
 
-    # Evaluar juez con los píxeles revelados
     with torch.no_grad():
-        logits = model((orig * mask.float()))
-        pred   = logits.argmax(dim=-1).item()
-
-    # Gana si pred coincide con labelA (verdadero)
+        pred = model((orig * mask.float())).argmax(dim=-1).item()
     return pred == labelA
-
 
 def main():
     parser = argparse.ArgumentParser()

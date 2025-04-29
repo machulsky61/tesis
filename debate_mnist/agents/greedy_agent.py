@@ -1,73 +1,60 @@
 import torch
 from debate_mnist.utils import even_logit, odd_logit
-
 class GreedyAgent:
     """
-    Elige en cada turno el píxel (>0.5) que más cambia
-    (o menos, si invertimos signo) la diferencia entre
-    logit_par e impar.
+    Revela, turno a turno, el píxel que más aumenta el logit de su clase-objetivo.
     """
-    def __init__(self, judge, k, maximize=True, thr=0.5, device='cpu'):
-        self.judge = judge
-        self.k     = k
-        self.max   = maximize        # True → par   False → impar
-        self.thr   = thr
-        self.device= device
+    def __init__(self, judge, target_label, max_pixels, thr=0.2, device='cpu'):
+        """
+        judge         : red convolucional que da logits (1,10)
+        target_label  : entero 0-9 que este agente quiere maximizar
+        max_pixels    : nº de píxeles que está permitido mostrar (k//2)
+        thr           : opcional, umbral para filtrar píxeles poco informativos
+        """
+        self.judge   = judge
+        self.label   = target_label
+        self.max_px  = max_pixels
+        self.thr     = thr
+        self.device  = device
 
+    # -------- ciclo por imagen ----------
     def reset(self, img):
-        """
-        img: tensor (1,1,H,W) en [0,1]
-        """
-        self.img      = img.clone().to(self.device)
-        self.current  = torch.zeros_like(self.img)   # máscara mostrada
-        self.shown_px = 0
+        self.img      = img.clone().to(self.device)           # (1,1,H,W)
+        self.current  = torch.zeros_like(self.img)            # máscara visible
+        self.shown    = 0
 
+    # -------- lógica interna -------------
     def _score(self, logits: torch.Tensor) -> torch.Tensor:
-        """
-        Devuelve una única escalar (tensor shape (1,))
-        que mide cuán 'par' es la imagen.  Si self.max==True
-        el agente intentará maximizarla; si es False la minimiza
-        (equivale a favorecer 'impar').
-        """
-        score = even_logit(logits) - odd_logit(logits)   # (1,1)
-        return score if self.max else -score
+        # Queremos SUBIR el logit de nuestra clase-diana
+        return logits[:, self.label]
 
     def select_pixel(self):
-        """
-        Devuelve (r,c) del mejor píxel aún no mostrado.
-        """
-        if self.shown_px >= self.k:
+        if self.shown >= self.max_px:
             return None
 
-        # píxeles candidatos: > thr y aún tapados
-        # cand = (self.img[0,0] > self.thr) & (self.current[0,0] == 0)
-        cand = (self.current[0,0] == 0)
-        coords = cand.nonzero(as_tuple=False)
-        if len(coords) == 0:
-            return None  # nada útil
+        # Candidatos = píxeles ocultos (puedes filtrar por umbral si quieres)
+        cand_mask = (self.current == 0) & (self.img.abs() > self.thr)
+        coords = cand_mask[0,0].nonzero(as_tuple=False)      # (N,2)
+        if coords.numel() == 0:
+            return None
 
-        # baseline
-        base_logits = self.judge(self.current).detach()
-        base_score  = self._score(base_logits)
-
+        base = self._score(self.judge(self.current)).item()
         best_gain, best_rc = -1e9, None
-        for r,c in coords:
+
+        for r, c, *_ in coords:                      # r,c en CPU
             tmp = self.current.clone()
-            tmp[0,0,r,c] = self.img[0,0,r,c]          # revela
-            logits = self.judge(tmp).detach()
-            gain   = self._score(logits) - base_score
+            tmp[0,0,r,c] = self.img[0,0,r,c]
+            gain = self._score(self.judge(tmp)).item() - base
             if gain > best_gain:
-                best_gain = gain
-                best_rc   = (int(r), int(c))
-                
-        # print(f"base={base_score.item():.3f} best_gain={best_gain.item():.3f}")
+                best_gain, best_rc = gain, (int(r), int(c))
+
         return best_rc
 
     def play_turn(self):
         rc = self.select_pixel()
         if rc is None:
             return None
-        r,c = rc
+        r, c = rc
         self.current[0,0,r,c] = self.img[0,0,r,c]
-        self.shown_px += 1
+        self.shown += 1
         return rc
