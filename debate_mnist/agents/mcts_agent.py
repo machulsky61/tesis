@@ -42,12 +42,12 @@ class MCTSAgent:
     def __init__(self,
                  judge,                  # CNN del juez en el device correcto
                  target_label: int,      # clase 0-9 que queremos maximizar
-                 sims: int      = 8_000, # rollouts por turno
+                 sims: int      = 3_000, # rollouts por turno
                  k: int         = 3,     # píxeles totales que juega este agente
-                 thr: float      = 0.02, # umbral de intensidad
-                 topN: int       = 50,   # Nº máximo de hijos por nodo
-                 device: str     = "cpu",
-                 c_puct: float   = 2.0):
+                 thr: float     = 0.1,   # umbral de intensidad (aumentado de 0.02)
+                 topN: int      = 50,    # Nº máximo de hijos por nodo
+                 device: str    = "cpu",
+                 c_puct: float  = 0.7):  # reducido de 2.0
         self.judge   = judge
         self.label   = target_label
         self.sims    = sims
@@ -111,13 +111,17 @@ class MCTSAgent:
 
     # ··· helpers ··· #
     def _score(self, logits: torch.Tensor) -> torch.Tensor:
-        """Devuelve logit de la clase objetivo (tensor shape (N,1))."""
-        return logits[:, self.label:self.label+1]   # mantener dim (N,1)
+        """
+        Logit (o probabilidad softmax) de la clase objetivo.
+        Cuanto más alto, mejor para el agente.
+        """
+        # usamos softmax para que el rango quede en [0,1]
+        probs = logits.softmax(dim=-1)
+        return probs[:, self.label]        # shape (1,)
 
     def _ucb(self, parent: TreeNode, child: TreeNode) -> float:
-        prior = child.prior
-        q     = child.mean_value
-        u     = self.c_puct * prior * math.sqrt(parent.visits + 1) / (child.visits + 1)
+        q = child.mean_value
+        u = self.c_puct * child.prior * math.sqrt(parent.visits + 1) / (child.visits + 1)
         return q + u
 
     def _select_child(self, node: TreeNode):
@@ -138,7 +142,7 @@ class MCTSAgent:
         top   = torch.argsort(vals, descending=True)[: self.topN]
         coords = coords[top]
 
-        prior = 1.0 / len(coords)
+        prior = 1.0 / len(coords)  # prior uniforme
         for r, c in coords:
             r, c = int(r), int(c)
             new_mask = node.mask.clone()
@@ -150,35 +154,25 @@ class MCTSAgent:
                 parent=node,
             )
 
-
     # --------- Roll-out rápido en lote --------- #
     def _rollout(self, node: TreeNode) -> float:
-        mask  = node.mask.clone()
-        shown = node.shown
+        """
+        Rellena *aleatoriamente* hasta usar los k píxeles restantes,
+        luego evalúa el juez y devuelve el score continuo.
+        """
+        mask = node.mask.clone()
 
-        cand_mask = (~mask) & (self.img.abs() > self.thr)
-        coords = cand_mask[0,0].nonzero(as_tuple=False)      # tensor N×2
+        # nº píxeles que todavía puede poner ESTE agente
+        remaining = self.k - (mask.sum().item())
 
-        # barajamos con torch, sin convertir a lista
-        perm   = torch.randperm(coords.size(0), device=coords.device)
-        coords = coords[perm]
-
-        for r, c in coords:
-            if shown >= self.k:
-                break
-            mask[0,0,r,c] = True
-            shown += 1
+        # índices disponibles (>thr y no usados)
+        cand = ((self.img.abs() > self.thr) & (~mask))[0, 0].nonzero(as_tuple=False)
+        if cand.numel():
+            cand = cand[torch.randperm(len(cand))[:remaining]]  # shuffle + sample
+            mask[0,0,cand[:,0], cand[:,1]] = True
 
         with torch.no_grad():
-            logits = self.judge((self.img * mask.float()))
-            value  = self._score(logits).item()
-
-        return value
-
-
-        # ---------- Batch de 1 (rápido) ----------
-        with torch.no_grad():
-            logits = self.judge((self.img * mask.float()))
-            value  = self._score(logits).item()  # escalar float
-
+            # No necesitamos unsqueeze(0) porque self.img ya tiene la dimensión del batch
+            logits = self.judge(self.img * mask.float())
+        value = self._score(logits).item()          # ∈ (0,1)
         return value
