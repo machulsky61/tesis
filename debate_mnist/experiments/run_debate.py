@@ -10,6 +10,9 @@ import json
 import pandas as pd
 from datetime import datetime
 import shutil
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 def play(img, labelA, labelB, model, sims, k, agent_type, device):
     orig = img.to(device).unsqueeze(0)         # (1,1,H,W)
@@ -60,7 +63,17 @@ def play(img, labelA, labelB, model, sims, k, agent_type, device):
         "total_pixels": k
     }
     
-    return pred == labelA, masked_img, debate_info
+    return pred == labelA, masked_img, debate_info, orig
+
+def save_confusion_matrix(y_true, y_pred, save_path):
+    cm = confusion_matrix(y_true, y_pred)
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+    plt.title('Confusion Matrix - Judge Predictions')
+    plt.ylabel('True Label')
+    plt.xlabel('Predicted Label')
+    plt.savefig(save_path)
+    plt.close()
 
 def main():
     parser = argparse.ArgumentParser()
@@ -78,6 +91,8 @@ def main():
     run_dir = os.path.join(args.save_dir, f"run_{timestamp}")
     os.makedirs(run_dir, exist_ok=True)
     os.makedirs(os.path.join(run_dir, 'metadata'), exist_ok=True)
+    os.makedirs(os.path.join(run_dir, 'original_images'), exist_ok=True)
+    os.makedirs(os.path.join(run_dir, 'debate_images'), exist_ok=True)
 
     # Save run parameters
     run_info = {
@@ -108,21 +123,28 @@ def main():
     # Loop
     correct = 0
     results = []
+    all_true_labels = []
+    all_predictions = []
     
     for idx, (img, label) in enumerate(tqdm.tqdm(test_ds)):
         wrong = random.choice([i for i in range(10) if i != label])
-        is_correct, masked_img, debate_info = play(img, label, wrong, model, args.sims, args.k, args.agent, device)
+        is_correct, masked_img, debate_info, original_img = play(img, label, wrong, model, args.sims, args.k, args.agent, device)
         if is_correct:
             correct += 1
+
+        # Save original image
+        original_img = original_img.squeeze().cpu().numpy()
+        original_img = (original_img * 255).astype(np.uint8)
+        original_pil = Image.fromarray(original_img)
+        original_filename = f'original_{idx:04d}_label_{label}.png'
+        original_pil.save(os.path.join(run_dir, 'original_images', original_filename))
 
         # Save the masked image
         masked_img = masked_img.squeeze().cpu().numpy()
         masked_img = (masked_img * 255).astype(np.uint8)
-        img_pil = Image.fromarray(masked_img)
-        
-        # Save image with descriptive filename
-        img_filename = f'debate_{idx:04d}_true_{label}_pred_{wrong}.png'
-        img_pil.save(os.path.join(run_dir, img_filename))
+        masked_pil = Image.fromarray(masked_img)
+        masked_filename = f'debate_{idx:04d}_true_{label}_pred_{wrong}_judge_{debate_info["final_prediction"]}.png'
+        masked_pil.save(os.path.join(run_dir, 'debate_images', masked_filename))
         
         # Save metadata
         metadata_filename = f'debate_{idx:04d}_true_{label}_pred_{wrong}.json'
@@ -137,6 +159,10 @@ def main():
             'prediction': debate_info['final_prediction'],
             'is_correct': is_correct
         })
+        
+        # Record for confusion matrix
+        all_true_labels.append(label)
+        all_predictions.append(debate_info['final_prediction'])
 
     # Calculate final accuracy
     accuracy = correct/len(test_ds)
@@ -149,6 +175,10 @@ def main():
     # Save run info
     with open(os.path.join(run_dir, 'run_info.json'), 'w') as f:
         json.dump(run_info, f, indent=2)
+    
+    # Generate and save confusion matrix
+    save_confusion_matrix(all_true_labels, all_predictions, 
+                         os.path.join(run_dir, 'confusion_matrix.png'))
     
     # Update or create experiments log
     experiments_log_path = os.path.join(args.save_dir, 'experiments_log.csv')
