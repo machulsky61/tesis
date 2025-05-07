@@ -178,5 +178,17 @@ latex/
 
 # PyTorch MNIST dataset and masked images after debate
 debate_mnist/data/MNIST/raw
-debate_mnist/data/masked_images_after_debate
-debate_mnist/data/random_masked_images
+
+# Ignorar imágenes generadas automáticamente
+debate_mnist/data/**/masked_images/
+debate_mnist/data/**/debate_images/
+debate_mnist/data/**/metadata/
+debate_mnist/data/**/original_images/
+#debate_mnist/data/**/random_masked_images/
+#debate_mnist/data/**/masked_images_after_debate/
+
+# Incluir los archivos importantes explícitamente (aunque sus carpetas estén ignoradas)
+!debate_mnist/data/**/results.csv
+!debate_mnist/data/**/run_info.json
+!debate_mnist/data/**/confusion_matrix.png
+!debate_mnist/data/**/experiments_log.csv

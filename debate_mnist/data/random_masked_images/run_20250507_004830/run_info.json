@@ -1,0 +1,8 @@
+{
+  "timestamp": "20250507_004830",
+  "k": 6,
+  "n_samples": 100,
+  "device": "cuda",
+  "masking_type": "random",
+  "accuracy": 0.67
+}
