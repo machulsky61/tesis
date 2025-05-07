@@ -176,5 +176,6 @@ cython_debug/
 # latex stuff
 latex/
 
-# PyTorch MNIST dataset
+# PyTorch MNIST dataset and masked images after debate
 debate_mnist/data/MNIST/raw
+debate_mnist/data/masked_images_after_debate
