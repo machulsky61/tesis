@@ -8,11 +8,11 @@ args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model  = SparseCNN().to(device)
-model.load_state_dict(torch.load(f'models/judge_{args.k}px.pth', map_location=device))
+model.load_state_dict(torch.load(f'debate_mnist/models/judge_{args.k}px.pth', map_location=device))
 model.eval()
 
 tf       = transforms.Compose([transforms.Resize(16), transforms.ToTensor()])
-test_ds  = datasets.MNIST(root='./data', train=False, download=True, transform=tf)
+test_ds  = datasets.MNIST(root='./debate_mnist/data', train=False, download=True, transform=tf)
 
 correct = 0
 for img, label in tqdm.tqdm(test_ds):
