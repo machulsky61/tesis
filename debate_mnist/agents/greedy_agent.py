@@ -1,60 +1,49 @@
 import torch
-from debate_mnist.utils import even_logit, odd_logit
-class GreedyAgent:
+from agents.base_agent import DebateAgent
+
+class GreedyAgent(DebateAgent):
     """
-    Revela, turno a turno, el píxel que más aumenta el logit de su clase-objetivo.
+    Agente que selecciona su siguiente movimiento de forma codiciosa (greedy).
+    Evalúa cada posible píxel no revelado y elige aquel que más beneficia a su caso inmediatamente.
     """
-    def __init__(self, judge, target_label, max_pixels, thr=0.2, device='cpu'):
-        """
-        judge         : red convolucional que da logits (1,10)
-        target_label  : entero 0-9 que este agente quiere maximizar
-        max_pixels    : nº de píxeles que está permitido mostrar (k//2)
-        thr           : opcional, umbral para filtrar píxeles poco informativos
-        """
-        self.judge   = judge
-        self.label   = target_label
-        self.max_px  = max_pixels
-        self.thr     = thr
-        self.device  = device
-
-    # -------- ciclo por imagen ----------
-    def reset(self, img):
-        self.img      = img.clone().to(self.device)           # (1,1,H,W)
-        self.current  = torch.zeros_like(self.img)            # máscara visible
-        self.shown    = 0
-
-    # -------- lógica interna -------------
-    def _score(self, logits: torch.Tensor) -> torch.Tensor:
-        # Queremos SUBIR el logit de nuestra clase-diana
-        return logits[:, self.label]
-
-    def select_pixel(self):
-        if self.shown >= self.max_px:
-            return None
-
-        # Candidatos = píxeles ocultos (puedes filtrar por umbral si quieres)
-        cand_mask = (self.current == 0) & (self.img.abs() > self.thr)
-        coords = cand_mask[0,0].nonzero(as_tuple=False)      # (N,2)
-        if coords.numel() == 0:
-            return None
-
-        base = self._score(self.judge(self.current)).item()
-        best_gain, best_rc = -1e9, None
-
-        for r, c, *_ in coords:                      # r,c en CPU
-            tmp = self.current.clone()
-            tmp[0,0,r,c] = self.img[0,0,r,c]
-            gain = self._score(self.judge(tmp)).item() - base
-            if gain > best_gain:
-                best_gain, best_rc = gain, (int(r), int(c))
-
-        return best_rc
-
-    def play_turn(self):
-        rc = self.select_pixel()
-        if rc is None:
-            return None
-        r, c = rc
-        self.current[0,0,r,c] = self.img[0,0,r,c]
-        self.shown += 1
-        return rc
+    def choose_pixel(self, mask, reveal_count=None):
+        # mask: tensor 2D (H x W) con 1 en píxeles ya revelados, 0 en no revelados
+        # Ignoramos reveal_count ya que este agente no planifica a futuro, solo paso actual
+        # Obtener lista de píxeles candidatos (no revelados) que sean relevantes
+        candidates = [(y, x) for (y, x) in self.relevant_coords if mask[y, x].item() == 0]
+        if not candidates:
+            return None  # no hay movimientos posibles
+        # Preparar un batch de entradas para el juez, una por cada pixel candidato revelado hipotéticamente
+        inputs = []
+        target_class = self.my_class
+        other_class = self.opp_class
+        # Crear tensores base para máscara actual y valores actuales
+        mask_current = mask.clone().detach()
+        mask_current = mask_current.to(self.image.device).float()
+        values_current = self.image * mask_current
+        H, W = mask_current.shape[-2], mask_current.shape[-1]
+        # Crear batch de entradas
+        for (y, x) in candidates:
+            # Clonar máscara actual y agregar el pixel candidato
+            mask_new = mask_current.clone()
+            mask_new[y, x] = 1.0
+            # Calcular nuevos valores revelados (sumando pixel revelado)
+            values_new = self.image * mask_new
+            # Formar entrada 2xHxW para el juez
+            inp = torch.stack([mask_new, values_new], dim=0)
+            inputs.append(inp)
+        # Unir todos en batch
+        batch_input = torch.stack(inputs, dim=0)  # shape [len(candidates), 2, H, W]
+        # Pasar el batch por el modelo juez
+        with torch.no_grad():
+            outputs = self.judge(batch_input)
+        # Extraer logits de la clase objetivo y la clase opuesta para cada candidato
+        # outputs shape: [N, 10], donde N = número de candidatos
+        target_logits = outputs[:, target_class]
+        other_logits = outputs[:, other_class]
+        # Calcular diferencias (qué tanto favorece a la clase objetivo sobre la opuesta)
+        diff = target_logits - other_logits
+        # Escoger el índice del mejor pixel (max diferencia)
+        best_idx = torch.argmax(diff).item()
+        best_pixel = candidates[best_idx]
+        return best_pixel

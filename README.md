@@ -38,6 +38,3 @@ Email: [jmachulsky@dc.uba.ar](mailto:jmachulsky@dc.uba.ar)
 Thesis Advisor: Sergio Abriola ([sabriola@dc.uba.ar](mailto:sabriola@dc.uba.ar))
 
 ---
-
-This **repository** will be updated as the thesis progresses. Any suggestions are welcome! 🚀
-

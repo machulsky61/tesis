@@ -1,4 +1,0 @@
-timestamp,k,n_samples,accuracy,masking_type
-20250507_004830,6,100,0.67,random
-20250507_004947,6,1000,0.628,random
-20250507_005036,6,8000,0.6165,random

@@ -1,0 +1,15 @@
+timestamp,judge_name,seed,resolution,thr,k,agent_type,rollouts,n_images,accuracy,precommit,note,first_move
+2025-05-18 00:44:19,16_4px,42,16,0.0,4,mcts,50,100,0.78,True,,honest
+2025-05-18 04:16:14,16,42,16,0.0,6,mcts,50,100,0.86,True,,honest
+2025-05-18 06:52:10,28_4px,42,28,0.0,4,mcts,50,100,0.73,True,,honest
+2025-05-18 16:32:33,28_4px,42,28,0.0,4,greedy,0,100,0.51,False,,honest
+2025-05-18 16:42:08,28_4px,42,28,0.0,4,greedy,0,100,0.56,False,,liar
+2025-05-18 16:49:53,28_4px,42,28,0.0,4,greedy,0,100,0.97,True,,honest
+2025-05-18 16:50:17,28_4px,42,28,0.0,4,greedy,0,100,0.99,True,,liar
+2025-05-18 04:08:43,28,42,28,0.0,6,greedy,0,100,0.58,False,,honest
+2025-05-18 16:45:06,28,42,28,0.0,6,greedy,0,100,0.66,False,,liar
+2025-05-18 04:09:32,28,42,28,0.0,6,greedy,0,100,1.0,True,,honest
+2025-05-18 16:46:26,28,42,28,0.0,6,greedy,0,100,1.0,True,,liar
+2025-05-18 16:09:26,28,42,28,0.0,6,mcts(re-doing in progress),50,100,0.69,True,,honest
+2025-05-18 21:53:08,28,42,28,0.0,6,mcts_fast,50,100,0.71,True,Testing new module,honest
+2025-05-19 05:52:29,28,42,28,0.0,6,mcts,256,10000,0.9168,True,256 simns batheado,honest
