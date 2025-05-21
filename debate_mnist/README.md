@@ -126,17 +126,15 @@ python scripts/run_debate.py --judge_name judge_28px --agent_type mcts --rollout
   * `greedy_agent.py`: Selects the pixel that immediately maximizes the logit difference in favor of its class.
   * `mcts_agent.py`: Performs random simulations (Monte Carlo) to choose the pixel with the highest win rate.
 
-* **utils/data\_utils.py**
-  Loads MNIST and builds a `DebateDataset` that, during training, generates partial masks with relevant pixels to teach the judge.
+* **utils**
 
-* **utils/helpers.py**
-  Utilities for seeding, saving images/JSON, and unified CSV logging for experiments.
+  * `data\_utils.py`: Loads MNIST and builds a `DebateDataset` that, during training, generates partial masks with relevant pixels to teach the judge.
+  * `helpers.py`: Utilities for seeding, saving images/JSON, and unified CSV logging for experiments.
 
-* **scripts/train\_judge.py**
-  Trains the judge model with partial data (mask + values) and saves its state.
-
-* **scripts/run\_debate.py**
-  Coordinates debates between two agents and the trained judge, saves results (CSV, images, JSON), and reports accuracy.
+* **scripts**
+  * `train\_judge.py`: Trains the judge model with partial data (mask + values) and saves its state.
+  * `eval\_judge.py`: Evaluates the judge model, reports accuracy and saves results.
+  * `run\_debate.py`: Coordinates debates between two agents and the trained judge, saves results (CSV, images, JSON), and reports accuracy.
 
 ---
 
