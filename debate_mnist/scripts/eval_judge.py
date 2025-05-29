@@ -106,7 +106,7 @@ def main():
         "accuracy": accuracy,
         "note": args.note
     }
-    evaluations_csv_path = "models/evaluations.csv"
+    evaluations_csv_path = "outputs/evaluations.csv"
     helpers.log_results_csv(evaluations_csv_path, results)
     print(f"Resultados registrados en {evaluations_csv_path}")
 

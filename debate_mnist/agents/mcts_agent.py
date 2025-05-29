@@ -7,14 +7,14 @@ class MCTSAgent(DebateAgent):
     Agente que utiliza búsqueda Monte Carlo (MCTS) simple para decidir el próximo movimiento.
     Simula aleatoriamente múltiples partidas para cada posible movimiento y elige el pixel que conduce a la mayor probabilidad de ganar.
     """
-    def __init__(self, judge_model, my_class, opponent_class, original_image, thr=0.1, simulations=100, total_moves=0, is_truth_agent=True):
+    def __init__(self, judge_model, my_class, opponent_class, original_image, thr=0.1, rollouts=100, total_moves=0, is_truth_agent=True):
         """
-        simulations: número de simulaciones aleatorias a realizar por movimiento candidato (número de rollouts).
+        rollouts: número de simulaciones aleatorias a realizar por movimiento candidato.
         total_moves: número total de revelaciones permitidas en el debate (k).
         is_truth_agent: booleano que indica si este agente representa la clase verdadera (True) o la clase engañosa (False).
         """
         super(MCTSAgent, self).__init__(judge_model, my_class, opponent_class, original_image, thr)
-        self.simulations = simulations
+        self.rollouts = rollouts
         self.total_moves = total_moves
         self.is_truth_agent = is_truth_agent
     def choose_pixel(self, mask, reveal_count=0):
@@ -26,7 +26,7 @@ class MCTSAgent(DebateAgent):
         best_pixel = None
         # Obtener cuántos movimientos quedan en total (incluyendo ambos agentes) después de esta jugada
         moves_done = reveal_count  # revelaciones ya hechas antes de esta jugada
-        # Por cada pixel candidato, simular 'self.simulations' partidas aleatorias
+        # Por cada pixel candidato, simular 'self.rollouts' partidas aleatorias
         for (y, x) in candidates:
             wins = 0
             # Realizar movimiento hipotético: revelar pixel (y,x)
@@ -37,7 +37,7 @@ class MCTSAgent(DebateAgent):
             # Calcular movimientos restantes después de este
             moves_left = self.total_moves - moves_done_sim
             # Simular múltiples rollouts aleatorios
-            for _ in range(self.simulations):
+            for _ in range(self.rollouts):
                 # Clonar estado actual para la simulación
                 mask_rollout = mask_sim.clone().detach()
                 # Turno siguiente: tras este agente, jugará el oponente si moves_left > 0
@@ -67,7 +67,7 @@ class MCTSAgent(DebateAgent):
                 if logit_my >= logit_opp:
                     # El juez favorece la clase defendida por este agente (mi_class)
                     wins += 1
-            win_rate = wins / float(self.simulations)
+            win_rate = wins / float(self.rollouts)
             if win_rate > best_score:
                 best_score = win_rate
                 best_pixel = (y, x)

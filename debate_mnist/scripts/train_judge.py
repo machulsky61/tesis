@@ -155,7 +155,7 @@ def main():
         "note": args.note
     }
     
-    judges_csv_path = "models/judges.csv"
+    judges_csv_path = "outputs/judges.csv"
     helpers.log_results_csv(judges_csv_path, training_info)
     print(f"Información de entrenamiento guardada en {judges_csv_path}")
 
