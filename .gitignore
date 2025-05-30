@@ -187,6 +187,10 @@ debate_mnist/data/**/original_images/
 #debate_mnist/data/**/random_masked_images/
 #debate_mnist/data/**/masked_images_after_debate/
 
+# Ignorar runs de outputs
+debate_mnist/outputs/**/
+
+
 # Incluir los archivos importantes explícitamente (aunque sus carpetas estén ignoradas)
 !debate_mnist/data/**/results.csv
 !debate_mnist/data/**/run_info.json

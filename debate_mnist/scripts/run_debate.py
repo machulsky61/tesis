@@ -60,35 +60,72 @@ def run_single_debate(image, agent_truth, agent_liar, args, device):
     judge_input = torch.stack([mask, values_plane], dim=0).unsqueeze(0)
     with torch.no_grad():
         output = agent_truth.judge(judge_input)  # Ambos agentes comparten el mismo modelo    
-    # --- PRECOMMIT: solo dos clases ---
-    if args.precommit:
-        logit_truth = output[0, agent_truth.my_class].item()
-        logit_liar  = output[0, agent_liar.my_class].item()
-        if logit_truth >= logit_liar:
-            predicted_label = agent_truth.my_class
-        else:
-            predicted_label = agent_liar.my_class
-    else:
-    # --- NO PRECOMMIT: máximo entre todas las clases ---
-        logits = output[0]
-        predicted_label = logits.argmax().item()  # Elige el label global máximo
-        logit_truth = output[0, agent_truth.my_class].item()
-        # logit_liar = output[0, agent_liar.my_class].item()
+
+    logit_truth = output[0, agent_truth.my_class].item()
+    logit_liar  = output[0, agent_liar.my_class].item()
+        
+    predicted_label = output[0].argmax().item()  # Elige el label global máximo
 
     return {
         "mask": mask,
         "predicted_label": predicted_label,
         "logit_truth": logit_truth,
-        "logit_liar": logit_liar if args.precommit else None,
+        "logit_liar": logit_liar,
+        "logits": output[0].cpu().numpy(),
         "revealed_positions": [(int(y), int(x)) for (y, x) in (mask > 0).nonzero(as_tuple=False).tolist()],
         "pixels_revealed": int(mask.sum().item())
     }
+    
+def run_exhaustive_precommit(image, label_true, args, judge_model, device):
+    """
+    Ejecuta el protocolo precommit exhaustivo:
+      * 9 etiquetas falsas
+      * 3 semillas por cada etiqueta
+    Devuelve:
+      - winner_label  : etiqueta ganadora tras el procedimiento
+      - logits_avg_dct: { etiqueta_falsa: (avg_true, avg_false) }
+    """
+    logits_avg_dct = {}
+    winner_label = label_true  # Por defecto gana el honesto
+
+    wrong_labels = [lbl for lbl in range(10) if lbl != label_true]
+
+    for wrong_lbl in wrong_labels:
+        true_accum, false_accum = 0.0, 0.0
+        for offset_seed in range(3):
+            # Establecer semillas distintas pero reproducibles
+            helpers.set_seed(args.seed + offset_seed)
+
+            # Instanciar agentes para ESTA semilla y ESTA etiqueta falsa
+            agent_truth, agent_liar = get_agents(
+                args.agent_type, judge_model, label_true, wrong_lbl,
+                image, args.thr, args.rollouts, args.k
+            )
+
+            res = run_single_debate(
+                image, agent_truth, agent_liar, args, device,
+            )
+            true_accum  += res["logit_truth"]
+            false_accum += res["logit_liar"]
+
+        # Promediar
+        avg_true  = true_accum  / 3.0
+        avg_false = false_accum / 3.0
+        logits_avg_dct[wrong_lbl] = (avg_true, avg_false)
+
+        # Si el mentiroso supera al honesto EN ALGUNA etiqueta -> mentiroso gana
+        if avg_false > avg_true:
+            winner_label = wrong_lbl
+            break  # basta con una etiqueta para que pierda la verdad
+
+    return winner_label, logits_avg_dct
 
 def save_outputs(i, image, mask, meta, args, id):
     """Guarda la imagen, máscara y metadatos en el directorio de salida."""
-    folder_note = f'_{args.note.replace(" ", "_")}' if args.note and len(args.note) < 20 else ""
-    run_folder = f"outputs/debate_{id}{folder_note}"
-    os.makedirs(run_folder, exist_ok=True)
+    if args.save_images or args.save_metadata:
+        folder_note = f'_{args.note.replace(" ", "_")}' if args.note and len(args.note) < 20 else ""
+        run_folder = f"outputs/debate_{id}{folder_note}"
+        os.makedirs(run_folder, exist_ok=True)
     if args.save_images:
             img_path = os.path.join(run_folder, f"sample_{i}.png")
             helpers.save_image(image, mask, img_path)
@@ -150,31 +187,51 @@ def main():
         raise ValueError(f"Solo hay {len(test_images)} imágenes, pero pediste {args.n_images}")
 
     for i in tqdm(range(args.n_images), desc="Debates"):
-        image, label = test_images[i]
+        image, label_tensor = test_images[i]
         image = image.to(device).squeeze()
-        label = label.item()
-        classes = list(range(10))
-        classes.remove(label)
-        opponent_label = random.choice(classes)
-        agent_truth, agent_liar = get_agents(
-            args.agent_type, judge_model, label, opponent_label, image, args.thr, args.rollouts, args.k
-        )
-        results = run_single_debate(image, agent_truth, agent_liar, args, device)
-        predicted_label = results["predicted_label"]
-        if predicted_label == label:
-            correct += 1
-        total += 1
+        label_true = label_tensor.item()
 
-        meta = {
-            "index": i,
-            "truth_label": int(label),
-            "liar_label": int(opponent_label) if args.precommit else None,
-            "pixels_revealed": results["pixels_revealed"],
-            "revealed_positions": results["revealed_positions"],
-            "predicted_label": int(predicted_label),
-            "logits": {str(label): results["logit_truth"], str(opponent_label): results["logit_liar"]}
-        }
-        save_outputs(i, image, results["mask"], meta, args, id)
+        if args.precommit:
+            winner_label, avg_logits = run_exhaustive_precommit(
+                image, label_true, args, judge_model, device
+            )
+            predicted_label = winner_label
+            correct += 1 if predicted_label == label_true else 0
+            meta = {
+                "index": i,
+                "truth_label": int(label_true),
+                "winner_label": int(winner_label),
+                "avg_logits": {str(lbl): {"true": t, "false": f}
+                            for lbl, (t, f) in avg_logits.items()}
+            }
+            save_outputs(i, image, torch.zeros_like(image[0]), meta, args, id)
+        else:
+            # Elegir UNA etiqueta falsa al azar
+            wrong_labels = [lbl for lbl in range(10) if lbl != label_true]
+            opponent_label = random.choice(wrong_labels)
+
+            agent_truth, agent_liar = get_agents(
+                args.agent_type, judge_model, label_true, opponent_label,
+                image, args.thr, args.rollouts, args.k
+            )
+            res = run_single_debate(image, agent_truth, agent_liar, args, device)
+            predicted_label = res["predicted_label"]
+            correct += 1 if predicted_label == label_true else 0
+
+            meta = {
+                "index": i,
+                "truth_label": int(label_true),
+                "liar_label": int(opponent_label),
+                "logits": {str(i): float(res["logits"][i]) for i in range(10)},
+                "pixels_revealed": res["pixels_revealed"],
+                "revealed_positions": res["revealed_positions"],
+                "predicted_label": int(predicted_label),
+                "logits": {str(label_true): res["logit_truth"],
+                        str(opponent_label): res["logit_liar"]}
+            }
+            save_outputs(i, image, res["mask"], meta, args, id)
+
+        total += 1
 
     accuracy = correct / total if total > 0 else 0.0
     print(f"Precisión del juez con debate: {accuracy*100:.2f}% (sobre {total} muestras)")
