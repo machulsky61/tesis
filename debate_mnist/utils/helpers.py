@@ -18,7 +18,39 @@ def set_seed(seed):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
-def save_image(original_image, mask, filepath):
+def save_image(original_image, filepath):
+    """
+    Guarda una imagen PNG de original_image.
+    original_image puede ser un Tensor 1xHxW o HxW, o un arreglo numpy 2D.
+    """
+    # Asegurarse de que la carpeta de destino existe
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    # Mover datos a CPU y convertir a arreglo numpy
+    if torch.is_tensor(original_image):
+        img = original_image.clone().detach().cpu()
+        # Si tiene canal inicial (1xHxW), convertir a 2D HxW
+        if img.dim() == 3:
+            img = img[0]
+    else:
+        # Asumimos que original_image es numpy array 2D ya
+        img = torch.tensor(original_image)
+    # Convertir a escala de 0-255 uint8 para guardar
+    img_np = (img.numpy() * 255).astype(np.uint8)
+    # Utilizar PIL para guardar en modo escala de grises
+    try:
+        from PIL import Image
+    except ImportError:
+        # Si PIL no está disponible, intentar con OpenCV (cv2)
+        try:
+            import cv2
+            cv2.imwrite(filepath, img_np)
+            return
+        except ImportError:
+            raise RuntimeError("No se encontró PIL ni cv2 para guardar imágenes")
+    img_pil = Image.fromarray(img_np, mode='L')
+    img_pil.save(filepath)
+
+def save_mask(original_image, mask, filepath):
     """
     Guarda una imagen PNG que muestra los píxeles revelados de original_image.
     Los píxeles revelados conservan su valor original; los no revelados aparecen en negro.
@@ -63,7 +95,7 @@ def save_image(original_image, mask, filepath):
     img_pil = Image.fromarray(revealed_np, mode='L')
     img_pil.save(filepath)
 
-def save_metadata(metadata, filepath):
+def save_play(metadata, filepath):
     """
     Guarda los metadatos de un debate (por ejemplo, secuencia de revelaciones, clases, logits, etc.) en un archivo JSON.
     """

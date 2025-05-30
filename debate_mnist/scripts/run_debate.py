@@ -122,16 +122,22 @@ def run_exhaustive_precommit(image, label_true, args, judge_model, device):
 
 def save_outputs(i, image, mask, meta, args, id):
     """Guarda la imagen, máscara y metadatos en el directorio de salida."""
-    if args.save_images or args.save_metadata:
+    if args.save_mask or args.save_play or args.save_images or args.save_metadata:
         folder_note = f'_{args.note.replace(" ", "_")}' if args.note and len(args.note) < 20 else ""
         run_folder = f"outputs/debate_{id}{folder_note}"
         os.makedirs(run_folder, exist_ok=True)
-    if args.save_images:
-            img_path = os.path.join(run_folder, f"sample_{i}.png")
-            helpers.save_image(image, mask, img_path)
-    if args.save_metadata:
-            meta_path = os.path.join(run_folder, f"sample_{i}.json")
-            helpers.save_metadata(meta, meta_path)
+    
+    if args.save_images or args.save_metadata:
+        img_path = os.path.join(run_folder, f"sample_{i}_image.png")
+        helpers.save_image(image, img_path)   
+         
+    if args.save_mask or args.save_metadata:
+        img_path = os.path.join(run_folder, f"sample_{i}_mask.png")
+        helpers.save_mask(image, mask, img_path)
+        
+    if args.save_play or args.save_metadata:
+        meta_path = os.path.join(run_folder, f"sample_{i}_play.json")
+        helpers.save_play(meta, meta_path)
 
 def log_results(args, accuracy, id):
     os.makedirs("models", exist_ok=True)
@@ -165,7 +171,9 @@ def main():
     parser.add_argument("--judge_name", type=str, default="judge_model")
     parser.add_argument("--n_images", type=int, default=100)
     parser.add_argument("--save_images", action="store_true")
-    parser.add_argument("--save_metadata", action="store_true")
+    parser.add_argument("--save_mask", action="store_true")
+    parser.add_argument("--save_play", action="store_true")
+    parser.add_argument("--save_metadata", action="store_true", help="Guardar metadatos (imagenes, mascaras y jugadas) de cada debate")
     parser.add_argument("--precommit", action="store_true")
     parser.add_argument("--note", type=str, default="")
     parser.add_argument("--starts", type=str, choices=["honest", "liar"], default="honest")
