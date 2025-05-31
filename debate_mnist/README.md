@@ -1,34 +1,37 @@
-# AI Safety via Debate · MNIST Experiment
+# AI Safety via Debate - MNIST Experiment
 
-This repository contains an implementation of the “AI Safety via Debate” experiment
-(Irving et al., 2018) applied to the MNIST dataset. The goal is to show how two agents
-compete to convince a “weaker” classifier (the judge) by revealing only a few
-pixels, and how this dramatically improves its accuracy.
+This repository contains an implementation of the "AI Safety via Debate" experiment (Irving et al., 2018), applied to the MNIST dataset. The goal is to demonstrate how two agents compete to convince a "weaker" classifier (the judge) by selectively revealing a limited number of pixels, dramatically improving the classifier's accuracy.
 
 ---
 
-## 📁 Folder Structure
+## 📁 1. Folder Structure
 
 ```
 .
-├── models/
-│   └── sparse_cnn.py           # Definition of the SparseCNN model (judge, 2 channels)
 ├── agents/
-│   ├── base_agent.py           # Base DebateAgent class
-│   ├── greedy_agent.py         # Greedy agent (myopically selects pixel)
-│   └── mcts_agent.py           # MCTS agent (Monte Carlo search)
+│   ├── base_agent.py           # Base class for DebateAgent
+│   ├── greedy_agent.py         # Greedy agent selecting pixels myopically
+│   └── mcts_agent.py           # MCTS agent using Monte Carlo Tree Search
+├── models/
+│   ├── sparse_cnn.py           # SparseCNN model definition (judge, 2 channels)
+│   └── judge_model.pth         # Pre-trained judge model
+├── outputs/
+│   ├── debate_id/              # Directory storing metadata of individual debates
+│   ├── debates.csv             # Log of debates (accuracy, etc.)
+│   └── judges.csv              # Data on trained judge models
 ├── utils/
-│   ├── data_utils.py           # Data loading and DebateDataset
-│   └── helpers.py              # Seeding, image/JSON saving, and CSV logging
-├── scripts/
-│   ├── train_judge.py          # Trains the judge with partial masks
-│   └── run_debate.py           # Runs debates between two agents
+│   ├── data_utils.py           # Data loading and DebateDataset class
+│   └── helpers.py              # Utility functions (seeding, saving images/JSON, CSV logging)
+├── train_judge.py              # Train the judge with partial masks
+├── eval_judge.py               # Evaluate the judge with randomly masked images
+├── run_debate.py               # Run debates between two agents
+├── requirements.txt
 └── README.md                   # This file
 ```
 
 ---
 
-## 🔧 Installing Dependencies
+## 🔧 2. Installing Dependencies
 
 ```bash
 python -m venv venv
@@ -39,116 +42,127 @@ pip install -r requirements.txt
 
 ---
 
-## 🚀 Quick Usage
+## 🚀 3. Quick Usage
 
-1. **Train the judge** (16×16 pixels, few epochs):
-
-```bash
-python scripts/train_judge.py \
-    --resolution 16 \
-    --thr 0.1 \
-    --seed 42 \
-    --epochs 3 \
-    --batch_size 128 \
-    --lr 1e-3 \
-```
-
-
-2. **Test debates (greedy)** on a few images:
-
- ```bash
-python scripts/run_debate.py \
-    --resolution 16 \
-    --thr 0.1 \
-    --agent_type greedy \
-    --k 6 \
-    --seed 42 \
-    --n_images 20 \
-    --save_images \
-    --save_metadata \
-```
-
-3. **Run a larger Debate (MCTS Agent)**:
-
-### 3. 
-```bash
-python scripts/run_debate.py \
-    --resolution 16 \
-    --thr 0.1 \
-    --agent_type mcts \
-    --rollouts 3000 \
-    --k 6 \
-    --seed 42 \
-    --n_images 1000 \
-    --log_csv experiments_log.csv
-```
-
-4. **(Optional) Repeat with 28×28**:
+### 3.1 Train the judge (16×16 pixels, quick test run):
 
 ```bash
-python scripts/train_judge.py --epochs 64 --seed 42 --judge_name judge_28px
-python scripts/run_debate.py --judge_name judge_28px --agent_type mcts --rollouts 10000 --k 6 --seed 42 --n_images 10000
+python train_judge.py --resolution 16 --epochs 8
+```
+
+### 3.2 Test debates (greedy) on a small subset of images:
+
+```bash
+python run_debate.py --resolution 16 --agent_type greedy --precommit --n_images 100 --save_metadata
+```
+
+### 3.3 Run larger debates (MCTS)
+
+```bash
+python run_debate.py --resolution 16 --precommit --agent_type mcts --rollouts 1000 --n_images 1000
+```
+
+> 💡 **Tip:** MCTS is computationally expensive. For quick testing or demonstration purposes, it's better to use `greedy` with 1000–2000 images. Use 10000 images with `mcts` only if replicating the original paper.
+
+### 3.4 (Optional) Repeat experiment for 4 pixels:
+```bash
+python train_judge.py --resolution 16 --k 4 --epochs 8 --judge_name 4px
+python run_debate.py --resolution 16 --k 4 --judge_name 4px --precommit --agent_type greedy --n_images 1000
+```
+---
+
+## 📝 4. Replicating the Original Paper's Experiment
+
+To replicate the original setup used in the paper, follow these steps:
+
+### 4.1 Train the judge
+
+```bash
+python train_judge.py --judge_name og_judge
+```
+
+### 4.2 Run debates with both agents using 10k images
+
+**Using MCTS (original configuration):**
+
+```bash
+python run_debate.py --judge_name og_judge --agent_type mcts --rollouts 10000 --n_images 10000
+```
+
+**Using Greedy (alternative faster but weaker agent):**
+
+```bash
+python run_debate.py --judge_name og_judge --agent_type greedy --n_images 10000
 ```
 
 ---
 
-## 🌎 Key Flags and Arguments
+## 🌎 5. Key Flags and Arguments
 
-| Argument         | Description                                                                 |
-|------------------|-----------------------------------------------------------------------------|
-| `--resolution`   | Input image size: 16 or 28 (default: 16)                                     |
-| `--thr`          | Threshold for pixel intensity (used in judge pre-processing)                 |
-| `--seed`         | Random seed                                                                  |
-| `--epochs`       | Number of training epochs for the judge                                     |
-| `--batch_size`   | Batch size during training                                                   |
-| `--lr`           | Learning rate                                                                |
-| `--judge_name`   | Identifier to save/load the judge model                                     |
-| `--agent_type`   | `greedy` or `mcts`                                                           |
-| `--rollouts`     | Number of MCTS simulations (only used if `agent_type=mcts`)                |
-| `--k`            | Total number of pixels revealed in a debate                                 |
-| `--n_images`     | Number of test images to run debates on                                     |
-| `--precommit`    | If set, agents precommit to a class label at the start                      |
-| `--starts`       | Which agent starts first (`honest` or `liar`)                               |
-| `--save_images`  | Save PNG visualizations of debates                                          |
-| `--save_metadata`| Save JSON logs of debates                                                   |
-| `--log_csv`      | Path to CSV log where results will be appended    
+Some arguments are used both when training the judge and running the debate, and **it's important to keep them consistent** between both stages for optimal performance.
+
+* **Used in both training and debate:** `--resolution`, `--thr`, `--seed`, `--judge_name`, `--k`
+* **Training only:** `--epochs`, `--batch_size`, `--lr`
+* **Debate only:** `--agent_type`, `--rollouts`, `--n_images`, `--precommit`, `--starts`, `--save_*`
+
+| Argument          | Description                                           | Values        | Default       |
+| ----------------- | ----------------------------------------------------- | ------------- | ------------- |
+| `--resolution`    | Input image size                                      | 16 or 28      | 28            |
+| `--thr`           | Threshold for pixel intensity (judge pre-processing)  | 0.0 to 1.0    | 0.0           |
+| `--seed`          | Random seed for reproducibility                       | int           | 42            |
+| `--epochs`        | Number of training epochs for judge                   | int           | 64            |
+| `--batch_size`    | Batch size for judge training                         | int           | 128           |
+| `--lr`            | Learning rate                                         | float         | 1e-4          |
+| `--judge_name`    | Identifier for saving/loading the judge               | str           | "judge\_name" |
+| `--agent_type`    | Type of debating agent                                | greedy / mcts | greedy        |
+| `--rollouts`      | Number of MCTS simulations (only used with mcts)      | int           | 50            |
+| `--k`             | Number of pixels revealed during debate               | int           | 6             |
+| `--n_images`      | Number of test images to run debates on               | int           | 100           |
+| `--precommit`     | Liar agent precommits to a class label at the start   | store\_true   | False         |
+| `--starts`        | Which agent starts first                              | honest / liar | liar          |
+| `--save_images`   | Save PNG original images                              | store\_true   | False         |
+| `--save_mask`     | Save PNG visualizations of masked images after debate | store\_true   | False         |
+| `--save_play`     | Save JSON logs of pixel play sequences                | store\_true   | False         |
+| `--save_metadata` | Save all metadata (images, mask, and play logs)       | store\_true   | False         |
 
 ---
 
-## 📄 Module Descriptions
+## 📄 6. Module Descriptions
 
-* **models/sparse\_cnn.py**
-  Defines the `SparseCNN` network, which receives two channels (mask and values) and classifies MNIST digits.
+* **models/sparse\_cnn.py**: Defines `SparseCNN`, which classifies MNIST digits using masked images.
 
 * **agents/**
 
-  * `base_agent.py`: Base class with shared functionality (image and judge handling).
-  * `greedy_agent.py`: Selects the pixel that immediately maximizes the logit difference in favor of its class.
-  * `mcts_agent.py`: Performs random simulations (Monte Carlo) to choose the pixel with the highest win rate.
+  * `base_agent.py`: Provides shared functionality (image/judge handling).
+  * `greedy_agent.py`: Picks the pixel maximizing immediate logit difference.
+  * `mcts_agent.py`: Uses Monte Carlo simulations to select optimal pixels.
 
-* **utils**
+* **utils/**
 
-  * `data\_utils.py`: Loads MNIST and builds a `DebateDataset` that, during training, generates partial masks with relevant pixels to teach the judge.
-  * `helpers.py`: Utilities for seeding, saving images/JSON, and unified CSV logging for experiments.
+  * `data_utils.py`: Handles MNIST loading and DebateDataset creation.
+  * `helpers.py`: General utilities for seeding, image/JSON saving, and CSV logging.
 
-* **scripts**
-  * `train\_judge.py`: Trains the judge model with partial data (mask + values) and saves its state.
-  * `eval\_judge.py`: Evaluates the judge model, reports accuracy and saves results.
-  * `run\_debate.py`: Coordinates debates between two agents and the trained judge, saves results (CSV, images, JSON), and reports accuracy.
+* **scripts/**
 
----
-
----
-
-## 📊 Citation
-This implementation is inspired by the original paper:
-> **AI Safety via Debate** — Geoffrey Irving, Paul Christiano, Dario Amodei (2018). [[arXiv:1805.00899](https://arxiv.org/abs/1805.00899)]
+  * `train_judge.py`: Trains judge model with masked data and saves it.
+  * `eval_judge.py`: Evaluates judge model accuracy and logs results.
+  * `run_debate.py`: Runs debates, logs outcomes, and evaluates accuracy.
 
 ---
 
-## ⚒️ Notes
-- The sparse judge is trained by randomly revealing a subset of pixels during training.
-- When using `--precommit`, the winning condition is based on which class the judge picks between the two agents' claims.
-- Agents use different strategies: `greedy` always picks the most favorable next pixel, while `mcts` performs simulations to select actions. Therefore it takes longer to run.
+## 📊 7. Citation
+
+This implementation is based on:
+
+> **AI Safety via Debate** – Geoffrey Irving, Paul Christiano, Dario Amodei (2018). \[[arXiv:1805.00899](https://arxiv.org/abs/1805.00899)]
 
 ---
+
+## ⚒️ 8. Notes
+
+* The judge is trained using randomly masked pixels, improving sparse image classification.
+* When `--precommit` is enabled, the judge determines the winner based on the agent’s committed class.
+* The liar agent will precommit to a class only if the flag is passed.
+* Greedy agents are fast and useful for debugging or small-scale tests.
+* MCTS agents are more accurate but significantly slower, making them ideal for high-confidence evaluations or paper replication scenarios.
+* You can experiment with different values of `--k`, such as `--k 4` or `--k 6`, depending on how much information the agents are allowed to reveal.
