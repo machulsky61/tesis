@@ -111,13 +111,13 @@ def log_results_csv(logfile, results):
     # Determinar el tipo de log basado en el nombre del archivo
     if "judges.csv" in logfile:
         columns = ["timestamp", "judge_name", "seed", "resolution", "thr", "k", 
-                  "epochs", "batch_size", "lr", "best_loss", "accuracy"]
+                  "epochs", "batch_size", "lr", "best_loss", "accuracy", "note"]
     elif "evaluations.csv" in logfile:
         columns = ["timestamp", "judge_name", "seed", "resolution", "thr", "k", 
                   "n_images", "accuracy"]
     elif "debates.csv" in logfile:
         columns = ["timestamp", "judge_name", "seed", "resolution", "thr", "k", 
-                  "agent_type", "rollouts", "n_images", "accuracy", "precommit", "note","started"]
+                  "agent_type", "rollouts", "n_images", "accuracy", "precommit", "note", "started"]
     else:
         # Default columns for backward compatibility
         columns = ["timestamp", "seed", "resolution", "thr", "masking_type", 

@@ -176,7 +176,7 @@ def main():
     parser.add_argument("--save_metadata", action="store_true", help="Guardar metadatos (imagenes, mascaras y jugadas) de cada debate")
     parser.add_argument("--precommit", action="store_true")
     parser.add_argument("--note", type=str, default="")
-    parser.add_argument("--starts", type=str, choices=["honest", "liar"], default="honest")
+    parser.add_argument("--starts", type=str, choices=["honest", "liar"], default="liar")
     args = parser.parse_args()
 
     #id numeric based on timestamp
