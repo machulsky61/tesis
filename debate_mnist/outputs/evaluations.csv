@@ -1,0 +1,3 @@
+timestamp,judge_name,seed,resolution,thr,k,n_images,accuracy,note
+2025-06-01 13:53:40,28_4px,42,28,0.0,4,10000,0.4759,,
+2025-06-01 13:55:20,28,42,28,0.0,6,10000,0.5842,,
