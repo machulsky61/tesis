@@ -114,7 +114,7 @@ def log_results_csv(logfile, results):
                   "epochs", "batch_size", "lr", "best_loss", "accuracy", "note"]
     elif "evaluations.csv" in logfile:
         columns = ["timestamp", "judge_name", "seed", "resolution", "thr", "k", 
-                  "n_images", "accuracy"]
+                  "n_images", "accuracy", "note"]
     elif "debates.csv" in logfile:
         columns = ["timestamp", "judge_name", "seed", "resolution", "thr", "k", 
                   "agent_type", "rollouts", "n_images", "accuracy", "precommit", "note", "started"]

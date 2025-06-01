@@ -14,25 +14,15 @@ from utils.data_utils import DebateDataset
 from utils import helpers
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Evalúa la precisión del juez débil (SparseCNN) sobre máscaras aleatorias de k píxeles"
-    )
-    parser.add_argument("--resolution", type=int, default=28,
-                        help="Resolución de las imágenes (16 o 28)")
-    parser.add_argument("--thr", type=float, default=0.0,
-                        help="Umbral para considerar píxeles relevantes")
-    parser.add_argument("--k", type=int, default=6,
-                        help="Número exacto de píxeles revelados en cada máscara")
-    parser.add_argument("--seed", type=int, default=42,
-                        help="Semilla para reproducibilidad")
-    parser.add_argument("--n_samples", type=int, default=10000,
-                        help="Cantidad de muestras de test a evaluar")
-    parser.add_argument("--batch_size", type=int, default=128,
-                        help="Tamaño de batch para evaluación")
-    parser.add_argument("--judge_name", type=str, default="judge_model",
-                        help="Nombre del modelo juez (sin extensión)")
-    parser.add_argument("--note", type=str, default="",
-                        help="Nota opcional para registrar en el CSV")
+    parser = argparse.ArgumentParser(description="Evalúa la precisión del juez débil (SparseCNN) sobre máscaras aleatorias de k píxeles")
+    parser.add_argument("--resolution", type=int,   default=28,             help="Resolución de las imágenes (16 o 28)")
+    parser.add_argument("--thr",        type=float, default=0.0,            help="Umbral para considerar píxeles relevantes")
+    parser.add_argument("--k",          type=int,   default=6,              help="Número exacto de píxeles revelados en cada máscara")
+    parser.add_argument("--seed",       type=int,   default=42,             help="Semilla para reproducibilidad")
+    parser.add_argument("--n_images",   type=int,   default=10000,          help="Cantidad de muestras de test a evaluar")
+    parser.add_argument("--batch_size", type=int,   default=128,            help="Tamaño de batch para evaluación")
+    parser.add_argument("--judge_name", type=str,   default="judge_model",  help="Nombre del modelo juez (sin extensión)")
+    parser.add_argument("--note",       type=str,   default="",             help="Nota opcional para registrar en el CSV")
     args = parser.parse_args()
 
     # 1) Fijar semillas
@@ -53,10 +43,10 @@ def main():
     transform = transforms.Compose(transform_list)
 
     full_test = MNIST(root="./data", train=False, download=True, transform=transform)
-    # Submuestrear para n_samples
+    # Submuestrear para n_images
     indices = list(range(len(full_test)))
     random.shuffle(indices)
-    indices = indices[: args.n_samples]
+    indices = indices[: args.n_images]
     test_subset = Subset(full_test, indices)
 
     # 4) Envolver en DebateDataset para generar máscaras de exactamente k píxeles
@@ -102,7 +92,7 @@ def main():
         "resolution": args.resolution,
         "thr": args.thr,
         "k": args.k,
-        "n_samples": args.n_samples,
+        "n_images": args.n_images,
         "accuracy": accuracy,
         "note": args.note
     }
