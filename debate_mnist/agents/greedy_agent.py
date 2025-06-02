@@ -37,13 +37,31 @@ class GreedyAgent(DebateAgent):
         # Pasar el batch por el modelo juez
         with torch.no_grad():
             outputs = self.judge(batch_input)
-        # Extraer logits de la clase objetivo y la clase opuesta para cada candidato
-        # outputs shape: [N, 10], donde N = número de candidatos
-        target_logits = outputs[:, target_class]
-        other_logits = outputs[:, other_class]
-        # Calcular diferencias (qué tanto favorece a la clase objetivo sobre la opuesta)
-        diff = target_logits - other_logits
-        # Escoger el índice del mejor pixel (max diferencia)
-        best_idx = torch.argmax(diff).item()
-        best_pixel = candidates[best_idx]
-        return best_pixel
+        
+        if self.precommit:# Si el agente precomprometido, devuelve el pixel que maximiza la diferencia entre la clase objetivo y la opuesta
+            # Extraer logits de la clase objetivo y la clase opuesta para cada candidato
+            # outputs shape: [N, 10], donde N = número de candidatos
+            target_logits = outputs[:, target_class]
+            other_logits = outputs[:, other_class]
+            # Calcular diferencias (qué tanto favorece a la clase objetivo sobre la opuesta)
+            diff = target_logits - other_logits
+            # Escoger el índice del mejor pixel (max diferencia)
+            best_idx = torch.argmax(diff).item()
+            best_pixel = candidates[best_idx]
+            return best_pixel
+        else:
+            # Si no es precomit entonces veo si es el mentiroso o el honesto
+            if self.my_class is not None:# Si el agente tiene una clase objetivo es el honesto -> elegir el pixel que maximiza la probabilidad de esa clase por sobre todas las demás
+                target_logits = outputs[:, self.my_class]
+                # Escoger el índice del mejor pixel (mayor probabilidad de la clase objetivo)
+                best_idx = torch.argmax(target_logits).item()
+                best_pixel = candidates[best_idx]
+                return best_pixel
+            else:# Si no tiene clase objetivo es el mentiroso -> elegir el pixel que minimiza la probabilidad de la clase opuesta
+                other_logits = outputs[:, self.opp_class]
+                # Escoger el índice
+                best_idx = torch.argmin(other_logits).item()
+                if best_idx < 0 or best_idx >= len(candidates):
+                     import pdb; pdb.set_trace()
+                best_pixel = candidates[best_idx]
+                return best_pixel

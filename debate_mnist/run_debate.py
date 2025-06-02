@@ -17,15 +17,15 @@ def load_judge_model(judge_name, resolution, device):
     judge_model.eval()
     return judge_model
 
-def get_agents(agent_type, judge_model, label, opponent_label, image, thr, rollouts, k):
+def get_agents(agent_type, judge_model, label, opponent_label, precommit, image, thr, rollouts, k):
     """Inicializa los agentes según el tipo."""
     if agent_type == "greedy":
-        agent_truth = GreedyAgent(judge_model, label, opponent_label, image, thr=thr)
-        agent_liar = GreedyAgent(judge_model, opponent_label, label, image, thr=thr)
+        agent_truth = GreedyAgent(judge_model, label, opponent_label, precommit, image, thr)
+        agent_liar = GreedyAgent(judge_model, opponent_label, label, precommit, image, thr)
     else:
-        agent_truth = MCTSAgent(judge_model, label, opponent_label, image, thr=thr,
+        agent_truth = MCTSAgent(judge_model, label, opponent_label, image, thr,
                                 rollouts=rollouts, total_moves=k, is_truth_agent=True)
-        agent_liar = MCTSAgent(judge_model, opponent_label, label, image, thr=thr,
+        agent_liar = MCTSAgent(judge_model, opponent_label, label, image, thr,
                                rollouts=rollouts, total_moves=k, is_truth_agent=False)
     return agent_truth, agent_liar
 
@@ -61,8 +61,11 @@ def run_single_debate(image, agent_truth, agent_liar, args, device):
     with torch.no_grad():
         output = agent_truth.judge(judge_input)  # Ambos agentes comparten el mismo modelo    
 
-    logit_truth = output[0, agent_truth.my_class].item()
-    logit_liar  = output[0, agent_liar.my_class].item()
+        logit_truth = output[0, agent_truth.my_class].item()
+    if args.precommit:
+        logit_liar  = output[0, agent_liar.my_class].item()
+    else:
+        logit_liar = "N/A"  # No hay etiqueta fija para el mentiroso en este caso
         
     predicted_label = output[0].argmax().item()  # Elige el label global máximo
 
@@ -98,8 +101,7 @@ def run_exhaustive_precommit(image, label_true, args, judge_model, device):
 
             # Instanciar agentes para ESTA semilla y ESTA etiqueta falsa
             agent_truth, agent_liar = get_agents(
-                args.agent_type, judge_model, label_true, wrong_lbl,
-                image, args.thr, args.rollouts, args.k
+                args.agent_type, judge_model, label_true, wrong_lbl, args.precommit, image, args.thr, args.rollouts, args.k
             )
 
             res = run_single_debate(
@@ -214,12 +216,9 @@ def main():
             }
             save_outputs(i, image, torch.zeros_like(image[0]), meta, args, id)
         else:
-            # Elegir UNA etiqueta falsa al azar
-            wrong_labels = [lbl for lbl in range(10) if lbl != label_true]
-            opponent_label = random.choice(wrong_labels)
-
+            # No precommit, no hay opponent label fijo.
             agent_truth, agent_liar = get_agents(
-                args.agent_type, judge_model, label_true, opponent_label,
+                args.agent_type, judge_model, label_true, None, args.precommit,
                 image, args.thr, args.rollouts, args.k
             )
             res = run_single_debate(image, agent_truth, agent_liar, args, device)
@@ -229,14 +228,11 @@ def main():
             meta = {
                 "index": i,
                 "truth_label": int(label_true),
-                "liar_label": int(opponent_label),
                 "logits": {str(i): float(res["logits"][i]) for i in range(10)},
                 "pixels_revealed": res["pixels_revealed"],
                 "revealed_positions": res["revealed_positions"],
                 "predicted_label": int(predicted_label),
-                "logits": {str(label_true): res["logit_truth"],
-                        str(opponent_label): res["logit_liar"]}
-            }
+                "logit_truth": float(res["logit_truth"]),}
             save_outputs(i, image, res["mask"], meta, args, id)
 
         total += 1

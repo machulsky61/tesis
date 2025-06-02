@@ -4,7 +4,7 @@ class DebateAgent:
     """
     Clase base para agentes del debate. Almacena información común como modelo juez, clases objetivo y la imagen original.
     """
-    def __init__(self, judge_model, my_class, opponent_class, original_image, thr=0.1):
+    def __init__(self, judge_model, my_class, opponent_class, precommit, original_image, thr=0.0):
         """
         judge_model: modelo del juez (clasificador) para evaluar estados.
         my_class: clase (dígito) que este agente defiende que es la imagen.
@@ -15,6 +15,7 @@ class DebateAgent:
         self.judge = judge_model
         self.my_class = my_class
         self.opp_class = opponent_class
+        self.precommit = precommit
         # Asegurarse de que la imagen original es 2D HxW para facilitar cálculos
         self.image = original_image.squeeze()
         # Mover la imagen al mismo dispositivo que el modelo del juez
