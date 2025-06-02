@@ -153,8 +153,8 @@ def log_results(args, accuracy, id):
         "n_images": args.n_images,
         "agent_type": args.agent_type,
         "pixels": args.k,
-        "precommit": bool(args.precommit),
         "started": args.starts,
+        "precommit": bool(args.precommit),
         "accuracy": accuracy,
         "note": args.note,
     }
