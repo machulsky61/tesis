@@ -110,18 +110,14 @@ def log_results_csv(logfile, results):
     """
     # Determinar el tipo de log basado en el nombre del archivo
     if "judges.csv" in logfile:
-        columns = ["timestamp", "judge_name", "seed", "resolution", "thr", "k", 
-                  "epochs", "batch_size", "lr", "best_loss", "accuracy", "note"]
+        columns = ["timestamp","judge_name","resolution","thr","seed", "epochs","batch_size","lr","best_loss", "pixels", "accuracy","note"]
     elif "evaluations.csv" in logfile:
-        columns = ["timestamp", "judge_name", "seed", "resolution", "thr", "k", 
-                  "n_images", "accuracy", "note"]
+        columns = ["timestamp","judge_name","resolution","thr","seed", "n_images", "pixels", "accuracy","note"]
     elif "debates.csv" in logfile:
-        columns = ["timestamp", "judge_name", "seed", "resolution", "thr", "k", 
-                  "agent_type", "rollouts", "n_images", "accuracy", "precommit", "note", "started"]
+        columns = ["timestamp","judge_name","resolution","thr","seed", "rollouts","n_images","agent_type", "pixels", "started","precommit", "accuracy","note"]
     else:
         # Default columns for backward compatibility
-        columns = ["timestamp", "seed", "resolution", "thr", "masking_type", 
-                  "k", "agent_type", "rollouts", "accuracy"]
+        columns = ["timestamp","judge_name","resolution","thr","seed", "pixels", "accuracy","note"]
 
     # Si el archivo no existe o está vacío, escribir encabezado
     file_exists = os.path.isfile(logfile)

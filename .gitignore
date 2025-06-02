@@ -189,7 +189,7 @@ debate_mnist/data/**/original_images/
 
 # Ignorar runs de outputs
 debate_mnist/outputs/**/
-
+debate_mnist/outputs/debates_old.csv
 
 # Incluir los archivos importantes explícitamente (aunque sus carpetas estén ignoradas)
 !debate_mnist/data/**/results.csv

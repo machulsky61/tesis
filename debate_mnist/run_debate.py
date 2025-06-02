@@ -149,14 +149,14 @@ def log_results(args, accuracy, id):
         "seed": args.seed,
         "resolution": args.resolution,
         "thr": args.thr,
-        "k": args.k,
-        "agent_type": args.agent_type,
         "rollouts": (args.rollouts if args.agent_type == "mcts" else 0),
         "n_images": args.n_images,
-        "accuracy": accuracy,
+        "agent_type": args.agent_type,
+        "pixels": args.k,
         "precommit": bool(args.precommit),
+        "started": args.starts,
+        "accuracy": accuracy,
         "note": args.note,
-        "started": args.starts
     }
     debates_csv_path = "outputs/debates.csv"
     helpers.log_results_csv(debates_csv_path, results)

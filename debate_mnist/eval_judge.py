@@ -25,6 +25,9 @@ def main():
     parser.add_argument("--note",       type=str,   default="",             help="Nota opcional para registrar en el CSV")
     args = parser.parse_args()
 
+    #id numeric based on timestamp
+    id = int(datetime.now().strftime("%Y%m%d-%H%M%S").replace("-", "").replace(":", ""))
+
     # 1) Fijar semillas
     helpers.set_seed(args.seed)
 
@@ -86,13 +89,13 @@ def main():
     # Guardar resultados en evaluations.csv
     os.makedirs("models", exist_ok=True)
     results = {
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "timestamp": id,
         "judge_name": args.judge_name,
-        "seed": args.seed,
         "resolution": args.resolution,
         "thr": args.thr,
-        "k": args.k,
+        "seed": args.seed,
         "n_images": args.n_images,
+        "pixels": args.k,
         "accuracy": accuracy,
         "note": args.note
     }

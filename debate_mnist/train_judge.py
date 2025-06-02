@@ -85,7 +85,10 @@ def main():
     parser.add_argument("--judge_name", type=str, default="judge_model", help="Nombre del modelo juez (sin extensión)")
     parser.add_argument("--note", type=str, default="", help="Nota opcional para registrar en el CSV")
     args = parser.parse_args()
-
+    
+    #id numeric based on timestamp
+    id = int(datetime.now().strftime("%Y%m%d-%H%M%S").replace("-", "").replace(":", ""))
+    
     # Fijar semillas para reproducibilidad
     helpers.set_seed(args.seed)
 
@@ -141,16 +144,16 @@ def main():
     
     # Guardar información del entrenamiento en judges.csv
     training_info = {
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "timestamp": id,
         "judge_name": args.judge_name,
-        "seed": args.seed,
         "resolution": args.resolution,
         "thr": args.thr,
-        "k": args.k,
+        "seed": args.seed,
         "epochs": args.epochs,
         "batch_size": args.batch_size,
         "lr": args.lr,
         "best_loss": round(best_loss,4),
+        "pixels": args.k,
         "accuracy": round(final_accuracy,3),
         "note": args.note
     }
