@@ -18,14 +18,24 @@ def load_judge_model(judge_name, resolution, device):
     judge_model.eval()
     return judge_model
 
-def get_agents(agent_type, judge_model, label, opponent_label, precommit, image, thr, rollouts, k):
+def get_agents(agent_type, judge_model, label, opponent_label, precommit, image, thr, rollouts, k, mixed_agents=False, honest_agent=None):
     """Inicializa los agentes según el tipo."""
-    if agent_type == "greedy":
-        agent_truth = GreedyAgent(judge_model, label, opponent_label, precommit, image, thr)
-        agent_liar = GreedyAgent(judge_model, opponent_label, label, precommit, image, thr)
+    if mixed_agents:
+        # Modo mixto: un agente MCTS y otro Greedy
+        if honest_agent == "mcts":
+            agent_truth = MCTSAgent(judge_model, label, opponent_label, precommit, image, thr, rollouts, k, True)
+            agent_liar = GreedyAgent(judge_model, opponent_label, label, precommit, image, thr)
+        else:  # honest_agent == "greedy"
+            agent_truth = GreedyAgent(judge_model, label, opponent_label, precommit, image, thr)
+            agent_liar = MCTSAgent(judge_model, opponent_label, label, precommit, image, thr, rollouts, k, False)
     else:
-        agent_truth = MCTSAgent(judge_model, label, opponent_label, precommit, image, thr, rollouts, k, True)
-        agent_liar = MCTSAgent(judge_model, opponent_label, label, precommit, image, thr, rollouts, k, False)
+        # Modo normal: ambos agentes del mismo tipo
+        if agent_type == "greedy":
+            agent_truth = GreedyAgent(judge_model, label, opponent_label, precommit, image, thr)
+            agent_liar = GreedyAgent(judge_model, opponent_label, label, precommit, image, thr)
+        else:
+            agent_truth = MCTSAgent(judge_model, label, opponent_label, precommit, image, thr, rollouts, k, True)
+            agent_liar = MCTSAgent(judge_model, opponent_label, label, precommit, image, thr, rollouts, k, False)
     return agent_truth, agent_liar
 
 def run_single_debate(image, agent_truth, agent_liar, args, device):
@@ -41,18 +51,28 @@ def run_single_debate(image, agent_truth, agent_liar, args, device):
     # Definir orden de agentes
     if args.starts == "honest":
         agent_order = [agent_truth, agent_liar]
+        agent_names = ["honest", "liar"]
     else:
         agent_order = [agent_liar, agent_truth]
+        agent_names = ["liar", "honest"]
+    
+    # Rastrear movimientos para visualización coloreada
+    debate_moves = []
     
     # Alternar turnos
     for move in range(args.k):
         current_agent_idx = move % 2
         current_agent = agent_order[current_agent_idx]
+        current_agent_name = agent_names[current_agent_idx]
+        
         pixel = current_agent.choose_pixel(mask, reveal_count=move)
         if pixel is None:
             break
         y, x = pixel
         mask[y, x] = 1.0
+        
+        # Guardar movimiento para visualización
+        debate_moves.append((y, x, current_agent_name, move + 1))
 
     # Calcular output del juez
     values_plane = image * mask
@@ -75,7 +95,8 @@ def run_single_debate(image, agent_truth, agent_liar, args, device):
         "logit_liar": logit_liar,
         "logits": output[0].cpu().numpy(),
         "revealed_positions": [(int(y), int(x)) for (y, x) in (mask > 0).nonzero(as_tuple=False).tolist()],
-        "pixels_revealed": int(mask.sum().item())
+        "pixels_revealed": int(mask.sum().item()),
+        "debate_moves": debate_moves
     }
     
 def run_exhaustive_precommit(image, label_true, args, judge_model, device):
@@ -100,7 +121,8 @@ def run_exhaustive_precommit(image, label_true, args, judge_model, device):
 
             # Instanciar agentes para ESTA semilla y ESTA etiqueta falsa
             agent_truth, agent_liar = get_agents(
-                args.agent_type, judge_model, label_true, wrong_lbl, args.precommit, image, args.thr, args.rollouts, args.k
+                args.agent_type, judge_model, label_true, wrong_lbl, args.precommit, image, args.thr, args.rollouts, args.k,
+                args.mixed_agents, args.honest_agent
             )
 
             res = run_single_debate(
@@ -123,7 +145,7 @@ def run_exhaustive_precommit(image, label_true, args, judge_model, device):
 
 def save_outputs(i, image, mask, meta, args, id):
     """Guarda la imagen, máscara y metadatos en el directorio de salida."""
-    if args.save_mask or args.save_play or args.save_images or args.save_metadata:
+    if args.save_mask or args.save_play or args.save_images or args.save_metadata or args.save_colored_debate:
         folder_note = f'_{args.note.replace(" ", "_")}' if args.note and len(args.note) < 20 else ""
         run_folder = f"outputs/debate_{id}{folder_note}"
         os.makedirs(run_folder, exist_ok=True)
@@ -139,18 +161,30 @@ def save_outputs(i, image, mask, meta, args, id):
     if args.save_play or args.save_metadata:
         meta_path = os.path.join(run_folder, f"sample_{i}_play.json")
         helpers.save_play(meta, meta_path)
+        
+    if args.save_colored_debate or args.save_metadata:
+        if 'debate_moves' in meta:
+            colored_path = os.path.join(run_folder, f"sample_{i}_colored_debate.png")
+            helpers.save_colored_debate(image, meta['debate_moves'], colored_path)
 
 def log_results(args, accuracy, id):
     os.makedirs("models", exist_ok=True)
+    
+    # Determinar el tipo de agente para el log
+    if args.mixed_agents:
+        agent_type_str = f"mixed_{args.honest_agent}_vs_{'mcts' if args.honest_agent == 'greedy' else 'greedy'}"
+    else:
+        agent_type_str = args.agent_type
+    
     results = {
         "timestamp": id,
         "judge_name": args.judge_name,
         "seed": args.seed,
         "resolution": args.resolution,
         "thr": args.thr,
-        "rollouts": (args.rollouts if args.agent_type == "mcts" else 0),
+        "rollouts": (args.rollouts if args.agent_type == "mcts" or args.mixed_agents else 0),
         "n_images": args.n_images,
-        "agent_type": args.agent_type,
+        "agent_type": agent_type_str,
         "pixels": args.k,
         "started": args.starts,
         "precommit": bool(args.precommit),
@@ -175,6 +209,9 @@ def main():
     parser.add_argument("--save_mask", action="store_true")
     parser.add_argument("--save_play", action="store_true")
     parser.add_argument("--save_metadata", action="store_true", help="Guardar metadatos (imagenes, mascaras y jugadas) de cada debate")
+    parser.add_argument("--save_colored_debate", action="store_true", help="Guardar imagen coloreada del debate con movimientos numerados")
+    parser.add_argument("--mixed_agents", action="store_true", help="Habilitar agentes de tipos diferentes (MCTS vs Greedy)")
+    parser.add_argument("--honest_agent", type=str, choices=["greedy", "mcts"], default="greedy", help="Tipo de agente que será honesto (cuando --mixed_agents está activado)")
     parser.add_argument("--precommit", action="store_true")
     parser.add_argument("--note", type=str, default="")
     parser.add_argument("--starts", type=str, choices=["honest", "liar"], default="liar")
@@ -218,7 +255,7 @@ def main():
             # No precommit, no hay opponent label fijo.
             agent_truth, agent_liar = get_agents(
                 args.agent_type, judge_model, label_true, None, args.precommit,
-                image, args.thr, args.rollouts, args.k
+                image, args.thr, args.rollouts, args.k, args.mixed_agents, args.honest_agent
             )
             res = run_single_debate(image, agent_truth, agent_liar, args, device)
             predicted_label = res["predicted_label"]
@@ -231,7 +268,8 @@ def main():
                 "pixels_revealed": res["pixels_revealed"],
                 "revealed_positions": res["revealed_positions"],
                 "predicted_label": int(predicted_label),
-                "logit_truth": float(res["logit_truth"]),}
+                "logit_truth": float(res["logit_truth"]),
+                "debate_moves": res["debate_moves"]}
             save_outputs(i, image, res["mask"], meta, args, id)
 
         total += 1
