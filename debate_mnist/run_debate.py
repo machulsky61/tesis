@@ -4,7 +4,8 @@ import torch
 from utils import data_utils, helpers
 from models.sparse_cnn import SparseCNN
 from agents.greedy_agent import GreedyAgent
-from agents.mcts_agent import MCTSAgent
+# from agents.mcts_agent import MCTSAgent
+from agents.mcts_fast import FastMCTSAgent as MCTSAgent
 from datetime import datetime
 from tqdm import tqdm
 import os
@@ -23,10 +24,8 @@ def get_agents(agent_type, judge_model, label, opponent_label, precommit, image,
         agent_truth = GreedyAgent(judge_model, label, opponent_label, precommit, image, thr)
         agent_liar = GreedyAgent(judge_model, opponent_label, label, precommit, image, thr)
     else:
-        agent_truth = MCTSAgent(judge_model, label, opponent_label, image, thr,
-                                rollouts=rollouts, total_moves=k, is_truth_agent=True)
-        agent_liar = MCTSAgent(judge_model, opponent_label, label, image, thr,
-                               rollouts=rollouts, total_moves=k, is_truth_agent=False)
+        agent_truth = MCTSAgent(judge_model, label, opponent_label, precommit, image, thr, rollouts, k, True)
+        agent_liar = MCTSAgent(judge_model, opponent_label, label, precommit, image, thr, rollouts, k, False)
     return agent_truth, agent_liar
 
 def run_single_debate(image, agent_truth, agent_liar, args, device):
