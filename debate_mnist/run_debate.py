@@ -284,8 +284,17 @@ def main():
     parser.add_argument("--starts", type=str, choices=["honest", "liar"], default="liar")
     args = parser.parse_args()
 
-    #id numeric based on timestamp
-    id = int(datetime.now().strftime("%Y%m%d-%H%M%S").replace("-", "").replace(":", ""))
+    # Generate descriptive experiment ID with timestamp suffix
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    precommit_status = "precommit" if args.precommit else "no-precommit"
+    
+    if args.mixed_agents:
+        # Format: {honest_agent}vs{liar_agent}_{pixels}px_{started}_{precommit_status}_{timestamp}
+        liar_agent = "mcts" if args.honest_agent == "greedy" else "greedy"
+        id = f"{args.honest_agent}_vs_{liar_agent}_{args.k}px_{args.starts}_{precommit_status}_{timestamp}"
+    else:
+        # Format: {agent_type}_{pixels}px_{started}_{precommit_status}_{timestamp}
+        id = f"{args.agent_type}_{args.k}px_{args.starts}_{precommit_status}_{timestamp}"
     
     helpers.set_seed(args.seed)
     _, test_loader = data_utils.load_datasets(resolution=args.resolution, thr=args.thr, batch_size=1)

@@ -86,8 +86,9 @@ def main():
     parser.add_argument("--note", type=str, default="", help="Nota opcional para registrar en el CSV")
     args = parser.parse_args()
     
-    #id numeric based on timestamp
-    id = int(datetime.now().strftime("%Y%m%d-%H%M%S").replace("-", "").replace(":", ""))
+    # Generate descriptive experiment ID for judge training
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    id = f"judge_{args.judge_name}_{args.resolution}px_{args.k}k_{timestamp}"
     
     # Fijar semillas para reproducibilidad
     helpers.set_seed(args.seed)
