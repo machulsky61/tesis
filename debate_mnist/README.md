@@ -11,20 +11,29 @@ This repository contains an implementation of the "AI Safety via Debate" experim
 ├── agents/
 │   ├── base_agent.py           # Base class for DebateAgent
 │   ├── greedy_agent.py         # Greedy agent selecting pixels myopically
-│   └── mcts_agent.py           # MCTS agent using Monte Carlo Tree Search
+│   ├── mcts_agent.py           # MCTS agent using Monte Carlo Tree Search
+│   └── mcts_fast.py            # Fast MCTS implementation
 ├── models/
 │   ├── sparse_cnn.py           # SparseCNN model definition (judge, 2 channels)
-│   └── judge_model.pth         # Pre-trained judge model
+│   ├── 28.pth                  # Pre-trained judge models
+│   ├── 16.pth
+│   ├── 28_4px.pth
+│   └── 16_4px.pth
 ├── outputs/
-│   ├── debate_id/              # Directory storing metadata of individual debates
-│   ├── debates.csv             # Log of debates (accuracy, etc.)
-│   └── judges.csv              # Data on trained judge models
+│   ├── debate_*/               # Directories with debate visualizations
+│   ├── debates.csv             # Log of symmetric debates
+│   ├── debates_asimetricos.csv # Log of asymmetric debates
+│   ├── judges.csv              # Data on trained judge models
+│   └── evaluations.csv         # Judge evaluation results
 ├── utils/
 │   ├── data_utils.py           # Data loading and DebateDataset class
-│   └── helpers.py              # Utility functions (seeding, saving images/JSON, CSV logging)
+│   └── helpers.py              # Utility functions with colored visualization support
 ├── train_judge.py              # Train the judge with partial masks
 ├── eval_judge.py               # Evaluate the judge with randomly masked images
-├── run_debate.py               # Run debates between two agents
+├── run_debate.py               # Run debates between two agents (enhanced)
+├── run_experiments.py          # Complete automation script
+├── quick_examples.py           # Non-interactive examples
+├── example_usage.md            # Detailed usage guide
 ├── requirements.txt
 └── README.md                   # This file
 ```
@@ -42,32 +51,44 @@ pip install -r requirements.txt
 
 ---
 
-## 🚀 3. Quick Usage
+## 🚀 3. Quick Start
 
-### 3.1 Train the judge (16×16 pixels, quick test run):
+### 3.1 🤖 Complete Automation (Recommended)
 
 ```bash
-python train_judge.py --resolution 16 --epochs 8
+python run_experiments.py
+```
+This interactive script handles everything: training judges, running experiments, and generating visualizations.
+
+### 3.2 ⚡ Quick Examples (Non-interactive)
+
+```bash
+python quick_examples.py
+```
+Choose from pre-configured examples like high-precision experiments, agent comparisons, etc.
+
+### 3.3 🎯 High-Precision Single Experiment
+
+```bash
+# 1 image, 2000 rollouts with colored visualization
+python run_debate.py --judge_name 28 --agent_type mcts --rollouts 2000 --n_images 1 --save_colored_debate --note "high_precision"
 ```
 
-### 3.2 Test debates (greedy) on a small subset of images:
+### 3.4 🔄 Mixed Agents (MCTS vs Greedy)
 
 ```bash
-python run_debate.py --resolution 16 --agent_type greedy --precommit --n_images 100 --save_metadata
+# MCTS honest vs Greedy liar
+python run_debate.py --judge_name 28 --mixed_agents --honest_agent mcts --rollouts 500 --n_images 50 --save_colored_debate --note "mixed_debate"
 ```
 
-### 3.3 Run larger debates (MCTS)
+### 3.5 📊 Traditional Usage
 
 ```bash
-python run_debate.py --resolution 16 --precommit --agent_type mcts --rollouts 1000 --n_images 1000
-```
+# Train judge
+python train_judge.py --resolution 28 --epochs 64 --judge_name test_judge
 
-> 💡 **Tip:** MCTS is computationally expensive. For quick testing or demonstration purposes, it's better to use `greedy` with 1000–2000 images. Use 10000 images with `mcts` only if replicating the original paper.
-
-### 3.4 (Optional) Repeat experiment for 4 pixels:
-```bash
-python train_judge.py --resolution 16 --k 4 --epochs 8 --judge_name 4px
-python run_debate.py --resolution 16 --k 4 --judge_name 4px --precommit --agent_type greedy --n_images 1000
+# Run debate with visualization
+python run_debate.py --judge_name test_judge --agent_type greedy --n_images 100 --save_colored_debate --save_metadata
 ```
 ---
 
@@ -124,6 +145,9 @@ Some arguments are used both when training the judge and running the debate, and
 | `--save_mask`     | Save PNG visualizations of masked images after debate | store\_true   | False         |
 | `--save_play`     | Save JSON logs of pixel play sequences                | store\_true   | False         |
 | `--save_metadata` | Save all metadata (images, mask, and play logs)       | store\_true   | False         |
+| `--save_colored_debate` | Save colored visualization with move order      | store\_true   | False         |
+| `--mixed_agents`  | Enable asymmetric debates (MCTS vs Greedy)            | store\_true   | False         |
+| `--honest_agent`  | Type of honest agent when using mixed agents          | greedy / mcts | greedy        |
 
 ---
 
