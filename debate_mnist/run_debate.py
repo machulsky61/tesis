@@ -96,7 +96,8 @@ def run_single_debate(image, agent_truth, agent_liar, args, device):
         "logits": output[0].cpu().numpy(),
         "revealed_positions": [(int(y), int(x)) for (y, x) in (mask > 0).nonzero(as_tuple=False).tolist()],
         "pixels_revealed": int(mask.sum().item()),
-        "debate_moves": debate_moves
+        "debate_moves": debate_moves,
+        "liar_class": agent_liar.my_class if hasattr(agent_liar, 'my_class') else None
     }
     
 def run_exhaustive_precommit(image, label_true, args, judge_model, device):
@@ -165,35 +166,101 @@ def save_outputs(i, image, mask, meta, args, id):
     if args.save_colored_debate or args.save_metadata:
         if 'debate_moves' in meta:
             colored_path = os.path.join(run_folder, f"sample_{i}_colored_debate.png")
-            helpers.save_colored_debate(image, meta['debate_moves'], colored_path)
+            
+            # Preparar información del debate
+            predicted_label = meta.get('predicted_label', 0)
+            
+            # Calcular predicted_logit correctamente
+            if 'logits' in meta and isinstance(meta['logits'], dict):
+                predicted_logit = meta['logits'].get(str(predicted_label), 0.0)
+            elif meta.get('predicted_label') == meta.get('truth_label'):
+                # Si es correcto, usar honest_logit
+                predicted_logit = meta.get('logit_truth', 0.0)
+            elif 'liar_logit' in meta and meta['liar_logit'] != "N/A":
+                # Si es incorrecto y tenemos liar_logit, usarlo
+                predicted_logit = meta.get('liar_logit', 0.0)
+            else:
+                predicted_logit = 0.0
+            
+            debate_info = {
+                'run_id': str(id),
+                'sample_index': i,
+                'true_label': meta.get('truth_label', '?'),
+                'predicted_label': predicted_label,
+                'predicted_logit': predicted_logit,
+                'honest_logit': meta.get('logit_truth', 0.0),
+            }
+            
+            # Determinar tipos de agentes
+            if args.mixed_agents:
+                debate_info['honest_agent_type'] = args.honest_agent
+                debate_info['liar_agent_type'] = 'mcts' if args.honest_agent == 'greedy' else 'greedy'
+            else:
+                debate_info['honest_agent_type'] = args.agent_type
+                debate_info['liar_agent_type'] = args.agent_type
+            
+            # Información adicional del debate
+            debate_info['first_move'] = args.starts
+            
+            # Agregar información del mentiroso si está disponible
+            if 'liar_class' in meta and meta['liar_class'] is not None:
+                debate_info['liar_label'] = meta['liar_class']
+                if 'logit_liar' in meta and meta['logit_liar'] != "N/A":
+                    debate_info['liar_logit'] = meta['logit_liar']
+            
+            # Marcar si es debate representativo
+            if 'representative_debate' in meta:
+                debate_info['representative_debate'] = meta['representative_debate']
+            
+            helpers.save_colored_debate(image, meta['debate_moves'], colored_path, debate_info)
 
 def log_results(args, accuracy, id):
-    os.makedirs("models", exist_ok=True)
+    os.makedirs("outputs", exist_ok=True)
     
-    # Determinar el tipo de agente para el log
     if args.mixed_agents:
-        agent_type_str = f"mixed_{args.honest_agent}_vs_{'mcts' if args.honest_agent == 'greedy' else 'greedy'}"
+        # Debates asimétricos - usar archivo específico
+        liar_agent_type = 'mcts' if args.honest_agent == 'greedy' else 'greedy'
+        
+        results = {
+            "timestamp": id,
+            "judge_name": args.judge_name,
+            "seed": args.seed,
+            "resolution": args.resolution,
+            "thr": args.thr,
+            "rollouts": args.rollouts,
+            "n_images": args.n_images,
+            "pixels": args.k,
+            "started": args.starts,
+            "precommit": bool(args.precommit),
+            "honest_agent_type": args.honest_agent,
+            "liar_agent_type": liar_agent_type,
+            "accuracy": accuracy,
+            "note": args.note,
+        }
+        debates_csv_path = "outputs/debates_asimetricos.csv"
+        helpers.log_results_csv(debates_csv_path, results)
+        print(f"Resultados de debate asimétrico registrados en {debates_csv_path}")
+        
     else:
-        agent_type_str = args.agent_type
-    
-    results = {
-        "timestamp": id,
-        "judge_name": args.judge_name,
-        "seed": args.seed,
-        "resolution": args.resolution,
-        "thr": args.thr,
-        "rollouts": (args.rollouts if args.agent_type == "mcts" or args.mixed_agents else 0),
-        "n_images": args.n_images,
-        "agent_type": agent_type_str,
-        "pixels": args.k,
-        "started": args.starts,
-        "precommit": bool(args.precommit),
-        "accuracy": accuracy,
-        "note": args.note,
-    }
-    debates_csv_path = "outputs/debates.csv"
-    helpers.log_results_csv(debates_csv_path, results)
-    print(f"Resultados registrados en {debates_csv_path}")
+        # Debates simétricos - usar archivo normal
+        results = {
+            "timestamp": id,
+            "judge_name": args.judge_name,
+            "seed": args.seed,
+            "resolution": args.resolution,
+            "thr": args.thr,
+            "rollouts": (args.rollouts if args.agent_type == "mcts" else 0),
+            "n_images": args.n_images,
+            "agent_type": args.agent_type,
+            "pixels": args.k,
+            "started": args.starts,
+            "precommit": bool(args.precommit),
+            "accuracy": accuracy,
+            "note": args.note,
+        }
+        debates_csv_path = "outputs/debates.csv"
+        helpers.log_results_csv(debates_csv_path, results)
+        print(f"Resultados registrados en {debates_csv_path}")
 
 def main():
     parser = argparse.ArgumentParser(description="Ejecutar experimento de debate AI Safety via Debate en MNIST")
@@ -243,14 +310,73 @@ def main():
             )
             predicted_label = winner_label
             correct += 1 if predicted_label == label_true else 0
+            
+            # Para precommit, no tenemos movimientos individuales, pero podemos crear metadata básica
             meta = {
                 "index": i,
                 "truth_label": int(label_true),
                 "winner_label": int(winner_label),
+                "predicted_label": int(winner_label),
                 "avg_logits": {str(lbl): {"true": t, "false": f}
-                            for lbl, (t, f) in avg_logits.items()}
+                            for lbl, (t, f) in avg_logits.items()},
+                "debate_moves": [],  # Sin movimientos específicos en precommit
+                "liar_class": None,  # Será determinado por el ganador si no es la clase real
+                "logit_truth": 0.0,  # Se calculará abajo
+                "logit_liar": "N/A"  # En precommit exhaustivo, varía por clase
             }
-            save_outputs(i, image, torch.zeros_like(image[0]), meta, args, id)
+            
+            # Calcular logits apropiados para precommit
+            representative_liar_class = None
+            if avg_logits:
+                # El honest logit es el promedio del honesto para la clase real
+                # En avg_logits tenemos: {wrong_label: (true_logit, false_logit)}
+                if len(avg_logits) > 0:
+                    # Tomar el primer true_logit (logit del honesto)
+                    first_entry = next(iter(avg_logits.values()))
+                    meta["logit_truth"] = first_entry[0]
+            
+            # Determinar el mentiroso y su clase
+            if winner_label != label_true:
+                # Mentiroso ganó
+                meta["liar_class"] = winner_label
+                representative_liar_class = winner_label
+                if winner_label in avg_logits:
+                    meta["logit_liar"] = avg_logits[winner_label][1]  # logit del mentiroso para su clase
+            else:
+                # Honesto ganó, pero aún podemos mostrar el mejor mentiroso
+                best_liar_class = None
+                best_liar_logit = float('-inf')
+                for wrong_lbl, (true_logit, false_logit) in avg_logits.items():
+                    if false_logit > best_liar_logit:
+                        best_liar_logit = false_logit
+                        best_liar_class = wrong_lbl
+                if best_liar_class is not None:
+                    meta["liar_class"] = best_liar_class
+                    meta["logit_liar"] = best_liar_logit
+                    representative_liar_class = best_liar_class
+            
+            # Ejecutar debate representativo solo si necesitamos visualización
+            if args.save_colored_debate or args.save_metadata:
+                # Usar la clase representativa ya calculada
+                if representative_liar_class is None:
+                    representative_liar_class = 0  # Fallback
+                
+                # Ejecutar debate representativo para visualización
+                helpers.set_seed(args.seed)  # Semilla consistente para reproducibilidad
+                repr_agent_truth, repr_agent_liar = get_agents(
+                    args.agent_type, judge_model, label_true, representative_liar_class, 
+                    True, image, args.thr, args.rollouts, args.k, args.mixed_agents, args.honest_agent
+                )
+                
+                representative_result = run_single_debate(
+                    image, repr_agent_truth, repr_agent_liar, args, device
+                )
+                
+                # Usar los movimientos del debate representativo para visualización
+                meta["debate_moves"] = representative_result["debate_moves"]
+                meta["representative_debate"] = True  # Marcar que es representativo
+            
+            save_outputs(i, image, torch.zeros_like(image), meta, args, id)
         else:
             # No precommit, no hay opponent label fijo.
             agent_truth, agent_liar = get_agents(

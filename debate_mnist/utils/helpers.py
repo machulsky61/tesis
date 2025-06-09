@@ -6,6 +6,27 @@ import numpy as np
 import torch
 from datetime import datetime
 
+def load_times_font(size=18, bold=False):
+    # Lista de rutas probables
+    candidates = [
+        "C:/Windows/Fonts/timesnewroman.ttf",
+        "C:/Windows/Fonts/times.ttf",
+        "/usr/share/fonts/truetype/msttcorefonts/times.ttf",
+        "/System/Library/Fonts/Supplemental/Times New Roman.ttf",
+        "times.ttf"
+    ]
+    
+    if bold:
+        candidates = [path.replace("times", "timesbd") for path in candidates]
+
+    for path in candidates:
+        if os.path.exists(path):
+            from PIL import ImageFont
+            return ImageFont.truetype(path, size)
+    
+    from PIL import ImageFont
+    return ImageFont.load_default()  # fallback
+
 def set_seed(seed):
     """Fija la semilla global para reproducibilidad completa."""
     random.seed(seed)
@@ -103,17 +124,99 @@ def save_play(metadata, filepath):
     with open(filepath, 'w') as f:
         json.dump(metadata, f, indent=4)
 
-def save_colored_debate(original_image, debate_moves, filepath):
+def save_colored_debate(original_image, debate_moves, filepath, debate_info=None):
     """
-    Guarda una imagen PNG que muestra los píxeles del debate coloreados por agente y numerados por orden.
+    Guarda una imagen PNG que muestra los píxeles del debate coloreados por agente y numerados por orden,
+    con información detallada del debate.
     
     Args:
         original_image: imagen original (Tensor HxW o 1xHxW)
         debate_moves: lista de movimientos [(y, x, agent_type, move_number), ...]
                      donde agent_type es 'honest' o 'liar'
         filepath: ruta donde guardar la imagen
+        debate_info: diccionario con información del debate {
+            'debate_id': str, 'run_id': str, 'sample_index': int,
+            'true_label': int, 'liar_label': int (opcional),
+            'predicted_label': int, 'predicted_logit': float,
+            'honest_logit': float, 'liar_logit': float (opcional),
+            'honest_agent_type': str, 'liar_agent_type': str,
+            'agent_types': str (descripción general)
+        }
     """
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    
+    # Generar texto informativo con estilo prolijo
+    def generate_info_text():
+        if not debate_info:
+            return []
+        
+        
+        info_lines = []
+        
+        # Titulo general
+        run_id = debate_info.get('run_id', '?????')
+        info_lines.append(f"Debate Simulation — ID: {run_id}")
+        info_lines.append("")
+        
+        # Configuracion
+        honest_type = debate_info.get('honest_agent_type', 'unknown').title()
+        liar_type = debate_info.get('liar_agent_type', 'unknown').title()
+        sample_idx = debate_info.get('sample_index', '?')
+        
+        # Determine if precommit
+        has_precommit = ('liar_label' in debate_info and debate_info['liar_label'] is not None) or \
+                       debate_info.get('representative_debate', False)
+        
+        # First move
+        first_move = debate_info.get('first_move', 'liar')
+        first_move_text = "Blue Player" if first_move == "honest" else "Red Player"
+        
+        info_lines.append("Configuration:")
+        info_lines.append(f"  - Agents: {honest_type} (Blue) vs {liar_type} (Red)")
+        info_lines.append(f"  - Precommit: {'Enabled' if has_precommit else 'Disabled'}")
+        info_lines.append(f"  - First move: {first_move_text}")
+        info_lines.append(f"  - Sample: #{sample_idx}")
+        info_lines.append("")
+        
+        # Resultado
+        true_label = debate_info.get('true_label', '?')
+        pred_label = debate_info.get('predicted_label', '?')
+        pred_logit = debate_info.get('predicted_logit', 0.0)
+        
+        if str(true_label) == str(pred_label):
+            result_symbol = "Correct"
+        else:
+            result_symbol = "Incorrect"
+        
+        info_lines.append("Outcome:")
+        info_lines.append(f"  - True label: {true_label}")
+        info_lines.append(f"  - Predicted: {pred_label} → {result_symbol}")
+        info_lines.append(f"  - Logit (class {pred_label}): {pred_logit:.2f}")
+        info_lines.append("")
+        
+        # Blue Player (Honest)
+        honest_logit = debate_info.get('honest_logit', 0.0)
+        info_lines.append("Blue Player (Honest):")
+        info_lines.append(f"  - Agent type: {honest_type}")
+        info_lines.append(f"  - Target class: {true_label}")
+        info_lines.append(f"  - Logit (class {true_label}): {honest_logit:.2f}")
+        info_lines.append("")
+        
+        # Red Player (Liar)
+        info_lines.append("Red Player (Liar):")
+        info_lines.append(f"  - Agent type: {liar_type}")
+        
+        if has_precommit and 'liar_label' in debate_info:
+            liar_label = debate_info['liar_label']
+            liar_logit = debate_info.get('liar_logit', 0.0)
+            info_lines.append(f"  - Target class: {liar_label}")
+            info_lines.append(f"  - Logit (class {liar_label}): {liar_logit:.2f}")
+        else:
+            info_lines.append("  - Target class: Unspecified (no precommit)")
+        
+        return info_lines
+    
+    info_text = generate_info_text()
     
     # Convertir imagen a numpy array
     if torch.is_tensor(original_image):
@@ -131,14 +234,26 @@ def save_colored_debate(original_image, debate_moves, filepath):
         
         # Escalar la imagen para mejor visualización (imagen de alta resolución)
         scale_factor = max(1, 800 // max(H, W))  # Escalar para que sea al menos 800px
-        new_H, new_W = H * scale_factor, W * scale_factor
+        scaled_H, scaled_W = H * scale_factor, W * scale_factor
         
-        # Convertir a RGB y escalar
+        # Calcular espacio para información (panel lateral)
+        info_panel_width = 500 if info_text else 0  # Más ancho para el nuevo formato
+        total_width = scaled_W + info_panel_width
+        total_height = max(scaled_H, len(info_text) * 25 + 80) if info_text else scaled_H  # Más espacio para fuentes grandes
+        
+        # Crear imagen completa con espacio para información
+        full_img = Image.new('RGB', (total_width, total_height), color=(240, 240, 240))
+        
+        # Convertir imagen original a RGB y escalar
         img_rgb = np.stack([img_np, img_np, img_np], axis=-1)
         img_pil = Image.fromarray(img_rgb, mode='RGB')
-        img_pil = img_pil.resize((new_W, new_H), Image.NEAREST)  # NEAREST para mantener píxeles nítidos
+        img_pil = img_pil.resize((scaled_W, scaled_H), Image.NEAREST)  # NEAREST para mantener píxeles nítidos
         
-        draw = ImageDraw.Draw(img_pil)
+        # Pegar la imagen escalada en la imagen completa
+        full_img.paste(img_pil, (0, 0))
+        
+        # Dibujar sobre la imagen completa
+        draw = ImageDraw.Draw(full_img)
         
         # Colores para los agentes
         honest_color = (0, 100, 255)    # Azul
@@ -206,7 +321,39 @@ def save_colored_debate(original_image, debate_moves, filepath):
                     print(f"Warning: No se pudo dibujar el número {move_number}: {e}")
                     pass
         
-        img_pil.save(filepath)
+        # Dibujar panel de información
+        if info_text and info_panel_width > 0:
+            info_x = scaled_W + 25  # Margen desde la imagen
+            info_y = 25
+            
+            # Cargar fuentes Times New Roman con función robusta
+            title_font = load_times_font(24, bold=True)     # Título en negrita
+            header_font = load_times_font(20, bold=True)    # Headers en negrita
+            content_font = load_times_font(18, bold=False)  # Contenido normal
+            
+            # Dibujar cada línea con formato apropiado (todo en negro)
+            for i, line in enumerate(info_text):
+                if line == "":  # Blank line
+                    info_y += 15
+                elif line.startswith("Debate Simulation"):
+                    # Main title
+                    draw.text((info_x, info_y), line, fill=(0, 0, 0), font=title_font)
+                    info_y += 35
+                elif line.startswith("Configuration:") or line.startswith("Outcome:") or \
+                     line.startswith("Blue Player") or line.startswith("Red Player"):
+                    # Section headers
+                    draw.text((info_x, info_y), line, fill=(0, 0, 0), font=header_font)
+                    info_y += 28
+                elif line.startswith("  -"):
+                    # Indented details
+                    draw.text((info_x, info_y), line, fill=(0, 0, 0), font=content_font)
+                    info_y += 24
+                else:
+                    # Normal text
+                    draw.text((info_x, info_y), line, fill=(0, 0, 0), font=content_font)
+                    info_y += 26
+        
+        full_img.save(filepath)
         
     except ImportError:
         # Fallback usando OpenCV con escalado
@@ -275,6 +422,9 @@ def log_results_csv(logfile, results):
         columns = ["timestamp","judge_name","resolution","thr","seed", "epochs","batch_size","lr","best_loss", "pixels", "accuracy","note"]
     elif "evaluations.csv" in logfile:
         columns = ["timestamp","judge_name","resolution","thr","seed", "n_images", "pixels", "accuracy","note"]
+    elif "debates_asimetricos.csv" in logfile:
+        columns = ["timestamp","judge_name","resolution","thr","seed", "rollouts","n_images", "pixels", "started","precommit", 
+                  "honest_agent_type","liar_agent_type","accuracy","note"]
     elif "debates.csv" in logfile:
         columns = ["timestamp","judge_name","resolution","thr","seed", "rollouts","n_images","agent_type", "pixels", "started","precommit", "accuracy","note"]
     else:
