@@ -112,17 +112,14 @@ def create_graph1_judge_vs_debate(debates_df, evaluations_df, output_dir="output
             greedy_honest_rate = 0
         greedy_honest.append(greedy_honest_rate * 100)
         
-        # MCTS debate - honest success rate with precommit (only for k=6)
-        if k == 6:
-            mcts_data = debates_df[
-                (debates_df['pixels'] == k) & 
-                (debates_df['agent_type'] == 'mcts') & 
-                (debates_df['precommit'] == True)
-            ]
-            mcts_honest_rate = mcts_data['accuracy'].mean() if not mcts_data.empty else 0
-            if pd.isna(mcts_honest_rate):
-                mcts_honest_rate = 0
-        else:
+        # MCTS debate - honest success rate with precommit
+        mcts_data = debates_df[
+            (debates_df['pixels'] == k) & 
+            (debates_df['agent_type'] == 'mcts') & 
+            (debates_df['precommit'] == True)
+        ]
+        mcts_honest_rate = mcts_data['accuracy'].mean() if not mcts_data.empty else 0
+        if pd.isna(mcts_honest_rate):
             mcts_honest_rate = 0
         mcts_honest.append(mcts_honest_rate * 100)
     
@@ -139,10 +136,10 @@ def create_graph1_judge_vs_debate(debates_df, evaluations_df, output_dir="output
                    label='Judge Alone (Random Pixels)', 
                    color=COLORS['judge'], alpha=0.9, edgecolor='white', linewidth=1)
     bars2 = ax.bar(x_pos, greedy_honest, width, 
-                   label='Greedy Debate (With Precommit)', 
+                   label='Greedy Debate (Precommit)', 
                    color=COLORS['greedy'], alpha=0.9, edgecolor='white', linewidth=1)
     bars3 = ax.bar(x_pos + width, mcts_honest, width, 
-                   label='MCTS Debate (With Precommit)', 
+                   label='MCTS Debate (Precommit)', 
                    color=COLORS['mcts'], alpha=0.9, edgecolor='white', linewidth=1)
     
     # Customize chart
@@ -152,12 +149,13 @@ def create_graph1_judge_vs_debate(debates_df, evaluations_df, output_dir="output
     ax.set_xticks(x_pos)
     ax.set_xticklabels([f'k={k}' for k in k_values], fontsize=12)
     
-    # Set y-axis limits for better zoom
-    ax.set_ylim(y_min, y_max)
     
-    # Enhanced grid with more tick marks
-    y_ticks = np.arange(y_min, y_max + 1, max(1, (y_max - y_min) / 10))
+    # Enhanced grid with fixed scale (steps of 5)
+    y_min_rounded = int(y_min // 5) * 5
+    y_max_rounded = int((y_max + 4) // 5) * 5
+    y_ticks = np.arange(y_min_rounded, y_max_rounded + 1, 5)
     ax.set_yticks(y_ticks)
+    ax.set_ylim(y_min_rounded, y_max_rounded)
     ax.grid(axis='y', alpha=0.3, linestyle='--', linewidth=0.5)
     ax.set_axisbelow(True)
     
@@ -205,6 +203,8 @@ def create_graph2_precommit_impact(debates_df, output_dir="outputs"):
         ('greedy', 4, 'liar'),
         ('greedy', 6, 'honest'),
         ('greedy', 6, 'liar'),
+        ('mcts', 4, 'honest'),
+        ('mcts', 4, 'liar'),
         ('mcts', 6, 'honest'),
         ('mcts', 6, 'liar')
     ]
@@ -275,9 +275,12 @@ def create_graph2_precommit_impact(debates_df, output_dir="outputs"):
     # Set y-axis limits for better zoom
     ax.set_ylim(y_min, y_max)
     
-    # Enhanced grid with more tick marks
-    y_ticks = np.arange(y_min, y_max + 1, max(1, (y_max - y_min) / 10))
+    # Enhanced grid with fixed scale (steps of 5)
+    y_min_rounded = int(y_min // 5) * 5
+    y_max_rounded = int((y_max + 4) // 5) * 5
+    y_ticks = np.arange(y_min_rounded, y_max_rounded + 1, 5)
     ax.set_yticks(y_ticks)
+    ax.set_ylim(y_min_rounded, y_max_rounded)
     ax.grid(axis='y', alpha=0.3, linestyle='--', linewidth=0.5)
     ax.set_axisbelow(True)
     
@@ -345,8 +348,8 @@ def create_graph3_agent_comparison(debates_df, output_dir="outputs"):
         
         # Only add if we have data for at least one agent type
         if greedy_rate > 0 or mcts_rate > 0:
-            precommit_str = "Con" if precommit else "Sin"
-            condition_label = f"{k}px, {precommit_str} Precommit\n{starter.title()} Starts"
+            precommit_str = "" if precommit else "No "
+            condition_label = f"{k}px, {precommit_str}Precommit\nStarted: {starter.title()}"
             conditions.append(condition_label)
             greedy_rates.append(greedy_rate)
             mcts_rates.append(mcts_rate)
@@ -384,9 +387,12 @@ def create_graph3_agent_comparison(debates_df, output_dir="outputs"):
     # Set y-axis limits for better zoom
     ax.set_ylim(y_min, y_max)
     
-    # Enhanced grid with more tick marks
-    y_ticks = np.arange(y_min, y_max + 1, max(1, (y_max - y_min) / 10))
+    # Enhanced grid with fixed scale (steps of 5)
+    y_min_rounded = int(y_min // 5) * 5
+    y_max_rounded = int((y_max + 4) // 5) * 5
+    y_ticks = np.arange(y_min_rounded, y_max_rounded + 1, 5)
     ax.set_yticks(y_ticks)
+    ax.set_ylim(y_min_rounded, y_max_rounded)
     ax.grid(axis='y', alpha=0.3, linestyle='--', linewidth=0.5)
     ax.set_axisbelow(True)
     
