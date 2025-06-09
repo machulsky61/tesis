@@ -11,4 +11,7 @@ timestamp,judge_name,resolution,thr,seed,rollouts,n_images,agent_type,pixels,sta
 20250608131307,28,28,0.0,42,512,100,mcts,6,liar,True,0.97,paper=90.4%
 20250608165716,28,28,0.0,42,512,100,mcts,6,honest,False,0.71,paper=67.4%
 20250608165041,28,28,0.0,42,512,100,mcts,6,liar,False,0.82,paper=81.5%
-
+20250609125924,28_4px,28,0.0,42,512,100,mcts,4,liar,False,0.69,paper=68.4%
+20250609130137,28_4px,28,0.0,42,512,100,mcts,4,liar,True,0.91,paper=86.7%
+20250609135658,28_4px,28,0.0,42,512,100,mcts,4,honest,False,0.54,paper=51.0%
+20250609135913,28_4px,28,0.0,42,512,100,mcts,4,honest,True,0.91,paper=83.8%
