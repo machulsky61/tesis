@@ -47,10 +47,8 @@ Entrenar 28_4px (Resolución 28x28, 4 píxeles) (y/n) [n]: y
 ¿Entrenar un juez con configuración personalizada? (y/n) [n]: n
 
 📋 Se entrenarán 2 modelos juez:
-  - 16: Resolución 16x16, 6 píxeles (32 épocas, ~16 minutos)
-  - 28_4px: Resolución 28x28, 4 píxeles (64 épocas, ~32 minutos)
-
-⏰ Tiempo estimado total de entrenamiento: 48 minutos
+  - 16: Resolución 16x16, 6 píxeles (32 épocas)
+  - 28_4px: Resolución 28x28, 4 píxeles (64 épocas)
 
 ¿Proceder con el entrenamiento? (y/n) [n]: y
 ```
@@ -160,7 +158,6 @@ Número de rollouts para MCTS [500]: 800
 📊 RESUMEN DE EXPERIMENTOS SELECCIONADOS
 ================================================================================
 Total de experimentos: 15
-Tiempo estimado total: 2.5 horas
 
 Experimentos a ejecutar:
  1. Greedy vs Greedy - baseline
@@ -179,8 +176,6 @@ Experimentos a ejecutar:
 14. Comparación MCTS seed123
 15. Escalabilidad MCTS 50 rollouts
 
-⏰ Tiempo estimado de ejecución: 2.5 horas
-
 ¿Proceder con la ejecución de todos los experimentos? (y/n) [n]: y
 ```
 
@@ -196,7 +191,7 @@ Experimentos a ejecutar:
 🚀 Ejecutando: Greedy vs Greedy - baseline
 Comando: python run_debate.py --judge_name 28_4px --resolution 28 --agent_type greedy --n_images 500 --note greedy_baseline
 ============================================================
-✅ Completado en 45 segundos
+✅ Completado exitosamente
 
 🔄 Progreso: 2/15 (13.3%)
 ...
@@ -210,7 +205,6 @@ Comando: python run_debate.py --judge_name 28_4px --resolution 28 --agent_type g
 ================================================================================
 ✅ Exitosos: 15
 ❌ Fallidos: 0
-⏱️  Tiempo total: 2.3 horas
 📊 Resultados guardados en:
    - outputs/debates.csv (debates simétricos)
    - outputs/debates_asimetricos.csv (debates asimétricos)

@@ -6,7 +6,6 @@ Incluye entrenamiento de jueces, experimentos y visualizaciones configurables.
 
 import subprocess
 import sys
-import time
 import os
 from datetime import datetime
 
@@ -285,7 +284,6 @@ def main():
     print("="*80)
     
     experiments = []
-    total_estimated_time = 0
     
     # === 1. EXPERIMENTOS SIMÉTRICOS ===
     print("\n1️⃣ EXPERIMENTOS SIMÉTRICOS (mismo tipo de agente)")
@@ -314,7 +312,6 @@ def main():
             cmd += f" --note {note}"
             
             experiments.append((cmd, description))
-            total_estimated_time += estimate_time("greedy", default_images_greedy)
     
     if get_yes_no("¿Ejecutar experimentos MCTS vs MCTS?"):
         mcts_variants = []
@@ -340,7 +337,6 @@ def main():
             cmd += f" --note {note}"
             
             experiments.append((cmd, description))
-            total_estimated_time += estimate_time("mcts", default_images_mcts, default_rollouts)
     
     # === 2. EXPERIMENTOS ASIMÉTRICOS ===
     print("\n2️⃣ EXPERIMENTOS ASIMÉTRICOS (MCTS vs Greedy)")
@@ -369,7 +365,6 @@ def main():
             cmd += f" --note {note}"
             
             experiments.append((cmd, description))
-            total_estimated_time += estimate_time("mixed", default_images_mcts)
     
     if get_yes_no("¿Ejecutar experimentos Greedy Honesto vs MCTS Mentiroso?"):
         async_variants_2 = []
@@ -395,7 +390,6 @@ def main():
             cmd += f" --note {note}"
             
             experiments.append((cmd, description))
-            total_estimated_time += estimate_time("mixed", default_images_mcts)
     
     # === 3. EXPERIMENTOS ESPECIALES ===
     print("\n3️⃣ EXPERIMENTOS ESPECIALES")
@@ -408,7 +402,6 @@ def main():
                 cmd = f"python run_debate.py --judge_name {judge_name} --resolution {resolution} --agent_type mcts --rollouts {rollouts} --n_images {n_imgs} --note mcts_{rollouts}_rollouts"
                 description = f"MCTS con {rollouts} rollouts"
                 experiments.append((cmd, description))
-                total_estimated_time += estimate_time("mcts", n_imgs, rollouts)
     
     if get_yes_no("¿Ejecutar experimentos con diferentes semillas (reproducibilidad)?"):
         seeds = [42, 123, 456, 789]
@@ -419,15 +412,12 @@ def main():
                 if base_config == "greedy":
                     cmd = f"python run_debate.py --judge_name {judge_name} --resolution {resolution} --agent_type greedy --n_images 500 --seed {seed} --note greedy_seed{seed}"
                     description = f"Greedy con semilla {seed}"
-                    total_estimated_time += estimate_time("greedy", 500)
                 elif base_config == "mcts":
                     cmd = f"python run_debate.py --judge_name {judge_name} --resolution {resolution} --agent_type mcts --rollouts {default_rollouts} --n_images 300 --seed {seed} --note mcts_seed{seed}"
                     description = f"MCTS con semilla {seed}"
-                    total_estimated_time += estimate_time("mcts", 300, default_rollouts)
                 else:  # mixed
                     cmd = f"python run_debate.py --judge_name {judge_name} --resolution {resolution} --mixed_agents --honest_agent mcts --rollouts {default_rollouts} --n_images 300 --seed {seed} --note mixed_seed{seed}"
                     description = f"Mixed con semilla {seed}"
-                    total_estimated_time += estimate_time("mixed", 300)
                 
                 experiments.append((cmd, description))
     
@@ -455,32 +445,18 @@ def main():
                 if get_yes_no(f"  - Visualización {exp_type}"):
                     description = f"Visualización {exp_type}"
                     experiments.append((cmd_template, description))
-                    total_estimated_time += estimate_time("greedy", 30)  # Estimación conservadora
         
         # Experimentos de visualización personalizados
         for cmd, note, description in viz_config['custom_experiments']:
             full_cmd = f"python run_debate.py --judge_name {judge_name} --resolution {resolution} {cmd}{viz_flags} --note {note}"
             experiments.append((full_cmd, description))
             
-            # Estimar tiempo basado en el tipo de experimento
-            if "mcts" in cmd:
-                rollouts_match = [int(s) for s in cmd.split() if s.isdigit()]
-                rollouts = rollouts_match[0] if rollouts_match else 500
-                n_images = 1 if "n_images 1" in cmd else 10
-                total_estimated_time += estimate_time("mcts", n_images, rollouts)
-            elif "mixed" in cmd:
-                n_images = 1 if "n_images 1" in cmd else 10
-                total_estimated_time += estimate_time("mixed", n_images)
-            else:
-                n_images = 1 if "n_images 1" in cmd else 10
-                total_estimated_time += estimate_time("greedy", n_images)
     
     # === RESUMEN Y CONFIRMACIÓN ===
     print("\n" + "="*80)
     print("📊 RESUMEN DE EXPERIMENTOS SELECCIONADOS")
     print("="*80)
     print(f"Total de experimentos: {len(experiments)}")
-    print(f"Tiempo estimado total: {format_time(total_estimated_time)}")
     print("\nExperimentos a ejecutar:")
     
     for i, (cmd, desc) in enumerate(experiments, 1):
@@ -490,7 +466,6 @@ def main():
         print("❌ No se seleccionaron experimentos para ejecutar.")
         return
     
-    print(f"\n⏰ Tiempo estimado de ejecución: {format_time(total_estimated_time)}")
     
     if not get_yes_no("\n¿Proceder con la ejecución de todos los experimentos?"):
         print("❌ Ejecución cancelada por el usuario.")
@@ -501,7 +476,6 @@ def main():
     print("🚀 INICIANDO EJECUCIÓN DE EXPERIMENTOS")
     print("="*80)
     
-    start_time = time.time()
     successful = 0
     failed = 0
     
@@ -516,13 +490,11 @@ def main():
                 break
     
     # === RESULTADOS FINALES ===
-    total_time = time.time() - start_time
     print("\n" + "="*80)
     print("🏁 EXPERIMENTOS COMPLETADOS")
     print("="*80)
     print(f"✅ Exitosos: {successful}")
     print(f"❌ Fallidos: {failed}")
-    print(f"⏱️  Tiempo total: {format_time(total_time)}")
     print(f"📊 Resultados guardados en:")
     print(f"   - outputs/debates.csv (debates simétricos)")
     print(f"   - outputs/debates_asimetricos.csv (debates asimétricos)")
