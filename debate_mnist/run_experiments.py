@@ -41,28 +41,6 @@ def get_yes_no(prompt, default="n"):
     response = get_user_input(f"{prompt} (y/n)", default, ["y", "n", "yes", "no"])
     return response.lower() in ["y", "yes"]
 
-def estimate_time(experiment_type, n_images, rollouts=None):
-    """Estima el tiempo de ejecución de un experimento."""
-    if experiment_type == "greedy":
-        return n_images * 0.1  # ~0.1 segundos por imagen
-    elif experiment_type == "mcts":
-        base_time = n_images * 0.5  # tiempo base
-        rollout_factor = (rollouts or 500) / 500
-        return base_time * rollout_factor
-    elif experiment_type == "mixed":
-        return n_images * 0.3  # tiempo intermedio
-    return n_images * 0.2
-
-def format_time(seconds):
-    """Formatea tiempo en horas, minutos y segundos."""
-    if seconds < 60:
-        return f"{seconds:.0f} segundos"
-    elif seconds < 3600:
-        return f"{seconds/60:.1f} minutos"
-    else:
-        hours = seconds // 3600
-        minutes = (seconds % 3600) // 60
-        return f"{hours:.0f}h {minutes:.0f}m"
 
 def check_judge_exists(judge_name):
     """Verifica si existe un modelo juez."""
@@ -115,14 +93,9 @@ def train_judge_models():
         return []
     
     print(f"\n📋 Se entrenarán {len(judges_to_train)} modelos juez:")
-    total_training_time = 0
     
     for judge_name, resolution, k, epochs, description in judges_to_train:
-        training_time = epochs * 30  # Estimación: 30 segundos por época
-        total_training_time += training_time
-        print(f"  - {judge_name}: {description} ({epochs} épocas, ~{format_time(training_time)})")
-    
-    print(f"\n⏰ Tiempo estimado total de entrenamiento: {format_time(total_training_time)}")
+        print(f"  - {judge_name}: {description} ({epochs} épocas)")
     
     if get_yes_no("¿Proceder con el entrenamiento?"):
         trained_judges = []
@@ -248,17 +221,13 @@ def run_command(cmd, description):
     print(f"Comando: {cmd}")
     print(f"{'='*60}")
     
-    start_time = time.time()
-    
     try:
         result = subprocess.run(cmd, shell=True, check=True, 
                               capture_output=False, text=True)
-        elapsed = time.time() - start_time
-        print(f"✅ Completado en {format_time(elapsed)}")
+        print(f"✅ Completado exitosamente")
         return True
     except subprocess.CalledProcessError as e:
-        elapsed = time.time() - start_time
-        print(f"❌ Error después de {format_time(elapsed)}: {e}")
+        print(f"❌ Error: {e}")
         return False
 
 def main():
