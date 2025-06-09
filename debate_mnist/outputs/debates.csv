@@ -10,3 +10,5 @@ timestamp,judge_name,resolution,thr,seed,rollouts,n_images,agent_type,pixels,sta
 20250608170526,28,28,0.0,42,512,100,mcts,6,honest,True,0.95,paper=87.4%
 20250608131307,28,28,0.0,42,512,100,mcts,6,liar,True,0.97,paper=90.4%
 20250608165716,28,28,0.0,42,512,100,mcts,6,honest,False,0.71,paper=67.4%
+20250608165041,28,28,0.0,42,512,100,mcts,6,liar,False,0.82,paper=81.5%
+
