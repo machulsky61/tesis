@@ -1,6 +1,7 @@
 import argparse
 import random
 import torch
+import numpy as np
 from utils import data_utils, helpers
 from models.sparse_cnn import SparseCNN
 from agents.greedy_agent import GreedyAgent
@@ -88,6 +89,16 @@ def run_single_debate(image, agent_truth, agent_liar, args, device):
         
     predicted_label = output[0].argmax().item()  # Elige el label global máximo
 
+    # Para modo no-precommit, calcular segundo logit más alto
+    second_highest_logit = None
+    second_highest_class = None
+    if not args.precommit:
+        logits_sorted = output[0].cpu().numpy()
+        sorted_indices = np.argsort(logits_sorted)[::-1]  # Orden descendente
+        if len(sorted_indices) >= 2:
+            second_highest_class = int(sorted_indices[1])  # Convertir a int
+            second_highest_logit = float(logits_sorted[second_highest_class])  # Convertir a float
+
     return {
         "mask": mask,
         "predicted_label": predicted_label,
@@ -97,7 +108,9 @@ def run_single_debate(image, agent_truth, agent_liar, args, device):
         "revealed_positions": [(int(y), int(x)) for (y, x) in (mask > 0).nonzero(as_tuple=False).tolist()],
         "pixels_revealed": int(mask.sum().item()),
         "debate_moves": debate_moves,
-        "liar_class": agent_liar.my_class if hasattr(agent_liar, 'my_class') else None
+        "liar_class": agent_liar.my_class if hasattr(agent_liar, 'my_class') else None,
+        "second_highest_logit": second_highest_logit,
+        "second_highest_class": second_highest_class
     }
     
 def run_exhaustive_precommit(image, label_true, args, judge_model, device):
@@ -108,9 +121,11 @@ def run_exhaustive_precommit(image, label_true, args, judge_model, device):
     Devuelve:
       - winner_label  : etiqueta ganadora tras el procedimiento
       - logits_avg_dct: { etiqueta_falsa: (avg_true, avg_false) }
+      - winning_logits: (logit_truth, logit_liar) para los valores que determinaron la victoria
     """
     logits_avg_dct = {}
     winner_label = label_true  # Por defecto gana el honesto
+    winning_logits = (0.0, 0.0)  # Default para cuando gana el honesto
 
     wrong_labels = [lbl for lbl in range(10) if lbl != label_true]
 
@@ -140,9 +155,16 @@ def run_exhaustive_precommit(image, label_true, args, judge_model, device):
         # Si el mentiroso supera al honesto EN ALGUNA etiqueta -> mentiroso gana
         if avg_false > avg_true:
             winner_label = wrong_lbl
+            winning_logits = (avg_true, avg_false)  # Guardar los logits que determinaron la victoria
             break  # basta con una etiqueta para que pierda la verdad
 
-    return winner_label, logits_avg_dct
+    # Si ningún mentiroso ganó, usar los logits del honesto vs el mejor mentiroso
+    if winner_label == label_true and logits_avg_dct:
+        # Encontrar el mejor desafío del mentiroso
+        best_liar_class = max(logits_avg_dct.keys(), key=lambda k: logits_avg_dct[k][1])
+        winning_logits = logits_avg_dct[best_liar_class]
+
+    return winner_label, logits_avg_dct, winning_logits
 
 def save_outputs(i, image, mask, meta, args, id):
     """Guarda la imagen, máscara y metadatos en el directorio de salida."""
@@ -207,6 +229,12 @@ def save_outputs(i, image, mask, meta, args, id):
                 debate_info['liar_label'] = meta['liar_class']
                 if 'logit_liar' in meta and meta['logit_liar'] != "N/A":
                     debate_info['liar_logit'] = meta['logit_liar']
+            
+            # Agregar segundo logit más alto para modo no-precommit
+            if not args.precommit:
+                if 'second_highest_logit' in meta and meta['second_highest_logit'] is not None:
+                    debate_info['second_highest_logit'] = meta['second_highest_logit']
+                    debate_info['second_highest_class'] = meta['second_highest_class']
             
             # Marcar si es debate representativo
             if 'representative_debate' in meta:
@@ -314,7 +342,7 @@ def main():
         label_true = label_tensor.item()
 
         if args.precommit:
-            winner_label, avg_logits = run_exhaustive_precommit(
+            winner_label, avg_logits, winning_logits = run_exhaustive_precommit(
                 image, label_true, args, judge_model, device
             )
             predicted_label = winner_label
@@ -334,25 +362,20 @@ def main():
                 "logit_liar": "N/A"  # En precommit exhaustivo, varía por clase
             }
             
-            # Calcular logits apropiados para precommit
+            # Usar los logits que realmente determinaron la victoria
+            meta["logit_truth"] = winning_logits[0]
+            meta["logit_liar"] = winning_logits[1]
+            
+            # Calcular representante para precommit
             representative_liar_class = None
-            if avg_logits:
-                # El honest logit es el promedio del honesto para la clase real
-                # En avg_logits tenemos: {wrong_label: (true_logit, false_logit)}
-                if len(avg_logits) > 0:
-                    # Tomar el primer true_logit (logit del honesto)
-                    first_entry = next(iter(avg_logits.values()))
-                    meta["logit_truth"] = first_entry[0]
             
             # Determinar el mentiroso y su clase
             if winner_label != label_true:
                 # Mentiroso ganó
                 meta["liar_class"] = winner_label
                 representative_liar_class = winner_label
-                if winner_label in avg_logits:
-                    meta["logit_liar"] = avg_logits[winner_label][1]  # logit del mentiroso para su clase
             else:
-                # Honesto ganó, pero aún podemos mostrar el mejor mentiroso
+                # Honesto ganó, pero mostrar el mejor mentiroso para contexto
                 best_liar_class = None
                 best_liar_logit = float('-inf')
                 for wrong_lbl, (true_logit, false_logit) in avg_logits.items():
@@ -384,8 +407,14 @@ def main():
                 # Usar los movimientos del debate representativo para visualización
                 meta["debate_moves"] = representative_result["debate_moves"]
                 meta["representative_debate"] = True  # Marcar que es representativo
+                
+                # Usar la máscara del debate representativo
+                representative_mask = representative_result["mask"]
+            else:
+                # Si no hay visualización, crear máscara vacía
+                representative_mask = torch.zeros_like(image)
             
-            save_outputs(i, image, torch.zeros_like(image), meta, args, id)
+            save_outputs(i, image, representative_mask, meta, args, id)
         else:
             # No precommit, no hay opponent label fijo.
             agent_truth, agent_liar = get_agents(
@@ -404,7 +433,11 @@ def main():
                 "revealed_positions": res["revealed_positions"],
                 "predicted_label": int(predicted_label),
                 "logit_truth": float(res["logit_truth"]),
-                "debate_moves": res["debate_moves"]}
+                "logit_liar": res["logit_liar"],
+                "debate_moves": res["debate_moves"],
+                "second_highest_logit": res.get("second_highest_logit"),
+                "second_highest_class": res.get("second_highest_class")
+            }
             save_outputs(i, image, res["mask"], meta, args, id)
 
         total += 1

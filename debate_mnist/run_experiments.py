@@ -348,7 +348,7 @@ class ExperimentManager:
                    f"--resolution {self.config['resolution']} --k {self.config['k']} "
                    f"--thr {self.config['thr']} --agent_type {agent_type} "
                    f"--n_images {n_images}{rollouts}{flags} "
-                   f"--note {agent_type}_{note}")
+                   f'--note "{agent_type}_{note}"')
             
             desc = f"{agent_type.upper()} vs {agent_type.upper()} - {variant_name}"
             self.experiments.append((cmd, desc))
@@ -386,7 +386,7 @@ class ExperimentManager:
                    f"--resolution {self.config['resolution']} --k {self.config['k']} "
                    f"--thr {self.config['thr']} --mixed_agents --honest_agent {honest_agent} "
                    f"--rollouts {rollouts} --n_images {n_images}{flags} "
-                   f"--note {honest_agent}_honest_vs_{liar_agent}_liar_{note}")
+                   f'--note "{honest_agent}_honest_vs_{liar_agent}_liar_{note}"')
             
             desc = f"{honest_agent.upper()} Honest vs {liar_agent.upper()} Liar - {variant_name}"
             self.experiments.append((cmd, desc))
@@ -437,7 +437,7 @@ class ExperimentManager:
                 cmd += " --precommit"
                 desc += " con precommit"
                 
-            cmd += f" --note ablation_k{k}_{agent_type}"
+            cmd += f' --note "ablation_k{k}_{agent_type}"'
             self.experiments.append((cmd, desc))
             
         print(f"✅ Añadidos {len(k_values)} experimentos de ablación")
@@ -494,7 +494,7 @@ class ExperimentManager:
             if fixed_seed:
                 cmd += f" --seed {seed}"
                 
-            cmd += f" --note scalability_mcts_r{rollouts}"
+            cmd += f' --note "scalability_mcts_r{rollouts}"'
             self.experiments.append((cmd, f"Escalabilidad MCTS - {rollouts} rollouts"))
             
             # Mixed si se solicita
@@ -544,7 +544,7 @@ class ExperimentManager:
             base_cmd += f" --mixed_agents --honest_agent {honest} --rollouts {rollouts}"
         
         for seed in seeds:
-            cmd = base_cmd + f" --seed {seed} --note robustness_{agent_type}_s{seed}"
+            cmd = base_cmd + f' --seed {seed} --note "robustness_{agent_type}_s{seed}"'
             self.experiments.append((cmd, f"Robustez {agent_type} - Semilla {seed}"))
             
         print(f"✅ Añadidos {len(seeds)} experimentos de robustez")
@@ -602,7 +602,7 @@ class ExperimentManager:
             cmd += f" --seed {seed}"
             
         note = self.get_input("Nota descriptiva", f"custom_{agent_desc}")
-        cmd += f" --note {note}"
+        cmd += f' --note "{note}"'
         
         # Visualizaciones
         if self.config['viz_enabled']:
@@ -885,17 +885,17 @@ class ExperimentManager:
         # Experimentos del paper
         experiments = [
             # Greedy baseline
-            (f"{base_cmd} --agent_type greedy --n_images 1000 --note paper_greedy_baseline",
+            (f'{base_cmd} --agent_type greedy --n_images 1000 --note "paper_greedy_baseline"',
              "Paper - Greedy baseline"),
             # Greedy precommit
-            (f"{base_cmd} --agent_type greedy --n_images 1000 --precommit --note paper_greedy_precommit",
+            (f'{base_cmd} --agent_type greedy --n_images 1000 --precommit --note "paper_greedy_precommit"',
              "Paper - Greedy precommit"),
             # MCTS diferentes rollouts
-            (f"{base_cmd} --agent_type mcts --rollouts 100 --n_images 500 --note paper_mcts_100",
+            (f'{base_cmd} --agent_type mcts --rollouts 100 --n_images 500 --note "paper_mcts_100"',
              "Paper - MCTS 100 rollouts"),
-            (f"{base_cmd} --agent_type mcts --rollouts 500 --n_images 500 --note paper_mcts_500",
+            (f'{base_cmd} --agent_type mcts --rollouts 500 --n_images 500 --note "paper_mcts_500"',
              "Paper - MCTS 500 rollouts"),
-            (f"{base_cmd} --agent_type mcts --rollouts 1000 --n_images 300 --note paper_mcts_1000",
+            (f'{base_cmd} --agent_type mcts --rollouts 1000 --n_images 300 --note "paper_mcts_1000"',
              "Paper - MCTS 1000 rollouts"),
         ]
         

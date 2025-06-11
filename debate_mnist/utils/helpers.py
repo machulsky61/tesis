@@ -94,11 +94,20 @@ def save_mask(original_image, mask, filepath):
             msk = msk[0]
     else:
         msk = torch.tensor(mask)
-    # Asegurar que img y msk son float (img) y binaria (msk)
+    # Asegurar que img y msk son float 
     img = img.float()
-    msk = (msk > 0).float()
+    msk = msk.float()
+    
+    
     # Aplicar máscara: píxeles no revelados a 0
-    revealed_img = img * msk
+    # Si la máscara es binaria (0s y 1s), usarla como está
+    # Si la máscara tiene valores intermedios, normalizarla
+    if msk.max() <= 1.0:
+        revealed_img = img * msk
+    else:
+        # Si la máscara tiene valores > 1, normalizarla primero
+        msk_normalized = msk / msk.max()
+        revealed_img = img * msk_normalized
     # Convertir a escala de 0-255 uint8 para guardar
     # Suponemos original_image normalizada 0-1 (como ToTensor de MNIST)
     revealed_np = (revealed_img.numpy() * 255).astype(np.uint8)
@@ -153,9 +162,8 @@ def save_colored_debate(original_image, debate_moves, filepath, debate_info=None
         
         info_lines = []
         
-        # Titulo general
-        run_id = debate_info.get('run_id', '?????')
-        info_lines.append(f"Debate Simulation — ID: {run_id}")
+        # Titulo general (sin run ID)
+        info_lines.append("Debate Simulation")
         info_lines.append("")
         
         # Configuracion
@@ -189,30 +197,39 @@ def save_colored_debate(original_image, debate_moves, filepath, debate_info=None
             result_symbol = "Incorrect"
         
         info_lines.append("Outcome:")
-        info_lines.append(f"  - True label: {true_label}")
-        info_lines.append(f"  - Predicted: {pred_label} → {result_symbol}")
-        info_lines.append(f"  - Logit (class {pred_label}): {pred_logit:.2f}")
+        info_lines.append(f"  - True label: {true_label} ")
+        info_lines.append(f"  - Predicted: {pred_label} (Logit: {pred_logit:.2f}) → {result_symbol}")
         info_lines.append("")
         
         # Blue Player (Honest)
         honest_logit = debate_info.get('honest_logit', 0.0)
         info_lines.append("Blue Player (Honest):")
-        info_lines.append(f"  - Agent type: {honest_type}")
-        info_lines.append(f"  - Target class: {true_label}")
-        info_lines.append(f"  - Logit (class {true_label}): {honest_logit:.2f}")
+        info_lines.append(f"  - Agent: {honest_type}")
+        info_lines.append(f"  - Target: Class {true_label} (Logit: {honest_logit:.2f})")
         info_lines.append("")
         
         # Red Player (Liar)
         info_lines.append("Red Player (Liar):")
-        info_lines.append(f"  - Agent type: {liar_type}")
+        info_lines.append(f"  - Agent: {liar_type}")
         
         if has_precommit and 'liar_label' in debate_info:
             liar_label = debate_info['liar_label']
             liar_logit = debate_info.get('liar_logit', 0.0)
-            info_lines.append(f"  - Target class: {liar_label}")
-            info_lines.append(f"  - Logit (class {liar_label}): {liar_logit:.2f}")
+            info_lines.append(f"  - Target: Class {liar_label} (Logit: {liar_logit:.2f})")
         else:
-            info_lines.append("  - Target class: Unspecified (no precommit)")
+            info_lines.append("  - Target: Not fixed")
+            
+            # Para no-precommit, agregar segundo logit más alto
+            second_highest_logit = debate_info.get('second_highest_logit', None)
+            second_highest_class = debate_info.get('second_highest_class', None)
+            if second_highest_logit is not None and second_highest_class is not None:
+                info_lines.append(f"  - Runner-up: Class {second_highest_class} (Logit: {second_highest_logit:.2f})")
+        
+        info_lines.append("")
+        
+        # Run ID al final en gris pequeño
+        run_id = debate_info.get('run_id', '?????')
+        info_lines.append(f"Run ID: {run_id}")
         
         return info_lines
     
@@ -236,10 +253,10 @@ def save_colored_debate(original_image, debate_moves, filepath, debate_info=None
         scale_factor = max(1, 800 // max(H, W))  # Escalar para que sea al menos 800px
         scaled_H, scaled_W = H * scale_factor, W * scale_factor
         
-        # Calcular espacio para información (panel lateral)
-        info_panel_width = 500 if info_text else 0  # Más ancho para el nuevo formato
+        # Calcular espacio para información (panel lateral) - aumentado para fuentes más grandes
+        info_panel_width = 600 if info_text else 0  # Más ancho para fuentes más grandes
         total_width = scaled_W + info_panel_width
-        total_height = max(scaled_H, len(info_text) * 25 + 80) if info_text else scaled_H  # Más espacio para fuentes grandes
+        total_height = max(scaled_H, len(info_text) * 30 + 100) if info_text else scaled_H  # Más espacio para fuentes grandes
         
         # Crear imagen completa con espacio para información
         full_img = Image.new('RGB', (total_width, total_height), color=(240, 240, 240))
@@ -326,32 +343,37 @@ def save_colored_debate(original_image, debate_moves, filepath, debate_info=None
             info_x = scaled_W + 25  # Margen desde la imagen
             info_y = 25
             
-            # Cargar fuentes Times New Roman con función robusta
-            title_font = load_times_font(24, bold=True)     # Título en negrita
-            header_font = load_times_font(20, bold=True)    # Headers en negrita
-            content_font = load_times_font(18, bold=False)  # Contenido normal
+            # Cargar fuentes Times New Roman con función robusta (tamaños aumentados)
+            title_font = load_times_font(28, bold=True)     # Título en negrita
+            header_font = load_times_font(24, bold=True)    # Headers en negrita
+            content_font = load_times_font(20, bold=False)  # Contenido normal
             
             # Dibujar cada línea con formato apropiado (todo en negro)
             for i, line in enumerate(info_text):
                 if line == "":  # Blank line
-                    info_y += 15
+                    info_y += 18
                 elif line.startswith("Debate Simulation"):
                     # Main title
                     draw.text((info_x, info_y), line, fill=(0, 0, 0), font=title_font)
-                    info_y += 35
+                    info_y += 40
                 elif line.startswith("Configuration:") or line.startswith("Outcome:") or \
                      line.startswith("Blue Player") or line.startswith("Red Player"):
                     # Section headers
                     draw.text((info_x, info_y), line, fill=(0, 0, 0), font=header_font)
-                    info_y += 28
+                    info_y += 32
                 elif line.startswith("  -"):
                     # Indented details
                     draw.text((info_x, info_y), line, fill=(0, 0, 0), font=content_font)
-                    info_y += 24
+                    info_y += 26
+                elif line.startswith("Run ID:"):
+                    # Run ID en gris y más pequeño
+                    small_font = load_times_font(16, bold=False)  # También aumentado ligeramente
+                    draw.text((info_x, info_y), line, fill=(120, 120, 120), font=small_font)
+                    info_y += 22
                 else:
                     # Normal text
                     draw.text((info_x, info_y), line, fill=(0, 0, 0), font=content_font)
-                    info_y += 26
+                    info_y += 28
         
         full_img.save(filepath)
         

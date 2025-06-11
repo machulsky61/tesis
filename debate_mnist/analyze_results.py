@@ -43,23 +43,8 @@ def load_data():
     # Load debates data
     debates_df = pd.read_csv(data_path / "debates.csv")
     
-    # Load judge evaluations (random pixels baseline)
+    # Load judge evaluations (random pixels baseline) - now properly formatted
     evaluations_df = pd.read_csv(data_path / "evaluations.csv")
-    
-    # Fix column mapping - pandas shifts data left when using first column as index
-    corrected_evaluations = pd.DataFrame({
-        'timestamp': evaluations_df.index,
-        'judge_name': evaluations_df['timestamp'],
-        'resolution': evaluations_df['judge_name'],
-        'thr': evaluations_df['resolution'],
-        'seed': evaluations_df['thr'],
-        'n_images': evaluations_df['seed'],
-        'pixels': evaluations_df['n_images'],
-        'accuracy': evaluations_df['pixels'],
-        'note': evaluations_df['accuracy']
-    })
-    
-    evaluations_df = corrected_evaluations
     
     # Convert to proper types
     evaluations_df['pixels'] = pd.to_numeric(evaluations_df['pixels'], errors='coerce')
@@ -73,7 +58,7 @@ def load_data():
     
     return debates_df, evaluations_df, judges_df
 
-def create_graph1_judge_vs_debate(debates_df, evaluations_df, output_dir="outputs"):
+def create_graph1_judge_vs_debate(debates_df, evaluations_df, output_dir="outputs/figures"):
     """
     Graph 1: Judge Precision vs Debate (Section 3.2)
     Grouped bar chart comparing judge alone vs debate performance.
@@ -133,7 +118,7 @@ def create_graph1_judge_vs_debate(debates_df, evaluations_df, output_dir="output
     
     # Create bars with custom colors
     bars1 = ax.bar(x_pos - width, judge_alone, width, 
-                   label='Judge Alone (Random Pixels)', 
+                   label='Sparse CNN Judge (Random Pixels)', 
                    color=COLORS['judge'], alpha=0.9, edgecolor='white', linewidth=1)
     bars2 = ax.bar(x_pos, greedy_honest, width, 
                    label='Greedy Debate (Precommit)', 
@@ -183,7 +168,7 @@ def create_graph1_judge_vs_debate(debates_df, evaluations_df, output_dir="output
     plt.savefig(f"{output_dir}/graph1_judge_vs_debate.png", dpi=300, bbox_inches='tight')
     plt.show()
 
-def create_graph2_precommit_impact(debates_df, output_dir="outputs"):
+def create_graph2_precommit_impact(debates_df, output_dir="outputs/figures"):
     """
     Graph 2: Precommit Impact (Section 3.4)
     Grouped bar chart showing with/without precommit comparison.
@@ -307,7 +292,7 @@ def create_graph2_precommit_impact(debates_df, output_dir="outputs"):
     plt.savefig(f"{output_dir}/graph2_precommit_impact.png", dpi=300, bbox_inches='tight')
     plt.show()
 
-def create_graph3_agent_comparison(debates_df, output_dir="outputs"):
+def create_graph3_agent_comparison(debates_df, output_dir="outputs/figures"):
     """
     Graph 3: Agent Type Comparison (Section 3.5)
     Grouped bar chart comparing Greedy vs MCTS agents.
@@ -475,7 +460,7 @@ def print_data_summary(debates_df, evaluations_df):
 
 def main():
     parser = argparse.ArgumentParser(description='Analyze debate results and generate graphs')
-    parser.add_argument('--output-dir', default='outputs', help='Output directory for graphs')
+    parser.add_argument('--output-dir', default='outputs/figures', help='Output directory for graphs')
     parser.add_argument('--summary-only', action='store_true', help='Only print data summary')
     args = parser.parse_args()
     
