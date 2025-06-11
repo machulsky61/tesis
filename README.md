@@ -35,6 +35,5 @@ This research is based on AI safety and alignment techniques, including:
 
 **Joaquín Salvador Machulsky**  
 Email: [jmachulsky@dc.uba.ar](mailto:jmachulsky@dc.uba.ar)  
-Thesis Advisor: Sergio Abriola ([sabriola@dc.uba.ar](mailto:sabriola@dc.uba.ar))
 
 ---
