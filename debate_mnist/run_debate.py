@@ -60,6 +60,28 @@ def run_single_debate(image, agent_truth, agent_liar, args, device):
     # Rastrear movimientos para visualización coloreada
     debate_moves = []
     
+    # Rastrear confianza del juez si está habilitado
+    confidence_progression = []
+    if args.track_confidence:
+        # Evaluar estado inicial (sin píxeles revelados)
+        values_plane_init = torch.zeros_like(mask)
+        judge_input_init = torch.stack([mask, values_plane_init], dim=0).unsqueeze(0)
+        with torch.no_grad():
+            output_init = agent_truth.judge(judge_input_init)
+            logits_init = output_init[0].cpu().numpy()
+            probs_init = torch.softmax(output_init[0], dim=0).cpu().numpy()
+            
+            confidence_progression.append({
+                "turn": 0,
+                "pixels_revealed": 0,
+                "agent": "initial",
+                "pixel_revealed": None,
+                "logits": {str(i): float(logits_init[i]) for i in range(10)},
+                "probabilities": {str(i): float(probs_init[i]) for i in range(10)},
+                "predicted_class": int(output_init[0].argmax().item()),
+                "max_confidence": float(probs_init.max())
+            })
+    
     # Alternar turnos
     for move in range(args.k):
         current_agent_idx = move % 2
@@ -74,6 +96,26 @@ def run_single_debate(image, agent_truth, agent_liar, args, device):
         
         # Guardar movimiento para visualización
         debate_moves.append((y, x, current_agent_name, move + 1))
+        
+        # Trackear confianza del juez después de este movimiento
+        if args.track_confidence:
+            values_plane_current = image * mask
+            judge_input_current = torch.stack([mask, values_plane_current], dim=0).unsqueeze(0)
+            with torch.no_grad():
+                output_current = agent_truth.judge(judge_input_current)
+                logits_current = output_current[0].cpu().numpy()
+                probs_current = torch.softmax(output_current[0], dim=0).cpu().numpy()
+                
+                confidence_progression.append({
+                    "turn": move + 1,
+                    "pixels_revealed": int(mask.sum().item()),
+                    "agent": current_agent_name,
+                    "pixel_revealed": (int(y), int(x)),
+                    "logits": {str(i): float(logits_current[i]) for i in range(10)},
+                    "probabilities": {str(i): float(probs_current[i]) for i in range(10)},
+                    "predicted_class": int(output_current[0].argmax().item()),
+                    "max_confidence": float(probs_current.max())
+                })
 
     # Calcular output del juez
     values_plane = image * mask
@@ -99,7 +141,7 @@ def run_single_debate(image, agent_truth, agent_liar, args, device):
             second_highest_class = int(sorted_indices[1])  # Convertir a int
             second_highest_logit = float(logits_sorted[second_highest_class])  # Convertir a float
 
-    return {
+    result = {
         "mask": mask,
         "predicted_label": predicted_label,
         "logit_truth": logit_truth,
@@ -112,6 +154,12 @@ def run_single_debate(image, agent_truth, agent_liar, args, device):
         "second_highest_logit": second_highest_logit,
         "second_highest_class": second_highest_class
     }
+    
+    # Agregar progresión de confianza si está habilitada
+    if args.track_confidence:
+        result["confidence_progression"] = confidence_progression
+    
+    return result
     
 def run_exhaustive_precommit(image, label_true, args, judge_model, device):
     """
@@ -168,7 +216,7 @@ def run_exhaustive_precommit(image, label_true, args, judge_model, device):
 
 def save_outputs(i, image, mask, meta, args, id):
     """Guarda la imagen, máscara y metadatos en el directorio de salida."""
-    if args.save_mask or args.save_play or args.save_images or args.save_metadata or args.save_colored_debate:
+    if args.save_mask or args.save_play or args.save_images or args.save_metadata or args.save_colored_debate or args.track_confidence:
         folder_note = f'_{args.note.replace(" ", "_")}' if args.note and len(args.note) < 20 else ""
         run_folder = f"outputs/debate_{id}{folder_note}"
         os.makedirs(run_folder, exist_ok=True)
@@ -241,6 +289,42 @@ def save_outputs(i, image, mask, meta, args, id):
                 debate_info['representative_debate'] = meta['representative_debate']
             
             helpers.save_colored_debate(image, meta['debate_moves'], colored_path, debate_info)
+    
+    # Guardar datos de confianza si está habilitado
+    if args.track_confidence and 'confidence_progression' in meta:
+        save_confidence_data(meta['confidence_progression'], i, args, id)
+
+def save_confidence_data(confidence_progression, sample_index, args, id):
+    """Guarda los datos de confianza del juez para análisis estadístico."""
+    if not confidence_progression:
+        return
+    
+    folder_note = f'_{args.note.replace(" ", "_")}' if args.note and len(args.note) < 20 else ""
+    run_folder = f"outputs/debate_{id}{folder_note}"
+    os.makedirs(run_folder, exist_ok=True)
+    
+    confidence_path = os.path.join(run_folder, f"sample_{sample_index}_confidence.json")
+    
+    # Preparar metadata adicional
+    confidence_data = {
+        "metadata": {
+            "sample_index": sample_index,
+            "run_id": str(id),
+            "agent_type": args.agent_type if not args.mixed_agents else f"{args.honest_agent}_vs_mixed",
+            "precommit": bool(args.precommit),
+            "k_pixels": args.k,
+            "started_by": args.starts,
+            "allow_all_pixels": bool(args.allow_all_pixels),
+            "judge_name": args.judge_name,
+            "resolution": args.resolution,
+            "threshold": args.thr,
+            "timestamp": id
+        },
+        "confidence_progression": confidence_progression
+    }
+    
+    helpers.save_play(confidence_data, confidence_path)
+    return confidence_path
 
 def log_results(args, accuracy, id):
     os.makedirs("outputs", exist_ok=True)
@@ -263,6 +347,7 @@ def log_results(args, accuracy, id):
             "honest_agent_type": args.honest_agent,
             "liar_agent_type": liar_agent_type,
             "allow_all_pixels": bool(args.allow_all_pixels),
+            "track_confidence": bool(args.track_confidence),
             "accuracy": accuracy,
             "note": args.note,
         }
@@ -285,6 +370,7 @@ def log_results(args, accuracy, id):
             "started": args.starts,
             "precommit": bool(args.precommit),
             "allow_all_pixels": bool(args.allow_all_pixels),
+            "track_confidence": bool(args.track_confidence),
             "accuracy": accuracy,
             "note": args.note,
         }
@@ -313,6 +399,7 @@ def main():
     parser.add_argument("--note", type=str, default="")
     parser.add_argument("--starts", type=str, choices=["honest", "liar"], default="liar")
     parser.add_argument("--allow_all_pixels", action="store_true", help="Allow agents to select any pixel, not just relevant ones (>thr)")
+    parser.add_argument("--track_confidence", action="store_true", help="Track judge logits/probabilities progression during debate")
     args = parser.parse_args()
 
     # Generate descriptive experiment ID with timestamp suffix
