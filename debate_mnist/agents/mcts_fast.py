@@ -8,8 +8,8 @@ class FastMCTSAgent(DebateAgent):
     No mantiene árbol explícito, pero simula muchas secuencias posibles de manera eficiente.
     """
     def __init__(self, judge_model, my_class, opponent_class, precommit, original_image, thr=0.1, 
-                 rollouts=512, total_moves=6, is_truth_agent=True):
-        super().__init__(judge_model, my_class, opponent_class, precommit, original_image, thr)
+                 rollouts=512, total_moves=6, is_truth_agent=True, allow_all_pixels=False):
+        super().__init__(judge_model, my_class, opponent_class, precommit, original_image, thr, allow_all_pixels)
         self.rollouts = rollouts
         self.total_moves = total_moves
         self.is_truth_agent = is_truth_agent

@@ -19,24 +19,24 @@ def load_judge_model(judge_name, resolution, device):
     judge_model.eval()
     return judge_model
 
-def get_agents(agent_type, judge_model, label, opponent_label, precommit, image, thr, rollouts, k, mixed_agents=False, honest_agent=None):
+def get_agents(agent_type, judge_model, label, opponent_label, precommit, image, thr, rollouts, k, mixed_agents=False, honest_agent=None, allow_all_pixels=False):
     """Inicializa los agentes según el tipo."""
     if mixed_agents:
         # Modo mixto: un agente MCTS y otro Greedy
         if honest_agent == "mcts":
-            agent_truth = MCTSAgent(judge_model, label, opponent_label, precommit, image, thr, rollouts, k, True)
-            agent_liar = GreedyAgent(judge_model, opponent_label, label, precommit, image, thr)
+            agent_truth = MCTSAgent(judge_model, label, opponent_label, precommit, image, thr, rollouts, k, True, allow_all_pixels)
+            agent_liar = GreedyAgent(judge_model, opponent_label, label, precommit, image, thr, allow_all_pixels)
         else:  # honest_agent == "greedy"
-            agent_truth = GreedyAgent(judge_model, label, opponent_label, precommit, image, thr)
-            agent_liar = MCTSAgent(judge_model, opponent_label, label, precommit, image, thr, rollouts, k, False)
+            agent_truth = GreedyAgent(judge_model, label, opponent_label, precommit, image, thr, allow_all_pixels)
+            agent_liar = MCTSAgent(judge_model, opponent_label, label, precommit, image, thr, rollouts, k, False, allow_all_pixels)
     else:
         # Modo normal: ambos agentes del mismo tipo
         if agent_type == "greedy":
-            agent_truth = GreedyAgent(judge_model, label, opponent_label, precommit, image, thr)
-            agent_liar = GreedyAgent(judge_model, opponent_label, label, precommit, image, thr)
+            agent_truth = GreedyAgent(judge_model, label, opponent_label, precommit, image, thr, allow_all_pixels)
+            agent_liar = GreedyAgent(judge_model, opponent_label, label, precommit, image, thr, allow_all_pixels)
         else:
-            agent_truth = MCTSAgent(judge_model, label, opponent_label, precommit, image, thr, rollouts, k, True)
-            agent_liar = MCTSAgent(judge_model, opponent_label, label, precommit, image, thr, rollouts, k, False)
+            agent_truth = MCTSAgent(judge_model, label, opponent_label, precommit, image, thr, rollouts, k, True, allow_all_pixels)
+            agent_liar = MCTSAgent(judge_model, opponent_label, label, precommit, image, thr, rollouts, k, False, allow_all_pixels)
     return agent_truth, agent_liar
 
 def run_single_debate(image, agent_truth, agent_liar, args, device):
@@ -138,7 +138,7 @@ def run_exhaustive_precommit(image, label_true, args, judge_model, device):
             # Instanciar agentes para ESTA semilla y ESTA etiqueta falsa
             agent_truth, agent_liar = get_agents(
                 args.agent_type, judge_model, label_true, wrong_lbl, args.precommit, image, args.thr, args.rollouts, args.k,
-                args.mixed_agents, args.honest_agent
+                args.mixed_agents, args.honest_agent, args.allow_all_pixels
             )
 
             res = run_single_debate(
@@ -262,6 +262,7 @@ def log_results(args, accuracy, id):
             "precommit": bool(args.precommit),
             "honest_agent_type": args.honest_agent,
             "liar_agent_type": liar_agent_type,
+            "allow_all_pixels": bool(args.allow_all_pixels),
             "accuracy": accuracy,
             "note": args.note,
         }
@@ -283,6 +284,7 @@ def log_results(args, accuracy, id):
             "pixels": args.k,
             "started": args.starts,
             "precommit": bool(args.precommit),
+            "allow_all_pixels": bool(args.allow_all_pixels),
             "accuracy": accuracy,
             "note": args.note,
         }
@@ -310,6 +312,7 @@ def main():
     parser.add_argument("--precommit", action="store_true")
     parser.add_argument("--note", type=str, default="")
     parser.add_argument("--starts", type=str, choices=["honest", "liar"], default="liar")
+    parser.add_argument("--allow_all_pixels", action="store_true", help="Allow agents to select any pixel, not just relevant ones (>thr)")
     args = parser.parse_args()
 
     # Generate descriptive experiment ID with timestamp suffix
@@ -397,7 +400,7 @@ def main():
                 helpers.set_seed(args.seed)  # Semilla consistente para reproducibilidad
                 repr_agent_truth, repr_agent_liar = get_agents(
                     args.agent_type, judge_model, label_true, representative_liar_class, 
-                    True, image, args.thr, args.rollouts, args.k, args.mixed_agents, args.honest_agent
+                    True, image, args.thr, args.rollouts, args.k, args.mixed_agents, args.honest_agent, args.allow_all_pixels
                 )
                 
                 representative_result = run_single_debate(
@@ -419,7 +422,7 @@ def main():
             # No precommit, no hay opponent label fijo.
             agent_truth, agent_liar = get_agents(
                 args.agent_type, judge_model, label_true, None, args.precommit,
-                image, args.thr, args.rollouts, args.k, args.mixed_agents, args.honest_agent
+                image, args.thr, args.rollouts, args.k, args.mixed_agents, args.honest_agent, args.allow_all_pixels
             )
             res = run_single_debate(image, agent_truth, agent_liar, args, device)
             predicted_label = res["predicted_label"]

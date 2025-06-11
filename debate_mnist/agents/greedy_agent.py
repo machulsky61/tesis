@@ -6,6 +6,8 @@ class GreedyAgent(DebateAgent):
     Agente que selecciona su siguiente movimiento de forma codiciosa (greedy).
     Evalúa cada posible píxel no revelado y elige aquel que más beneficia a su caso inmediatamente.
     """
+    def __init__(self, judge_model, my_class, opponent_class, precommit, original_image, thr=0.0, allow_all_pixels=False):
+        super().__init__(judge_model, my_class, opponent_class, precommit, original_image, thr, allow_all_pixels)
     def choose_pixel(self, mask, reveal_count=None):
         # mask: tensor 2D (H x W) con 1 en píxeles ya revelados, 0 en no revelados
         # Ignoramos reveal_count ya que este agente no planifica a futuro, solo paso actual
