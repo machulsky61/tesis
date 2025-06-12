@@ -443,12 +443,12 @@ def log_results_csv(logfile, results):
     if "judges.csv" in logfile:
         columns = ["timestamp","judge_name","resolution","thr","seed", "epochs","batch_size","lr","best_loss", "pixels", "accuracy","note"]
     elif "evaluations.csv" in logfile:
-        columns = ["timestamp","judge_name","resolution","thr","seed", "n_images", "pixels", "accuracy","note"]
+        columns = ["timestamp","judge_name","strategy","resolution","thr","seed", "n_images", "pixels", "accuracy","note"]
     elif "debates_asimetricos.csv" in logfile:
         columns = ["timestamp","judge_name","resolution","thr","seed", "rollouts","n_images", "pixels", "started","precommit", 
-                  "honest_agent_type","liar_agent_type","accuracy","note"]
+                  "honest_agent_type","liar_agent_type","allow_all_pixels","track_confidence","accuracy","note"]
     elif "debates.csv" in logfile:
-        columns = ["timestamp","judge_name","resolution","thr","seed", "rollouts","n_images","agent_type", "pixels", "started","precommit", "accuracy","note"]
+        columns = ["timestamp","judge_name","resolution","thr","seed", "rollouts","n_images","agent_type", "pixels", "started","precommit","allow_all_pixels","track_confidence", "accuracy","note"]
     else:
         # Default columns for backward compatibility
         columns = ["timestamp","judge_name","resolution","thr","seed", "pixels", "accuracy","note"]

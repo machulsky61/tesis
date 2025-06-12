@@ -94,6 +94,49 @@ def select_adversarial_pixels(image, model, true_label, k, thr, device):
     
     return chosen_coords
 
+def select_adversarial_nonzero_pixels(image, model, true_label, k, thr, device):
+    """
+    Selecciona los k píxeles que minimizan la confianza del juez en la clase verdadera,
+    pero SOLO entre píxeles con valores > thr (sin píxeles negros/zero).
+    Cota inferior más realista: peor caso entre píxeles relevantes.
+    """
+    H, W = image.shape[-2], image.shape[-1]
+    image_2d = image.squeeze()
+    
+    # Solo píxeles relevantes (>thr) - sin píxeles negros
+    mask_relevant = (image_2d > thr)
+    coords = mask_relevant.nonzero(as_tuple=False)
+    
+    if coords.size(0) == 0:
+        # Si no hay píxeles relevantes, usar todos como fallback
+        coords = torch.cartesian_prod(torch.arange(H), torch.arange(W))
+    
+    if coords.size(0) <= k:
+        chosen_coords = coords
+    else:
+        # Evaluar cada píxel relevante para encontrar los que más perjudican al juez
+        pixel_scores = []
+        
+        with torch.no_grad():
+            for coord in coords:
+                y, x = int(coord[0]), int(coord[1])
+                # Crear máscara con solo este píxel
+                test_mask = torch.zeros((H, W), dtype=torch.float32, device=device)
+                test_mask[y, x] = 1.0
+                values_plane = image_2d * test_mask
+                
+                # Evaluar con el juez
+                judge_input = torch.stack([test_mask, values_plane], dim=0).unsqueeze(0)
+                output = model(judge_input)
+                confidence = torch.softmax(output, dim=1)[0, true_label].item()
+                pixel_scores.append((confidence, coord))
+        
+        # Ordenar por confianza ascendente y tomar los k peores
+        pixel_scores.sort(key=lambda x: x[0])
+        chosen_coords = torch.stack([coord for _, coord in pixel_scores[:k]])
+    
+    return chosen_coords
+
 def select_random_pixels(image, k, thr):
     """
     Selecciona k píxeles aleatoriamente de los píxeles relevantes (>thr).
@@ -129,7 +172,7 @@ def main():
     parser.add_argument("--batch_size", type=int,   default=128,            help="Tamaño de batch para evaluación")
     parser.add_argument("--judge_name", type=str,   default="judge_model",  help="Nombre del modelo juez (sin extensión)")
     parser.add_argument("--strategy",   type=str,   default="random",       help="Estrategia de selección de píxeles", 
-                        choices=["random", "optimal", "adversarial"])
+                        choices=["random", "optimal", "adversarial", "adversarial_nonzero"])
     parser.add_argument("--note",       type=str,   default="",             help="Nota opcional para registrar en el CSV")
     args = parser.parse_args()
 
@@ -165,7 +208,12 @@ def main():
     total = 0
     correct = 0
     
-    strategy_name = {"random": "random", "optimal": "optimal", "adversarial": "adversarial"}[args.strategy]
+    strategy_name = {
+        "random": "random", 
+        "optimal": "optimal", 
+        "adversarial": "adversarial", 
+        "adversarial_nonzero": "adversarial_nonzero"
+    }[args.strategy]
     
     with torch.no_grad():
         pbar = tqdm(test_subset, desc=f"Evaluating with {strategy_name} strategy")
@@ -180,6 +228,8 @@ def main():
                 chosen_coords = select_optimal_pixels(image, model, true_label, args.k, args.thr, device)
             elif args.strategy == "adversarial":
                 chosen_coords = select_adversarial_pixels(image, model, true_label, args.k, args.thr, device)
+            elif args.strategy == "adversarial_nonzero":
+                chosen_coords = select_adversarial_nonzero_pixels(image, model, true_label, args.k, args.thr, device)
             
             # Crear máscara y entrada para el juez
             H, W = image.shape[-2], image.shape[-1]

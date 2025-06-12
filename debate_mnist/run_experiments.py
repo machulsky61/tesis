@@ -25,16 +25,22 @@ class ExperimentManager:
             'thr': 0.0,
             'viz_enabled': False,
             'viz_colored': False,
-            'viz_metadata': False
+            'viz_metadata': False,
+            'allow_all_pixels': False,
+            'track_confidence': False
         }
         
     def print_banner(self):
         print("=" * 80)
-        print("🧪 AI SAFETY DEBATE - EXPERIMENT AUTOMATION v2.0 🧪")
+        print("🧪 AI SAFETY DEBATE - EXPERIMENT AUTOMATION v3.0 🧪")
         print("=" * 80)
         print("Sistema mejorado con:")
         print("• Configuración dinámica de píxeles (k)")
         print("• Rollouts personalizables")
+        print("• Agentes mixtos (MCTS vs Greedy)")
+        print("• Selección irrestricta de píxeles")
+        print("• Tracking de confianza del juez")
+        print("• Estrategias de evaluación del juez")
         print("• Gestión avanzada de experimentos")
         print("• Templates y configuraciones guardables\n")
 
@@ -115,24 +121,27 @@ class ExperimentManager:
             print("="*80)
             print("1. 🎓 Entrenar nuevos modelos juez")
             print("2. 🔬 Configurar y ejecutar experimentos")
-            print("3. 📊 Ver resultados anteriores")
-            print("4. 💾 Cargar configuración guardada")
-            print("5. 📝 Crear template de experimentos")
-            print("6. ❌ Salir")
+            print("3. 🎯 Evaluar capacidades del juez")
+            print("4. 📊 Ver resultados anteriores")
+            print("5. 💾 Cargar configuración guardada")
+            print("6. 📝 Crear template de experimentos")
+            print("7. ❌ Salir")
             
-            choice = self.get_input("Selecciona una opción", "2", ["1", "2", "3", "4", "5", "6"])
+            choice = self.get_input("Selecciona una opción", "2", ["1", "2", "3", "4", "5", "6", "7"])
             
             if choice == "1":
                 self.train_judges()
             elif choice == "2":
                 self.configure_experiments()
             elif choice == "3":
-                self.show_previous_results()
+                self.evaluate_judge()
             elif choice == "4":
-                self.load_configuration()
+                self.show_previous_results()
             elif choice == "5":
-                self.create_template()
+                self.load_configuration()
             elif choice == "6":
+                self.create_template()
+            elif choice == "7":
                 print("👋 ¡Hasta luego!")
                 sys.exit(0)
 
@@ -211,6 +220,175 @@ class ExperimentManager:
                     if not self.get_yes_no("¿Continuar con los demás?"):
                         break
 
+    def evaluate_judge(self):
+        """Menú para evaluar capacidades del juez con diferentes estrategias."""
+        print("\n" + "="*80)
+        print("🎯 EVALUACIÓN DE CAPACIDADES DEL JUEZ")
+        print("="*80)
+        
+        # Escanear jueces disponibles
+        self.scan_available_judges()
+        
+        if not self.available_judges:
+            print("❌ No hay modelos juez disponibles. Entrena uno primero.")
+            return
+        
+        # Seleccionar juez
+        print("\n📊 Modelos juez disponibles:")
+        for i, judge in enumerate(self.available_judges, 1):
+            res, k = self.detect_judge_params(judge)
+            print(f"{i:2d}. {judge} (res: {res}x{res}, k: {k})")
+        
+        idx = self.get_input("Selecciona juez (número)", "1", input_type=int) - 1
+        judge_name = self.available_judges[idx]
+        resolution, default_k = self.detect_judge_params(judge_name)
+        
+        while True:
+            print("\n" + "="*60)
+            print("📋 ESTRATEGIAS DE EVALUACIÓN")
+            print("="*60)
+            print("1. 🎲 Random Pixels - Selección aleatoria (baseline)")
+            print("2. ⭐ Optimal Pixels - Píxeles que maximizan confianza (cota superior)")
+            print("3. 💀 Adversarial Pixels - Píxeles que minimizan confianza (incluye píxeles negros)")
+            print("4. 🚫 Adversarial Non-Zero - Píxeles adversariales SIN píxeles negros")
+            print("5. 📊 Comparison Suite - Comparar todas las estrategias")
+            print("6. 🔬 K-Range Analysis - Analizar diferentes valores de k")
+            print("7. 🎯 Threshold Analysis - Analizar diferentes thresholds")
+            print("0. ↩️  Volver al menú principal")
+            
+            choice = self.get_input("Selecciona estrategia", "5", ["0", "1", "2", "3", "4", "5", "6", "7"])
+            
+            if choice == "0":
+                break
+            elif choice == "1":
+                self._evaluate_single_strategy(judge_name, resolution, "random")
+            elif choice == "2":
+                self._evaluate_single_strategy(judge_name, resolution, "optimal")
+            elif choice == "3":
+                self._evaluate_single_strategy(judge_name, resolution, "adversarial")
+            elif choice == "4":
+                self._evaluate_single_strategy(judge_name, resolution, "adversarial_nonzero")
+            elif choice == "5":
+                self._evaluate_comparison_suite(judge_name, resolution, default_k)
+            elif choice == "6":
+                self._evaluate_k_range(judge_name, resolution)
+            elif choice == "7":
+                self._evaluate_threshold_range(judge_name, resolution, default_k)
+
+    def _evaluate_single_strategy(self, judge_name, resolution, strategy):
+        """Evalúa el juez con una estrategia específica."""
+        print(f"\n🎯 Evaluando estrategia: {strategy.upper()}")
+        
+        k = self.get_input("Número de píxeles (k)", "6", input_type=int)
+        n_images = self.get_input("Número de imágenes", "1000", input_type=int)
+        thr = self.get_input("Threshold", "0.0", input_type=float)
+        
+        cmd = (f"python eval_judge.py --judge_name {judge_name} --resolution {resolution} "
+               f"--strategy {strategy} --k {k} --n_images {n_images} --thr {thr}")
+        
+        if self.run_command(cmd, f"Evaluando {strategy} - k={k}"):
+            print(f"✅ Evaluación {strategy} completada")
+        else:
+            print(f"❌ Error en evaluación {strategy}")
+
+    def _evaluate_comparison_suite(self, judge_name, resolution, default_k):
+        """Ejecuta comparación completa de las 4 estrategias."""
+        print("\n📊 SUITE DE COMPARACIÓN - 4 ESTRATEGIAS")
+        print("-" * 50)
+        
+        k = self.get_input("Número de píxeles (k)", str(default_k), input_type=int)
+        n_images = self.get_input("Imágenes por estrategia", "1000", input_type=int)
+        thr = self.get_input("Threshold", "0.0", input_type=float)
+        
+        strategies = ["random", "optimal", "adversarial", "adversarial_nonzero"]
+        
+        print(f"\n🚀 Ejecutando comparación con k={k}, {n_images} imágenes cada una...")
+        
+        for strategy in strategies:
+            cmd = (f"python eval_judge.py --judge_name {judge_name} --resolution {resolution} "
+                   f"--strategy {strategy} --k {k} --n_images {n_images} --thr {thr}")
+            
+            if self.run_command(cmd, f"Comparación - {strategy.capitalize()}"):
+                print(f"✅ {strategy.capitalize()} completado")
+            else:
+                print(f"❌ Error en {strategy}")
+                if not self.get_yes_no("¿Continuar con las demás estrategias?"):
+                    break
+        
+        print("\n📊 Suite de comparación completada. Revisa outputs/evaluations.csv")
+
+    def _evaluate_k_range(self, judge_name, resolution):
+        """Evalúa diferentes valores de k."""
+        print("\n🔬 ANÁLISIS DE RANGO K")
+        print("-" * 40)
+        
+        k_values = []
+        print("Selecciona valores de k a evaluar:")
+        for k in [1, 2, 3, 4, 5, 6, 7, 8, 10, 12]:
+            if self.get_yes_no(f"  • k = {k}"):
+                k_values.append(k)
+        
+        if not k_values:
+            return
+        
+        strategy = self.get_input("Estrategia", "random", ["random", "optimal", "adversarial", "adversarial_nonzero"])
+        n_images = self.get_input("Imágenes por valor de k", "500", input_type=int)
+        thr = self.get_input("Threshold", "0.0", input_type=float)
+        
+        for k in k_values:
+            cmd = (f"python eval_judge.py --judge_name {judge_name} --resolution {resolution} "
+                   f"--strategy {strategy} --k {k} --n_images {n_images} --thr {thr}")
+            
+            if self.run_command(cmd, f"K-Range - k={k} ({strategy})"):
+                print(f"✅ k={k} completado")
+            else:
+                print(f"❌ Error con k={k}")
+                if not self.get_yes_no("¿Continuar con los demás valores?"):
+                    break
+        
+        print(f"\n📊 Análisis de rango k completado para {len(k_values)} valores")
+
+    def _evaluate_threshold_range(self, judge_name, resolution, default_k):
+        """Evalúa diferentes valores de threshold."""
+        print("\n🎯 ANÁLISIS DE THRESHOLD")
+        print("-" * 40)
+        
+        thresholds = []
+        print("Configurar thresholds:")
+        print("1. Serie estándar (0.0, 0.1, 0.2, 0.3, 0.4, 0.5)")
+        print("2. Serie personalizada")
+        
+        choice = self.get_input("Selecciona", "1", ["1", "2"])
+        if choice == "1":
+            thresholds = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+        else:
+            print("Ingresa valores de threshold (escribe 'done' para terminar):")
+            while True:
+                val = input("Threshold: ").strip()
+                if val.lower() == 'done':
+                    break
+                try:
+                    thresholds.append(float(val))
+                except:
+                    print("❌ Valor inválido")
+        
+        k = self.get_input("Número de píxeles (k)", str(default_k), input_type=int)
+        strategy = self.get_input("Estrategia", "random", ["random", "optimal", "adversarial", "adversarial_nonzero"])
+        n_images = self.get_input("Imágenes por threshold", "500", input_type=int)
+        
+        for thr in thresholds:
+            cmd = (f"python eval_judge.py --judge_name {judge_name} --resolution {resolution} "
+                   f"--strategy {strategy} --k {k} --n_images {n_images} --thr {thr}")
+            
+            if self.run_command(cmd, f"Threshold - thr={thr} ({strategy})"):
+                print(f"✅ thr={thr} completado")
+            else:
+                print(f"❌ Error con thr={thr}")
+                if not self.get_yes_no("¿Continuar con los demás valores?"):
+                    break
+        
+        print(f"\n📊 Análisis de threshold completado para {len(thresholds)} valores")
+
     def configure_experiments(self):
         """Configuración principal de experimentos con menú mejorado."""
         print("\n" + "="*80)
@@ -254,6 +432,9 @@ class ExperimentManager:
         # Configurar visualizaciones
         self._configure_visualizations()
         
+        # Configurar nuevas opciones
+        self._configure_advanced_options()
+        
         # Menú de experimentos
         self._experiment_selection_menu()
 
@@ -268,6 +449,36 @@ class ExperimentManager:
                 "  • ¿Guardar debates coloreados?")
             self.config['viz_metadata'] = self.get_yes_no(
                 "  • ¿Guardar metadatos completos?")
+
+    def _configure_advanced_options(self):
+        """Configura las opciones avanzadas nuevas."""
+        print("\n🚀 CONFIGURACIÓN AVANZADA")
+        print("-" * 40)
+        
+        self.config['allow_all_pixels'] = self.get_yes_no(
+            "¿Permitir selección irrestricta de píxeles? (incluye píxeles negros)")
+        
+        self.config['track_confidence'] = self.get_yes_no(
+            "¿Trackear confianza del juez turno a turno? (para análisis estadístico)")
+
+    def _get_advanced_flags(self):
+        """Genera los flags avanzados para los comandos."""
+        flags = ""
+        
+        if self.config['allow_all_pixels']:
+            flags += " --allow_all_pixels"
+        
+        if self.config['track_confidence']:
+            flags += " --track_confidence"
+        
+        # Visualizaciones
+        if self.config['viz_enabled']:
+            if self.config['viz_colored']:
+                flags += " --save_colored_debate"
+            if self.config['viz_metadata']:
+                flags += " --save_metadata"
+        
+        return flags
 
     def _experiment_selection_menu(self):
         """Menú mejorado para selección de experimentos."""
@@ -284,13 +495,15 @@ class ExperimentManager:
             print("3. 🎯 Experimentos de Ablación (variar k)")
             print("4. 📈 Curvas de Escalabilidad (rollouts)")
             print("5. 🎲 Análisis de Robustez (múltiples semillas)")
-            print("6. 🔬 Experimentos Personalizados")
-            print("7. 📊 Ver cola de experimentos")
-            print("8. 🚀 Ejecutar experimentos")
-            print("9. 💾 Guardar configuración")
+            print("6. 🧠 Experimentos de Confianza (confidence tracking)")
+            print("7. 🚫 Experimentos con Píxeles Irrestrictos")
+            print("8. 🔬 Experimentos Personalizados")
+            print("9. 📊 Ver cola de experimentos")
+            print("10. 🚀 Ejecutar experimentos")
+            print("11. 💾 Guardar configuración")
             print("0. ↩️  Volver al menú principal")
             
-            choice = self.get_input("Selecciona opción", "8")
+            choice = self.get_input("Selecciona opción", "10")
             
             if choice == "1":
                 self._add_symmetric_experiments()
@@ -303,13 +516,17 @@ class ExperimentManager:
             elif choice == "5":
                 self._add_robustness_experiments()
             elif choice == "6":
-                self._add_custom_experiments()
+                self._add_confidence_experiments()
             elif choice == "7":
-                self._show_experiment_queue()
+                self._add_unrestricted_pixel_experiments()
             elif choice == "8":
+                self._add_custom_experiments()
+            elif choice == "9":
+                self._show_experiment_queue()
+            elif choice == "10":
                 self._execute_experiments()
                 break
-            elif choice == "9":
+            elif choice == "11":
                 self._save_configuration()
             elif choice == "0":
                 break
@@ -344,10 +561,11 @@ class ExperimentManager:
             rollouts = f" --rollouts {r}"
             
         for variant_name, flags, note in variants:
+            advanced_flags = self._get_advanced_flags()
             cmd = (f"python run_debate.py --judge_name {self.config['judge_name']} "
                    f"--resolution {self.config['resolution']} --k {self.config['k']} "
                    f"--thr {self.config['thr']} --agent_type {agent_type} "
-                   f"--n_images {n_images}{rollouts}{flags} "
+                   f"--n_images {n_images}{rollouts}{flags}{advanced_flags} "
                    f'--note "{agent_type}_{note}"')
             
             desc = f"{agent_type.upper()} vs {agent_type.upper()} - {variant_name}"
@@ -382,10 +600,11 @@ class ExperimentManager:
                                 str(self.config['default_rollouts']), input_type=int)
         
         for variant_name, flags, note in variants:
+            advanced_flags = self._get_advanced_flags()
             cmd = (f"python run_debate.py --judge_name {self.config['judge_name']} "
                    f"--resolution {self.config['resolution']} --k {self.config['k']} "
                    f"--thr {self.config['thr']} --mixed_agents --honest_agent {honest_agent} "
-                   f"--rollouts {rollouts} --n_images {n_images}{flags} "
+                   f"--rollouts {rollouts} --n_images {n_images}{flags}{advanced_flags} "
                    f'--note "{honest_agent}_honest_vs_{liar_agent}_liar_{note}"')
             
             desc = f"{honest_agent.upper()} Honest vs {liar_agent.upper()} Liar - {variant_name}"
@@ -417,6 +636,7 @@ class ExperimentManager:
         precommit = self.get_yes_no("¿Usar precommit?")
         
         for k in k_values:
+            advanced_flags = self._get_advanced_flags()
             cmd = (f"python run_debate.py --judge_name {self.config['judge_name']} "
                    f"--resolution {self.config['resolution']} --k {k} "
                    f"--thr {self.config['thr']} --n_images {n_images}")
@@ -437,7 +657,7 @@ class ExperimentManager:
                 cmd += " --precommit"
                 desc += " con precommit"
                 
-            cmd += f' --note "ablation_k{k}_{agent_type}"'
+            cmd += f'{advanced_flags} --note "ablation_k{k}_{agent_type}"'
             self.experiments.append((cmd, desc))
             
         print(f"✅ Añadidos {len(k_values)} experimentos de ablación")
@@ -549,6 +769,141 @@ class ExperimentManager:
             
         print(f"✅ Añadidos {len(seeds)} experimentos de robustez")
 
+    def _add_confidence_experiments(self):
+        """Añade experimentos específicos para análisis de confianza."""
+        print("\n🧠 EXPERIMENTOS DE CONFIANZA")
+        print("-" * 40)
+        
+        print("Estos experimentos fuerzan el tracking de confianza para análisis estadístico detallado.")
+        
+        # Temporalmente forzar track_confidence
+        original_track = self.config['track_confidence']
+        self.config['track_confidence'] = True
+        
+        agent_types = []
+        if self.get_yes_no("• Incluir Greedy vs Greedy"):
+            agent_types.append("greedy")
+        if self.get_yes_no("• Incluir MCTS vs MCTS"):
+            agent_types.append("mcts")
+        if self.get_yes_no("• Incluir Mixed (MCTS vs Greedy)"):
+            agent_types.append("mixed")
+        
+        if not agent_types:
+            self.config['track_confidence'] = original_track
+            return
+        
+        n_images = self.get_input("Imágenes por experimento", "200", input_type=int)
+        k_values = []
+        print("Valores de k para analizar confianza:")
+        for k in [3, 4, 5, 6, 8]:
+            if self.get_yes_no(f"  • k = {k}"):
+                k_values.append(k)
+        
+        if not k_values:
+            k_values = [self.config['k']]
+        
+        for agent_type in agent_types:
+            for k in k_values:
+                advanced_flags = self._get_advanced_flags()
+                base_cmd = (f"python run_debate.py --judge_name {self.config['judge_name']} "
+                           f"--resolution {self.config['resolution']} --k {k} "
+                           f"--thr {self.config['thr']} --n_images {n_images}{advanced_flags}")
+                
+                if agent_type == "greedy":
+                    cmd = base_cmd + f' --agent_type greedy --note "confidence_greedy_k{k}"'
+                    desc = f"Confidence Analysis - Greedy k={k}"
+                elif agent_type == "mcts":
+                    rollouts = self.get_input(f"Rollouts para MCTS k={k}", "300", input_type=int)
+                    cmd = base_cmd + f' --agent_type mcts --rollouts {rollouts} --note "confidence_mcts_k{k}_r{rollouts}"'
+                    desc = f"Confidence Analysis - MCTS k={k} ({rollouts}r)"
+                else:  # mixed
+                    honest = self.get_input("Agente honesto", "mcts", ["greedy", "mcts"])
+                    rollouts = self.get_input(f"Rollouts para mixed k={k}", "300", input_type=int)
+                    cmd = base_cmd + f' --mixed_agents --honest_agent {honest} --rollouts {rollouts} --note "confidence_mixed_{honest}_k{k}"'
+                    desc = f"Confidence Analysis - Mixed ({honest} honest) k={k}"
+                
+                self.experiments.append((cmd, desc))
+        
+        # Restaurar configuración original
+        self.config['track_confidence'] = original_track
+        
+        total_experiments = len(agent_types) * len(k_values)
+        print(f"✅ Añadidos {total_experiments} experimentos de análisis de confianza")
+
+    def _add_unrestricted_pixel_experiments(self):
+        """Añade experimentos con selección irrestricta de píxeles."""
+        print("\n🚫 EXPERIMENTOS CON PÍXELES IRRESTRICTOS")
+        print("-" * 40)
+        
+        print("Estos experimentos permiten a los agentes seleccionar CUALQUIER píxel,")
+        print("incluyendo píxeles negros, para analizar estrategias emergentes.")
+        
+        # Temporalmente forzar allow_all_pixels
+        original_allow = self.config['allow_all_pixels']
+        self.config['allow_all_pixels'] = True
+        
+        experiment_types = []
+        if self.get_yes_no("• Comparación: restringido vs irrestricto (mismo setup)"):
+            experiment_types.append("comparison")
+        if self.get_yes_no("• Exploración de estrategias adversariales"):
+            experiment_types.append("adversarial")
+        if self.get_yes_no("• Análisis de robustez con píxeles negros"):
+            experiment_types.append("robustness")
+        
+        if not experiment_types:
+            self.config['allow_all_pixels'] = original_allow
+            return
+        
+        agent_type = self.get_input("Tipo de agente principal", "greedy", ["greedy", "mcts", "mixed"])
+        n_images = self.get_input("Imágenes por experimento", "300", input_type=int)
+        
+        if "comparison" in experiment_types:
+            # Experimentos de comparación directa
+            advanced_flags = self._get_advanced_flags()
+            base_cmd = (f"python run_debate.py --judge_name {self.config['judge_name']} "
+                       f"--resolution {self.config['resolution']} --k {self.config['k']} "
+                       f"--thr {self.config['thr']} --n_images {n_images}")
+            
+            # Con restricción (temporal: quitar allow_all_pixels)
+            self.config['allow_all_pixels'] = False
+            restricted_flags = self._get_advanced_flags()
+            self.config['allow_all_pixels'] = True
+            
+            if agent_type == "greedy":
+                # Restringido
+                cmd_restricted = base_cmd + restricted_flags + ' --agent_type greedy --note "comparison_restricted_greedy"'
+                self.experiments.append((cmd_restricted, "Comparison - Greedy RESTRICTED pixels"))
+                # Irrestricto
+                cmd_unrestricted = base_cmd + advanced_flags + ' --agent_type greedy --note "comparison_unrestricted_greedy"'
+                self.experiments.append((cmd_unrestricted, "Comparison - Greedy UNRESTRICTED pixels"))
+            
+        if "adversarial" in experiment_types:
+            # Experimentos adversariales
+            advanced_flags = self._get_advanced_flags()
+            for k in [4, 6, 8]:
+                cmd = (f"python run_debate.py --judge_name {self.config['judge_name']} "
+                       f"--resolution {self.config['resolution']} --k {k} "
+                       f"--thr 0.0 --n_images {n_images} --agent_type {agent_type}{advanced_flags} "
+                       f'--note "adversarial_unrestricted_{agent_type}_k{k}"')
+                self.experiments.append((cmd, f"Adversarial - {agent_type.upper()} k={k} (unrestricted)"))
+        
+        if "robustness" in experiment_types:
+            # Experimentos de robustez
+            advanced_flags = self._get_advanced_flags()
+            for thr in [0.0, 0.1, 0.3]:
+                cmd = (f"python run_debate.py --judge_name {self.config['judge_name']} "
+                       f"--resolution {self.config['resolution']} --k {self.config['k']} "
+                       f"--thr {thr} --n_images {n_images} --agent_type {agent_type}{advanced_flags} "
+                       f'--note "robustness_unrestricted_{agent_type}_thr{thr}"')
+                self.experiments.append((cmd, f"Robustness - {agent_type.upper()} thr={thr} (unrestricted)"))
+        
+        # Restaurar configuración original
+        self.config['allow_all_pixels'] = original_allow
+        
+        total_experiments = len([e for e in experiment_types if e in ["comparison", "adversarial", "robustness"]])
+        print(f"✅ Añadidos experimentos de píxeles irrestrictos")
+        print(f"    Los agentes pueden ahora seleccionar píxeles negros y explorar nuevas estrategias")
+
     def _add_custom_experiments(self):
         """Añade experimentos completamente personalizados."""
         print("\n🔬 EXPERIMENTO PERSONALIZADO")
@@ -596,6 +951,13 @@ class ExperimentManager:
             
         if self.get_yes_no("¿Honest empieza primero?"):
             cmd += " --starts honest"
+        
+        # Opciones avanzadas
+        if self.get_yes_no("¿Permitir selección irrestricta de píxeles?"):
+            cmd += " --allow_all_pixels"
+        
+        if self.get_yes_no("¿Trackear confianza del juez?"):
+            cmd += " --track_confidence"
         
         seed = self.get_input("Semilla (dejar vacío para default)", "")
         if seed:
