@@ -443,7 +443,7 @@ def log_results_csv(logfile, results):
     if "judges.csv" in logfile:
         columns = ["timestamp","judge_name","resolution","thr","seed", "epochs","batch_size","lr","best_loss", "pixels", "accuracy","note"]
     elif "evaluations.csv" in logfile:
-        columns = ["timestamp","judge_name","strategy","resolution","thr","seed", "n_images", "pixels", "accuracy","note"]
+        columns = ["timestamp","judge_name","strategy","resolution","thr","seed", "n_images", "pixels", "accuracy","rollouts","allow_all_pixels","note"]
     elif "debates_asimetricos.csv" in logfile:
         columns = ["timestamp","judge_name","resolution","thr","seed", "rollouts","n_images", "pixels", "started","precommit", 
                   "honest_agent_type","liar_agent_type","allow_all_pixels","track_confidence","accuracy","note"]

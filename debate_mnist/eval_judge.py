@@ -162,6 +162,85 @@ def select_random_pixels(image, k, thr):
     
     return chosen_coords
 
+def select_agent_pixels(image, model, true_label, k, thr, device, agent_type, **agent_kwargs):
+    """
+    Selecciona k píxeles usando un agente específico (greedy o mcts) de forma secuencial.
+    Simula un debate de un solo agente eligiendo k píxeles para el juez.
+    
+    Args:
+        image: imagen original
+        model: modelo del juez
+        true_label: etiqueta verdadera
+        k: número de píxeles a seleccionar
+        thr: threshold para píxeles relevantes
+        device: dispositivo (GPU/CPU)
+        agent_type: "greedy" o "mcts"
+        **agent_kwargs: argumentos específicos del agente (rollouts, etc.)
+    """
+    H, W = image.shape[-2], image.shape[-1]
+    image_2d = image.squeeze()
+    
+    # Inicializar máscara vacía
+    mask = torch.zeros((H, W), dtype=torch.float32, device=device)
+    
+    # Importar agentes dinámicamente
+    if agent_type == "greedy":
+        from agents.greedy_agent import GreedyAgent
+        # Para evaluación del juez: agente honesto que maximiza la clase verdadera
+        agent = GreedyAgent(
+            judge_model=model,
+            my_class=true_label,
+            opponent_class=None,  # No hay oponente en evaluación
+            precommit=False,      # Modo honesto estándar
+            original_image=image,
+            thr=thr,
+            allow_all_pixels=agent_kwargs.get('allow_all_pixels', False)
+        )
+    elif agent_type == "greedy_adversarial":
+        from agents.greedy_adversarial_agent import GreedyAdversarialAgent
+        # Agente adversarial que minimiza logits de la clase verdadera
+        agent = GreedyAdversarialAgent(
+            judge_model=model,
+            true_class=true_label,
+            original_image=image,
+            thr=thr,
+            allow_all_pixels=agent_kwargs.get('allow_all_pixels', False)
+        )
+    elif agent_type == "mcts":
+        from agents.mcts_fast import FastMCTSAgent
+        rollouts = agent_kwargs.get('rollouts', 500)
+        agent = FastMCTSAgent(
+            judge_model=model,
+            my_class=true_label,
+            opponent_class=None,
+            precommit=False,
+            original_image=image,
+            thr=thr,
+            rollouts=rollouts,
+            total_moves=k,
+            is_truth_agent=True,
+            allow_all_pixels=agent_kwargs.get('allow_all_pixels', False)
+        )
+    else:
+        raise ValueError(f"Tipo de agente no soportado: {agent_type}")
+    
+    # Selección secuencial de píxeles
+    chosen_coords = []
+    for turn in range(k):
+        pixel = agent.choose_pixel(mask, reveal_count=turn)
+        if pixel is None:
+            break  # No hay más píxeles disponibles
+        
+        y, x = pixel
+        mask[y, x] = 1.0
+        chosen_coords.append(torch.tensor([y, x], device=device))
+    
+    if chosen_coords:
+        return torch.stack(chosen_coords)
+    else:
+        # Fallback a selección aleatoria si el agente no puede seleccionar
+        return select_random_pixels(image, k, thr)
+
 def main():
     parser = argparse.ArgumentParser(description="Evalúa la precisión del juez débil (SparseCNN) con diferentes estrategias de selección de píxeles")
     parser.add_argument("--resolution", type=int,   default=28,             help="Resolución de las imágenes (16 o 28)")
@@ -172,7 +251,9 @@ def main():
     parser.add_argument("--batch_size", type=int,   default=128,            help="Tamaño de batch para evaluación")
     parser.add_argument("--judge_name", type=str,   default="judge_model",  help="Nombre del modelo juez (sin extensión)")
     parser.add_argument("--strategy",   type=str,   default="random",       help="Estrategia de selección de píxeles", 
-                        choices=["random", "optimal", "adversarial", "adversarial_nonzero"])
+                        choices=["random", "optimal", "adversarial", "adversarial_nonzero", "greedy_agent", "mcts_agent", "greedy_adversarial_agent"])
+    parser.add_argument("--rollouts",   type=int,   default=500,            help="Rollouts para MCTS agent (solo usado con strategy=mcts_agent)")
+    parser.add_argument("--allow_all_pixels", action="store_true",         help="Permitir selección de cualquier píxel (incluye píxeles negros)")
     parser.add_argument("--note",       type=str,   default="",             help="Nota opcional para registrar en el CSV")
     args = parser.parse_args()
 
@@ -212,7 +293,10 @@ def main():
         "random": "random", 
         "optimal": "optimal", 
         "adversarial": "adversarial", 
-        "adversarial_nonzero": "adversarial_nonzero"
+        "adversarial_nonzero": "adversarial_nonzero",
+        "greedy_agent": "greedy_agent",
+        "mcts_agent": "mcts_agent",
+        "greedy_adversarial_agent": "greedy_adversarial_agent"
     }[args.strategy]
     
     with torch.no_grad():
@@ -230,6 +314,21 @@ def main():
                 chosen_coords = select_adversarial_pixels(image, model, true_label, args.k, args.thr, device)
             elif args.strategy == "adversarial_nonzero":
                 chosen_coords = select_adversarial_nonzero_pixels(image, model, true_label, args.k, args.thr, device)
+            elif args.strategy == "greedy_agent":
+                chosen_coords = select_agent_pixels(
+                    image, model, true_label, args.k, args.thr, device, 
+                    "greedy", allow_all_pixels=args.allow_all_pixels
+                )
+            elif args.strategy == "mcts_agent":
+                chosen_coords = select_agent_pixels(
+                    image, model, true_label, args.k, args.thr, device, 
+                    "mcts", rollouts=args.rollouts, allow_all_pixels=args.allow_all_pixels
+                )
+            elif args.strategy == "greedy_adversarial_agent":
+                chosen_coords = select_agent_pixels(
+                    image, model, true_label, args.k, args.thr, device, 
+                    "greedy_adversarial", allow_all_pixels=args.allow_all_pixels
+                )
             
             # Crear máscara y entrada para el juez
             H, W = image.shape[-2], image.shape[-1]
@@ -269,6 +368,8 @@ def main():
         "n_images": args.n_images,
         "pixels": args.k,
         "accuracy": accuracy,
+        "rollouts": args.rollouts if args.strategy == "mcts_agent" else "",
+        "allow_all_pixels": args.allow_all_pixels,
         "note": args.note
     }
     evaluations_csv_path = "outputs/evaluations.csv"

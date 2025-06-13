@@ -251,12 +251,15 @@ class ExperimentManager:
             print("2. ⭐ Optimal Pixels - Píxeles que maximizan confianza (cota superior)")
             print("3. 💀 Adversarial Pixels - Píxeles que minimizan confianza (incluye píxeles negros)")
             print("4. 🚫 Adversarial Non-Zero - Píxeles adversariales SIN píxeles negros")
-            print("5. 📊 Comparison Suite - Comparar todas las estrategias")
-            print("6. 🔬 K-Range Analysis - Analizar diferentes valores de k")
-            print("7. 🎯 Threshold Analysis - Analizar diferentes thresholds")
+            print("5. 🤖 Greedy Agent - Selección secuencial con agente Greedy")
+            print("6. 🧠 MCTS Agent - Selección secuencial con agente MCTS")
+            print("7. 💀 Greedy Adversarial Agent - Agente que minimiza logits de clase verdadera")
+            print("8. 📊 Comparison Suite - Comparar todas las estrategias")
+            print("9. 🔬 K-Range Analysis - Analizar diferentes valores de k")
+            print("10. 🎯 Threshold Analysis - Analizar diferentes thresholds")
             print("0. ↩️  Volver al menú principal")
             
-            choice = self.get_input("Selecciona estrategia", "5", ["0", "1", "2", "3", "4", "5", "6", "7"])
+            choice = self.get_input("Selecciona estrategia", "8", ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
             
             if choice == "0":
                 break
@@ -269,10 +272,16 @@ class ExperimentManager:
             elif choice == "4":
                 self._evaluate_single_strategy(judge_name, resolution, "adversarial_nonzero")
             elif choice == "5":
-                self._evaluate_comparison_suite(judge_name, resolution, default_k)
+                self._evaluate_agent_strategy(judge_name, resolution, "greedy_agent")
             elif choice == "6":
-                self._evaluate_k_range(judge_name, resolution)
+                self._evaluate_agent_strategy(judge_name, resolution, "mcts_agent")
             elif choice == "7":
+                self._evaluate_agent_strategy(judge_name, resolution, "greedy_adversarial_agent")
+            elif choice == "8":
+                self._evaluate_comparison_suite(judge_name, resolution, default_k)
+            elif choice == "9":
+                self._evaluate_k_range(judge_name, resolution)
+            elif choice == "10":
                 self._evaluate_threshold_range(judge_name, resolution, default_k)
 
     def _evaluate_single_strategy(self, judge_name, resolution, strategy):
@@ -291,25 +300,64 @@ class ExperimentManager:
         else:
             print(f"❌ Error en evaluación {strategy}")
 
+    def _evaluate_agent_strategy(self, judge_name, resolution, strategy):
+        """Evalúa el juez con estrategias de agentes (greedy_agent o mcts_agent)."""
+        agent_type = strategy.replace("_agent", "")
+        print(f"\n🤖 Evaluando estrategia de agente: {agent_type.upper()}")
+        
+        k = self.get_input("Número de píxeles (k)", "6", input_type=int)
+        n_images = self.get_input("Número de imágenes", "500", input_type=int)
+        thr = self.get_input("Threshold", "0.0", input_type=float)
+        allow_all_pixels = self.get_yes_no("¿Permitir selección de píxeles negros?")
+        
+        cmd = (f"python eval_judge.py --judge_name {judge_name} --resolution {resolution} "
+               f"--strategy {strategy} --k {k} --n_images {n_images} --thr {thr}")
+        
+        if strategy == "mcts_agent":
+            rollouts = self.get_input("Rollouts para MCTS", "500", input_type=int)
+            cmd += f" --rollouts {rollouts}"
+            
+        if allow_all_pixels:
+            cmd += " --allow_all_pixels"
+        
+        if self.run_command(cmd, f"Evaluando {agent_type} agent - k={k}"):
+            print(f"✅ Evaluación {agent_type} agent completada")
+        else:
+            print(f"❌ Error en evaluación {agent_type} agent")
+
     def _evaluate_comparison_suite(self, judge_name, resolution, default_k):
-        """Ejecuta comparación completa de las 4 estrategias."""
-        print("\n📊 SUITE DE COMPARACIÓN - 4 ESTRATEGIAS")
+        """Ejecuta comparación completa de estrategias incluyendo agentes."""
+        print("\n📊 SUITE DE COMPARACIÓN EXTENDIDA")
         print("-" * 50)
         
         k = self.get_input("Número de píxeles (k)", str(default_k), input_type=int)
-        n_images = self.get_input("Imágenes por estrategia", "1000", input_type=int)
+        n_images = self.get_input("Imágenes por estrategia", "500", input_type=int)
         thr = self.get_input("Threshold", "0.0", input_type=float)
+        
+        include_agents = self.get_yes_no("¿Incluir estrategias de agentes (más lento)?", "y")
+        allow_all_pixels = self.get_yes_no("¿Permitir píxeles negros para agentes?")
         
         strategies = ["random", "optimal", "adversarial", "adversarial_nonzero"]
         
+        if include_agents:
+            strategies.extend(["greedy_agent", "mcts_agent", "greedy_adversarial_agent"])
+            rollouts = self.get_input("Rollouts para MCTS agent", "300", input_type=int)
+        
         print(f"\n🚀 Ejecutando comparación con k={k}, {n_images} imágenes cada una...")
+        print(f"Estrategias: {', '.join(strategies)}")
         
         for strategy in strategies:
             cmd = (f"python eval_judge.py --judge_name {judge_name} --resolution {resolution} "
                    f"--strategy {strategy} --k {k} --n_images {n_images} --thr {thr}")
             
-            if self.run_command(cmd, f"Comparación - {strategy.capitalize()}"):
-                print(f"✅ {strategy.capitalize()} completado")
+            if strategy == "mcts_agent":
+                cmd += f" --rollouts {rollouts}"
+                
+            if strategy in ["greedy_agent", "mcts_agent", "greedy_adversarial_agent"] and allow_all_pixels:
+                cmd += " --allow_all_pixels"
+            
+            if self.run_command(cmd, f"Comparación - {strategy.replace('_', ' ').title()}"):
+                print(f"✅ {strategy.replace('_', ' ').title()} completado")
             else:
                 print(f"❌ Error en {strategy}")
                 if not self.get_yes_no("¿Continuar con las demás estrategias?"):
@@ -331,13 +379,28 @@ class ExperimentManager:
         if not k_values:
             return
         
-        strategy = self.get_input("Estrategia", "random", ["random", "optimal", "adversarial", "adversarial_nonzero"])
-        n_images = self.get_input("Imágenes por valor de k", "500", input_type=int)
+        strategy = self.get_input("Estrategia", "random", 
+                                 ["random", "optimal", "adversarial", "adversarial_nonzero", "greedy_agent", "mcts_agent", "greedy_adversarial_agent"])
+        n_images = self.get_input("Imágenes por valor de k", "300", input_type=int)
         thr = self.get_input("Threshold", "0.0", input_type=float)
+        
+        # Configuración específica para agentes
+        rollouts = None
+        allow_all_pixels = False
+        if strategy in ["greedy_agent", "mcts_agent", "greedy_adversarial_agent"]:
+            allow_all_pixels = self.get_yes_no("¿Permitir píxeles negros?")
+            if strategy == "mcts_agent":
+                rollouts = self.get_input("Rollouts para MCTS", "200", input_type=int)
         
         for k in k_values:
             cmd = (f"python eval_judge.py --judge_name {judge_name} --resolution {resolution} "
                    f"--strategy {strategy} --k {k} --n_images {n_images} --thr {thr}")
+            
+            if strategy == "mcts_agent" and rollouts:
+                cmd += f" --rollouts {rollouts}"
+                
+            if strategy in ["greedy_agent", "mcts_agent", "greedy_adversarial_agent"] and allow_all_pixels:
+                cmd += " --allow_all_pixels"
             
             if self.run_command(cmd, f"K-Range - k={k} ({strategy})"):
                 print(f"✅ k={k} completado")
@@ -373,12 +436,27 @@ class ExperimentManager:
                     print("❌ Valor inválido")
         
         k = self.get_input("Número de píxeles (k)", str(default_k), input_type=int)
-        strategy = self.get_input("Estrategia", "random", ["random", "optimal", "adversarial", "adversarial_nonzero"])
-        n_images = self.get_input("Imágenes por threshold", "500", input_type=int)
+        strategy = self.get_input("Estrategia", "random", 
+                                 ["random", "optimal", "adversarial", "adversarial_nonzero", "greedy_agent", "mcts_agent", "greedy_adversarial_agent"])
+        n_images = self.get_input("Imágenes por threshold", "300", input_type=int)
+        
+        # Configuración específica para agentes
+        rollouts = None
+        allow_all_pixels = False
+        if strategy in ["greedy_agent", "mcts_agent", "greedy_adversarial_agent"]:
+            allow_all_pixels = self.get_yes_no("¿Permitir píxeles negros?")
+            if strategy == "mcts_agent":
+                rollouts = self.get_input("Rollouts para MCTS", "200", input_type=int)
         
         for thr in thresholds:
             cmd = (f"python eval_judge.py --judge_name {judge_name} --resolution {resolution} "
                    f"--strategy {strategy} --k {k} --n_images {n_images} --thr {thr}")
+            
+            if strategy == "mcts_agent" and rollouts:
+                cmd += f" --rollouts {rollouts}"
+                
+            if strategy in ["greedy_agent", "mcts_agent", "greedy_adversarial_agent"] and allow_all_pixels:
+                cmd += " --allow_all_pixels"
             
             if self.run_command(cmd, f"Threshold - thr={thr} ({strategy})"):
                 print(f"✅ thr={thr} completado")
@@ -497,13 +575,14 @@ class ExperimentManager:
             print("5. 🎲 Análisis de Robustez (múltiples semillas)")
             print("6. 🧠 Experimentos de Confianza (confidence tracking)")
             print("7. 🚫 Experimentos con Píxeles Irrestrictos")
-            print("8. 🔬 Experimentos Personalizados")
-            print("9. 📊 Ver cola de experimentos")
-            print("10. 🚀 Ejecutar experimentos")
-            print("11. 💾 Guardar configuración")
+            print("8. 🤖 Experimentos de Evaluación de Juez")
+            print("9. 🔬 Experimentos Personalizados")
+            print("10. 📊 Ver cola de experimentos")
+            print("11. 🚀 Ejecutar experimentos")
+            print("12. 💾 Guardar configuración")
             print("0. ↩️  Volver al menú principal")
             
-            choice = self.get_input("Selecciona opción", "10")
+            choice = self.get_input("Selecciona opción", "11")
             
             if choice == "1":
                 self._add_symmetric_experiments()
@@ -520,13 +599,15 @@ class ExperimentManager:
             elif choice == "7":
                 self._add_unrestricted_pixel_experiments()
             elif choice == "8":
-                self._add_custom_experiments()
+                self._add_judge_evaluation_experiments()
             elif choice == "9":
-                self._show_experiment_queue()
+                self._add_custom_experiments()
             elif choice == "10":
+                self._show_experiment_queue()
+            elif choice == "11":
                 self._execute_experiments()
                 break
-            elif choice == "11":
+            elif choice == "12":
                 self._save_configuration()
             elif choice == "0":
                 break
@@ -903,6 +984,96 @@ class ExperimentManager:
         total_experiments = len([e for e in experiment_types if e in ["comparison", "adversarial", "robustness"]])
         print(f"✅ Añadidos experimentos de píxeles irrestrictos")
         print(f"    Los agentes pueden ahora seleccionar píxeles negros y explorar nuevas estrategias")
+
+    def _add_judge_evaluation_experiments(self):
+        """Añade experimentos específicos de evaluación del juez con agentes."""
+        print("\n🤖 EXPERIMENTOS DE EVALUACIÓN DE JUEZ")
+        print("-" * 40)
+        
+        print("Estos experimentos evalúan la capacidad del juez con diferentes estrategias")
+        print("incluyendo agentes que seleccionan píxeles secuencialmente.")
+        
+        experiment_types = []
+        if self.get_yes_no("• Comparación de todas las estrategias"):
+            experiment_types.append("full_comparison")
+        if self.get_yes_no("• Análisis de agentes vs estrategias estáticas"):
+            experiment_types.append("agent_vs_static")
+        if self.get_yes_no("• Análisis de escalabilidad de agentes (diferentes k)"):
+            experiment_types.append("agent_scalability")
+        if self.get_yes_no("• Análisis de rollouts para MCTS"):
+            experiment_types.append("mcts_rollouts")
+        
+        if not experiment_types:
+            return
+        
+        n_images = self.get_input("Imágenes por experimento", "300", input_type=int)
+        
+        if "full_comparison" in experiment_types:
+            # Comparación completa de todas las estrategias
+            strategies = ["random", "optimal", "adversarial", "adversarial_nonzero", 
+                         "greedy_agent", "mcts_agent", "greedy_adversarial_agent"]
+            
+            for strategy in strategies:
+                cmd = (f"python eval_judge.py --judge_name {self.config['judge_name']} "
+                       f"--resolution {self.config['resolution']} --k {self.config['k']} "
+                       f"--thr {self.config['thr']} --strategy {strategy} --n_images {n_images}")
+                
+                if strategy == "mcts_agent":
+                    cmd += " --rollouts 300"
+                
+                cmd += f' --note "judge_eval_comparison_{strategy}"'
+                
+                desc = f"Judge Eval - {strategy.replace('_', ' ').title()}"
+                self.experiments.append((cmd, desc))
+        
+        if "agent_vs_static" in experiment_types:
+            # Comparación directa agentes vs estáticas con mismas condiciones
+            for k in [4, 6, 8]:
+                base_cmd = (f"python eval_judge.py --judge_name {self.config['judge_name']} "
+                           f"--resolution {self.config['resolution']} --k {k} "
+                           f"--thr {self.config['thr']} --n_images {n_images}")
+                
+                # Estáticas
+                for strategy in ["random", "optimal"]:
+                    cmd = base_cmd + f' --strategy {strategy} --note "judge_eval_static_{strategy}_k{k}"'
+                    self.experiments.append((cmd, f"Judge Eval - {strategy.title()} k={k}"))
+                
+                # Agentes
+                for agent in ["greedy_agent", "mcts_agent", "greedy_adversarial_agent"]:
+                    cmd = base_cmd + f' --strategy {agent}'
+                    if agent == "mcts_agent":
+                        cmd += " --rollouts 200"
+                    cmd += f' --note "judge_eval_agent_{agent}_k{k}"'
+                    self.experiments.append((cmd, f"Judge Eval - {agent.replace('_', ' ').title()} k={k}"))
+        
+        if "agent_scalability" in experiment_types:
+            # Análisis de escalabilidad de agentes
+            for agent in ["greedy_agent", "mcts_agent", "greedy_adversarial_agent"]:
+                for k in [3, 4, 5, 6, 7, 8, 10]:
+                    cmd = (f"python eval_judge.py --judge_name {self.config['judge_name']} "
+                           f"--resolution {self.config['resolution']} --k {k} "
+                           f"--thr {self.config['thr']} --strategy {agent} --n_images {n_images}")
+                    
+                    if agent == "mcts_agent":
+                        cmd += " --rollouts 200"
+                    
+                    cmd += f' --note "judge_eval_scalability_{agent}_k{k}"'
+                    self.experiments.append((cmd, f"Judge Eval Scalability - {agent.replace('_', ' ').title()} k={k}"))
+        
+        if "mcts_rollouts" in experiment_types:
+            # Análisis de rollouts para MCTS
+            for rollouts in [50, 100, 200, 500, 1000]:
+                cmd = (f"python eval_judge.py --judge_name {self.config['judge_name']} "
+                       f"--resolution {self.config['resolution']} --k {self.config['k']} "
+                       f"--thr {self.config['thr']} --strategy mcts_agent --rollouts {rollouts} "
+                       f"--n_images {n_images} --note judge_eval_mcts_r{rollouts}")
+                
+                self.experiments.append((cmd, f"Judge Eval - MCTS {rollouts} rollouts"))
+        
+        total_added = len([exp for exp in self.experiments 
+                          if "judge_eval" in exp[0]])
+        print(f"✅ Añadidos experimentos de evaluación de juez")
+        print(f"    Total: {total_added} experimentos que evalúan capacidades del juez")
 
     def _add_custom_experiments(self):
         """Añade experimentos completamente personalizados."""
