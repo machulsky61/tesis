@@ -39,3 +39,7 @@ greedy_6px_liar_no-precommit_20250612_013152,28,28,0.0,42,0,1000,greedy,6,liar,F
 greedy_6px_liar_precommit_20250612_015038,28,28,0.0,42,0,1000,greedy,6,liar,True,True,False,0.219,greedy_precommit
 greedy_6px_honest_no-precommit_20250612_061505,28,28,0.0,42,0,1000,greedy,6,honest,False,True,False,0.076,greedy_honest_first
 greedy_6px_honest_precommit_20250612_063402,28,28,0.0,42,0,1000,greedy,6,honest,True,True,False,0.138,greedy_precommit_honest_first
+mcts_6px_liar_no-precommit_20250612_101458,28,28,0.0,42,512,100,mcts,6,liar,False,True,False,0.49,mcts_
+mcts_6px_liar_precommit_20250612_174436,28,28,0.0,42,512,100,mcts,6,liar,True,True,False,0.16,mcts_precommit
+mcts_6px_honest_no-precommit_20250612_213814,28,28,0.0,42,512,100,mcts,6,honest,False,True,False,0.04,mcts_honest_first
+mcts_6px_honest_precommit_20250612_215708,28,28,0.0,42,512,100,mcts,6,honest,True,True,False,0.11,mcts_precommit_honest_first
