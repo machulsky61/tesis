@@ -12,6 +12,7 @@ import os
 from models.sparse_cnn import SparseCNN
 from utils.data_utils import DebateDataset
 from utils import helpers
+from utils.paths import get_model_path, EVALUATIONS_CSV
 
 def select_optimal_pixels(image, model, true_label, k, thr, device):
     """
@@ -221,8 +222,19 @@ def select_agent_pixels(image, model, true_label, k, thr, device, agent_type, **
             is_truth_agent=True,
             allow_all_pixels=agent_kwargs.get('allow_all_pixels', False)
         )
+    elif agent_type == "mcts_adversarial":
+        from agents.mcts_adversarial_agent import MCTSAdversarialAgent
+        rollouts = agent_kwargs.get('rollouts', 500)
+        agent = MCTSAdversarialAgent(
+            judge_model=model,
+            true_class=true_label,
+            original_image=image,
+            thr=thr,
+            allow_all_pixels=agent_kwargs.get('allow_all_pixels', False),
+            rollouts=rollouts
+        )
     else:
-        raise ValueError(f"Tipo de agente no soportado: {agent_type}")
+        raise ValueError(f"Unsupported agent type: {agent_type}")
     
     # Selección secuencial de píxeles
     chosen_coords = []
@@ -250,8 +262,8 @@ def main():
     parser.add_argument("--n_images",   type=int,   default=1000,           help="Cantidad de muestras de test a evaluar")
     parser.add_argument("--batch_size", type=int,   default=128,            help="Tamaño de batch para evaluación")
     parser.add_argument("--judge_name", type=str,   default="judge_model",  help="Nombre del modelo juez (sin extensión)")
-    parser.add_argument("--strategy",   type=str,   default="random",       help="Estrategia de selección de píxeles", 
-                        choices=["random", "optimal", "adversarial", "adversarial_nonzero", "greedy_agent", "mcts_agent", "greedy_adversarial_agent"])
+    parser.add_argument("--strategy",   type=str,   default="random",       help="Pixel selection strategy", 
+                        choices=["random", "optimal", "adversarial", "adversarial_nonzero", "greedy_agent", "mcts_agent", "greedy_adversarial_agent", "mcts_adversarial_agent"])
     parser.add_argument("--rollouts",   type=int,   default=500,            help="Rollouts para MCTS agent (solo usado con strategy=mcts_agent)")
     parser.add_argument("--allow_all_pixels", action="store_true",         help="Permitir selección de cualquier píxel (incluye píxeles negros)")
     parser.add_argument("--note",       type=str,   default="",             help="Nota opcional para registrar en el CSV")
@@ -267,7 +279,7 @@ def main():
     # 2) Cargar modelo del juez
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = SparseCNN(resolution=args.resolution).to(device)
-    model_path = f"models/{args.judge_name}.pth"
+    model_path = get_model_path(args.judge_name)
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
 
@@ -329,6 +341,11 @@ def main():
                     image, model, true_label, args.k, args.thr, device, 
                     "greedy_adversarial", allow_all_pixels=args.allow_all_pixels
                 )
+            elif args.strategy == "mcts_adversarial_agent":
+                chosen_coords = select_agent_pixels(
+                    image, model, true_label, args.k, args.thr, device, 
+                    "mcts_adversarial", rollouts=args.rollouts, allow_all_pixels=args.allow_all_pixels
+                )
             
             # Crear máscara y entrada para el juez
             H, W = image.shape[-2], image.shape[-1]
@@ -372,9 +389,8 @@ def main():
         "allow_all_pixels": args.allow_all_pixels,
         "note": args.note
     }
-    evaluations_csv_path = "outputs/evaluations.csv"
-    helpers.log_results_csv(evaluations_csv_path, results)
-    print(f"Resultados registrados en {evaluations_csv_path}")
+    helpers.log_results_csv(str(EVALUATIONS_CSV), results)
+    print(f"Results logged to {EVALUATIONS_CSV}")
 
 if __name__ == "__main__":
     main()

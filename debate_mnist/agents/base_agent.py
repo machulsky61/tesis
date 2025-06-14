@@ -2,45 +2,45 @@ import torch
 
 class DebateAgent:
     """
-    Clase base para agentes del debate. Almacena información común como modelo juez, clases objetivo y la imagen original.
+    Base class for debate agents. Stores common information like judge model, target classes and original image.
     """
     def __init__(self, judge_model, my_class, opponent_class, precommit, original_image, thr=0.0, allow_all_pixels=False):
         """
-        judge_model: modelo del juez (clasificador) para evaluar estados.
-        my_class: clase (dígito) que este agente defiende que es la imagen.
-        opponent_class: clase que defiende el agente oponente.
-        original_image: imagen original completa (tensor 1xHxW o 2D HxW) con intensidades.
-        thr: umbral de relevancia de píxeles para considerar.
-        allow_all_pixels: si True, permite seleccionar cualquier píxel (no solo >thr).
+        judge_model: judge model (classifier) to evaluate states.
+        my_class: class (digit) that this agent defends the image to be.
+        opponent_class: class that the opponent agent defends.
+        original_image: complete original image (tensor 1xHxW or 2D HxW) with intensities.
+        thr: relevance threshold for pixels to consider.
+        allow_all_pixels: if True, allows selecting any pixel (not just >thr).
         """
         self.judge = judge_model
         self.my_class = my_class
         self.opp_class = opponent_class
         self.precommit = precommit
         self.allow_all_pixels = allow_all_pixels
-        # Asegurarse de que la imagen original es 2D HxW para facilitar cálculos
+        # Ensure original image is 2D HxW for easier calculations
         self.image = original_image.squeeze()
-        # Mover la imagen al mismo dispositivo que el modelo del juez
+        # Move image to same device as judge model
         self.image = self.image.to(next(judge_model.parameters()).device)
-        # Guardar umbral y precomputar píxeles relevantes (coordenadas) según thr
+        # Save threshold and precompute relevant pixels (coordinates) according to thr
         self.thr = thr
         
         H, W = self.image.shape[-2], self.image.shape[-1]
         
         if allow_all_pixels:
-            # Permitir cualquier píxel en la imagen
+            # Allow any pixel in the image
             coords = torch.cartesian_prod(torch.arange(H), torch.arange(W))
         else:
-            # Solo píxeles relevantes (>thr) - comportamiento original
+            # Only relevant pixels (>thr) - original behavior
             mask_relevant = (self.image > self.thr)
             coords = mask_relevant.nonzero(as_tuple=False)
             if coords.numel() == 0:
-                # si ningún pixel supera thr, considerar todos los píxeles
+                # if no pixel exceeds thr, consider all pixels
                 coords = torch.cartesian_prod(torch.arange(H), torch.arange(W))
         
-        # Convertir coords tensor a lista de tuplas de int (en CPU para facilidad)
+        # Convert coords tensor to list of int tuples (on CPU for convenience)
         coords = coords.cpu().tolist()
         self.relevant_coords = [(int(y), int(x)) for (y, x) in coords]
     def choose_pixel(self, mask, reveal_count=None):
-        """Método abstracto que el agente debe implementar para elegir el próximo píxel a revelar."""
-        raise NotImplementedError("Este método debe ser implementado por subclases de DebateAgent")
+        """Abstract method that the agent must implement to choose the next pixel to reveal."""
+        raise NotImplementedError("This method must be implemented by DebateAgent subclasses")

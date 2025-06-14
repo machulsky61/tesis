@@ -7,7 +7,7 @@ import torch
 from datetime import datetime
 
 def load_times_font(size=18, bold=False):
-    # Lista de rutas probables
+    # List of likely paths
     candidates = [
         "C:/Windows/Fonts/timesnewroman.ttf",
         "C:/Windows/Fonts/times.ttf",
@@ -28,14 +28,14 @@ def load_times_font(size=18, bold=False):
     return ImageFont.load_default()  # fallback
 
 def set_seed(seed):
-    """Fija la semilla global para reproducibilidad completa."""
+    """Sets global seed for complete reproducibility."""
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-    # Si se utiliza GPU, fijamos semilla para CUDA también
+    # If using GPU, also set seed for CUDA
     torch.cuda.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
-    # Opciones para reproducibilidad en CNN (puede afectar rendimiento)
+    # Options for CNN reproducibility (may affect performance)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
@@ -44,49 +44,49 @@ def save_image(original_image, filepath):
     Guarda una imagen PNG de original_image.
     original_image puede ser un Tensor 1xHxW o HxW, o un arreglo numpy 2D.
     """
-    # Asegurarse de que la carpeta de destino existe
+    # Ensure destination folder exists
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    # Mover datos a CPU y convertir a arreglo numpy
+    # Move data to CPU and convert to numpy array
     if torch.is_tensor(original_image):
         img = original_image.clone().detach().cpu()
-        # Si tiene canal inicial (1xHxW), convertir a 2D HxW
+        # If has initial channel (1xHxW), convert to 2D HxW
         if img.dim() == 3:
             img = img[0]
     else:
-        # Asumimos que original_image es numpy array 2D ya
+        # Assume original_image is already 2D numpy array
         img = torch.tensor(original_image)
-    # Convertir a escala de 0-255 uint8 para guardar
+    # Convert to 0-255 uint8 scale for saving
     img_np = (img.numpy() * 255).astype(np.uint8)
-    # Utilizar PIL para guardar en modo escala de grises
+    # Use PIL to save in grayscale mode
     try:
         from PIL import Image
     except ImportError:
-        # Si PIL no está disponible, intentar con OpenCV (cv2)
+        # If PIL not available, try with OpenCV (cv2)
         try:
             import cv2
             cv2.imwrite(filepath, img_np)
             return
         except ImportError:
-            raise RuntimeError("No se encontró PIL ni cv2 para guardar imágenes")
+            raise RuntimeError("Neither PIL nor cv2 found for saving images")
     img_pil = Image.fromarray(img_np, mode='L')
     img_pil.save(filepath)
 
 def save_mask(original_image, mask, filepath):
     """
-    Guarda una imagen PNG que muestra los píxeles revelados de original_image.
-    Los píxeles revelados conservan su valor original; los no revelados aparecen en negro.
+    Saves a PNG image showing revealed pixels of original_image.
+    Revealed pixels retain their original value; unrevealed appear black.
     """
-    # Asegurarse de que la carpeta de destino existe
+    # Ensure destination folder exists
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    # Mover datos a CPU y convertir a arreglo numpy
+    # Move data to CPU and convert to numpy array
     # original_image puede ser Tensor 1xHxW o HxW; mask puede ser Tensor HxW (o 1xHxW)
     if torch.is_tensor(original_image):
         img = original_image.clone().detach().cpu()
-        # Si tiene canal inicial (1xHxW), convertir a 2D HxW
+        # If has initial channel (1xHxW), convert to 2D HxW
         if img.dim() == 3:
             img = img[0]
     else:
-        # Asumimos que original_image es numpy array 2D ya
+        # Assume original_image is already 2D numpy array
         img = torch.tensor(original_image)
     if torch.is_tensor(mask):
         msk = mask.clone().detach().cpu()
@@ -108,26 +108,26 @@ def save_mask(original_image, mask, filepath):
         # Si la máscara tiene valores > 1, normalizarla primero
         msk_normalized = msk / msk.max()
         revealed_img = img * msk_normalized
-    # Convertir a escala de 0-255 uint8 para guardar
+    # Convert to 0-255 uint8 scale for saving
     # Suponemos original_image normalizada 0-1 (como ToTensor de MNIST)
     revealed_np = (revealed_img.numpy() * 255).astype(np.uint8)
-    # Utilizar PIL para guardar en modo escala de grises
+    # Use PIL to save in grayscale mode
     try:
         from PIL import Image
     except ImportError:
-        # Si PIL no está disponible, intentar con OpenCV (cv2)
+        # If PIL not available, try with OpenCV (cv2)
         try:
             import cv2
             cv2.imwrite(filepath, revealed_np)
             return
         except ImportError:
-            raise RuntimeError("No se encontró PIL ni cv2 para guardar imágenes")
+            raise RuntimeError("Neither PIL nor cv2 found for saving images")
     img_pil = Image.fromarray(revealed_np, mode='L')
     img_pil.save(filepath)
 
 def save_play(metadata, filepath):
     """
-    Guarda los metadatos de un debate (por ejemplo, secuencia de revelaciones, clases, logits, etc.) en un archivo JSON.
+    Saves debate metadata (e.g., revelation sequence, classes, logits, etc.) to a JSON file.
     """
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     with open(filepath, 'w') as f:
@@ -135,8 +135,8 @@ def save_play(metadata, filepath):
 
 def save_colored_debate(original_image, debate_moves, filepath, debate_info=None):
     """
-    Guarda una imagen PNG que muestra los píxeles del debate coloreados por agente y numerados por orden,
-    con información detallada del debate.
+    Saves a PNG image showing debate pixels colored by agent and numbered by order,
+    with detailed debate information.
     
     Args:
         original_image: imagen original (Tensor HxW o 1xHxW)
@@ -436,10 +436,10 @@ def save_colored_debate(original_image, debate_moves, filepath, debate_info=None
 
 def log_results_csv(logfile, results):
     """
-    Registra los resultados de un experimento en un archivo CSV con formato unificado.
-    `results` debe ser un diccionario que contenga las claves esperadas.
+    Logs experiment results to a CSV file with unified format.
+    `results` must be a dictionary containing expected keys.
     """
-    # Determinar el tipo de log basado en el nombre del archivo
+    # Determine log type based on filename
     if "judges.csv" in logfile:
         columns = ["timestamp","judge_name","resolution","thr","seed", "epochs","batch_size","lr","best_loss", "pixels", "accuracy","note"]
     elif "evaluations.csv" in logfile:
@@ -453,7 +453,7 @@ def log_results_csv(logfile, results):
         # Default columns for backward compatibility
         columns = ["timestamp","judge_name","resolution","thr","seed", "pixels", "accuracy","note"]
 
-    # Si el archivo no existe o está vacío, escribir encabezado
+    # If file doesn't exist or is empty, write header
     file_exists = os.path.isfile(logfile)
     write_header = not file_exists or os.path.getsize(logfile) == 0
 
@@ -461,7 +461,7 @@ def log_results_csv(logfile, results):
         writer = csv.DictWriter(csvfile, fieldnames=columns)
         if write_header:
             writer.writeheader()
-        # Asegurar que results contiene todas las columnas (rellenar si falta alguna no esencial)
+        # Ensure results contains all columns (fill if any non-essential missing)
         for col in columns:
             if col not in results:
                 results[col] = ""

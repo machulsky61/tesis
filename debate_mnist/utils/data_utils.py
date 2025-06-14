@@ -6,82 +6,82 @@ import torchvision.transforms as transforms
 
 class DebateDataset(Dataset):
     """
-    Dataset envoltorio que toma un dataset base (imágenes completas) y devuelve ejemplos parcialmente revelados.
-    Cada ejemplo consiste en dos canales: [máscara, valores_revelados] y la etiqueta original.
-    La máscara es binaria (1 en píxeles revelados, 0 en no revelados).
-    El plano de valores contiene los valores originales solo en píxeles revelados (0 en el resto).
-    Se revela aleatoriamente una cantidad de píxeles relevantes entre min_reveal y max_reveal.
+    Wrapper dataset that takes a base dataset (complete images) and returns partially revealed examples.
+    Each example consists of two channels: [mask, revealed_values] and the original label.
+    The mask is binary (1 for revealed pixels, 0 for unrevealed).
+    The values plane contains original values only in revealed pixels (0 for the rest).
+    Randomly reveals a number of relevant pixels between min_reveal and max_reveal.
     """
     def __init__(self, base_dataset, thr=0.1, min_reveal=1, max_reveal=None):
         self.base = base_dataset
         self.thr = thr
         self.min_reveal = min_reveal
-        # Si max_reveal no se especifica, por defecto revela todos los píxeles relevantes posibles
+        # If max_reveal is not specified, by default reveals all possible relevant pixels
         self.max_reveal = max_reveal
     def __len__(self):
         return len(self.base)
     def __getitem__(self, idx):
-        # Obtener imagen y etiqueta del dataset base
-        image, label = self.base[idx]  # image es Tensor 1xHxW (float 0-1), label es entero
-        # Calcular máscara de píxeles relevantes según el umbral
-        # Considerar solo intensidades > thr como relevantes
+        # Get image and label from base dataset
+        image, label = self.base[idx]  # image is Tensor 1xHxW (float 0-1), label is integer
+        # Calculate mask of relevant pixels according to threshold
+        # Consider only intensities > thr as relevant
         # mask_relevant = (image > self.thr)
         # # Extraer coordenadas de píxeles relevantes
         # coords = mask_relevant.nonzero(as_tuple=False)
-        # image: Tensor 1×H×W → tomamos el canal 0 para tener H×W
-        original_values = image[0]                         # ahora H×W
-        mask_relevant   = (original_values > self.thr)     # máscara 2D
+        # image: Tensor 1×H×W → take channel 0 to have H×W
+        original_values = image[0]                         # now H×W
+        mask_relevant   = (original_values > self.thr)     # 2D mask
         coords          = mask_relevant.nonzero(as_tuple=False)  # [N, 2]
-        # Si no hay píxeles relevantes (imagen muy tenue), considerar todos los píxeles como relevantes
+        # If no relevant pixels (very faint image), consider all pixels as relevant
         if coords.size(0) == 0:
-            # generar coords de todos los píxeles
+            # generate coords of all pixels
             H, W = image.shape[-2], image.shape[-1]
             coords = torch.cartesian_prod(torch.arange(H), torch.arange(W))
-        # Determinar cuántos píxeles revelar
+        # Determine how many pixels to reveal
         max_reveal = coords.size(0) if self.max_reveal is None else min(self.max_reveal, coords.size(0))
-        # Asegurarse de que min_reveal no exceda la cantidad disponible
+        # Ensure min_reveal doesn't exceed available amount
         min_reveal = min(self.min_reveal, max_reveal)
         num_reveal = random.randint(min_reveal, max_reveal) if max_reveal > 0 else 0
-        # Elegir aleatoriamente num_reveal píxeles de coords sin reemplazo
+        # Randomly choose num_reveal pixels from coords without replacement
         if num_reveal > 0:
             chosen_indices = random.sample(range(coords.size(0)), num_reveal)
             chosen_coords = coords[chosen_indices]
         else:
             chosen_coords = torch.empty((0,2), dtype=torch.long)
-        # Crear máscara de revelado (misma dimensión que imagen original, sin canal)
-        # mask tendrá 1 en píxeles revelados, 0 en el resto
+        # Create reveal mask (same dimension as original image, without channel)
+        # mask will have 1 for revealed pixels, 0 for the rest
         H, W = image.shape[-2], image.shape[-1]
         reveal_mask = torch.zeros((H, W), dtype=torch.float32)
         for coord in chosen_coords:
             y, x = int(coord[0]), int(coord[1])
             reveal_mask[y, x] = 1.0
-        # Crear plano de valores revelados: usar valores originales donde mask=1, 0 en el resto
-        # image es 1xHxW, extraerla como 2D para multiplicar fácilmente
+        # Create revealed values plane: use original values where mask=1, 0 for the rest
+        # image is 1xHxW, extract as 2D for easy multiplication
         original_values = image[0]  # Tensor HxW
         values_plane = original_values * reveal_mask
-        # Combinar en tensor de 2 canales: [mask, values]
+        # Combine into 2-channel tensor: [mask, values]
         sample_input = torch.stack([reveal_mask, values_plane], dim=0)
         return sample_input, label
 
 def load_datasets(resolution=16, k=6, thr=0.1, batch_size=64):
     """
-    Carga los datasets de MNIST para entrenamiento y prueba, aplicando la resolución dada.
-    Devuelve DataLoader de entrenamiento (con imágenes parcialmente reveladas) y de prueba (imágenes completas).
+    Loads MNIST datasets for training and testing, applying given resolution.
+    Returns training DataLoader (with partially revealed images) and testing (complete images).
     """
-    # Transformaciones: redimensionar y convertir a tensor
+    # Transformations: resize and convert to tensor
     transform_list = []
     if resolution != 28:
         transform_list.append(transforms.Resize((resolution, resolution)))
     transform_list.append(transforms.ToTensor())
     transform = transforms.Compose(transform_list)
-    # Cargar datasets base de MNIST
+    # Load base MNIST datasets
     train_base = torchvision.datasets.MNIST(root="./data", train=True, download=True, transform=transform)
     test_base = torchvision.datasets.MNIST(root="./data", train=False, download=True, transform=transform)
-    # Envolver el dataset de entrenamiento en DebateDataset para generar entradas parciales
+    # Wrap training dataset in DebateDataset to generate partial inputs
     train_dataset = DebateDataset(train_base, thr=thr, min_reveal=k, max_reveal=k)
-    # Para test, usaremos las imágenes completas; no envolvemos en DebateDataset ya que en el debate se revelan interactivamente
+    # For test, we'll use complete images; don't wrap in DebateDataset since in debate they're revealed interactively
     test_dataset = test_base
-    # Crear DataLoaders
+    # Create DataLoaders
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
     return train_loader, test_loader

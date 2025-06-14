@@ -10,6 +10,9 @@ import seaborn as sns
 import numpy as np
 from pathlib import Path
 import argparse
+import sys
+sys.path.append('..')
+from utils.paths import get_figure_path, DEBATES_CSV, EVALUATIONS_CSV
 
 # Set style and colors
 plt.style.use('seaborn-v0_8')
@@ -41,10 +44,10 @@ def load_data():
     data_path = Path("outputs")
     
     # Load debates data
-    debates_df = pd.read_csv(data_path / "debates.csv")
+    debates_df = pd.read_csv(DEBATES_CSV)
     
     # Load judge evaluations (random pixels baseline) - now properly formatted
-    evaluations_df = pd.read_csv(data_path / "evaluations.csv")
+    evaluations_df = pd.read_csv(EVALUATIONS_CSV)
     
     # Convert to proper types
     evaluations_df['pixels'] = pd.to_numeric(evaluations_df['pixels'], errors='coerce')
@@ -54,7 +57,8 @@ def load_data():
     evaluations_df = evaluations_df.dropna(subset=['pixels', 'accuracy'])
     
     # Load judge training metadata
-    judges_df = pd.read_csv(data_path / "judges.csv")
+    from utils.paths import JUDGES_CSV
+    judges_df = pd.read_csv(JUDGES_CSV)
     
     return debates_df, evaluations_df, judges_df
 
@@ -165,7 +169,7 @@ def create_graph1_judge_vs_debate(debates_df, evaluations_df, output_dir="output
     ax.spines['right'].set_visible(False)
     
     plt.tight_layout()
-    plt.savefig(f"{output_dir}/graph1_judge_vs_debate.png", dpi=300, bbox_inches='tight')
+    plt.savefig(get_figure_path("graph1_judge_vs_debate.png"), dpi=300, bbox_inches='tight')
     plt.show()
 
 def create_graph2_precommit_impact(debates_df, output_dir="outputs/figures"):
@@ -289,7 +293,7 @@ def create_graph2_precommit_impact(debates_df, output_dir="outputs/figures"):
     ax.spines['right'].set_visible(False)
     
     plt.tight_layout()
-    plt.savefig(f"{output_dir}/graph2_precommit_impact.png", dpi=300, bbox_inches='tight')
+    plt.savefig(get_figure_path("graph2_precommit_impact.png"), dpi=300, bbox_inches='tight')
     plt.show()
 
 def create_graph3_agent_comparison(debates_df, output_dir="outputs/figures"):
@@ -401,7 +405,7 @@ def create_graph3_agent_comparison(debates_df, output_dir="outputs/figures"):
     ax.spines['right'].set_visible(False)
     
     plt.tight_layout()
-    plt.savefig(f"{output_dir}/graph3_agent_comparison.png", dpi=300, bbox_inches='tight')
+    plt.savefig(get_figure_path("graph3_agent_comparison.png"), dpi=300, bbox_inches='tight')
     plt.show()
 
 def print_data_summary(debates_df, evaluations_df):
@@ -474,8 +478,9 @@ def main():
     if args.summary_only:
         return
     
-    # Create output directory
-    Path(args.output_dir).mkdir(exist_ok=True)
+    # Ensure output directory exists
+    from utils.paths import FIGURES_DIR
+    FIGURES_DIR.mkdir(exist_ok=True)
     
     print(f"\nGenerating graphs in {args.output_dir}/...")
     

@@ -3,18 +3,17 @@ mcts_vs_greedy_6px_liar_no-precommit_20250609_015132,28,28,0.0,42,512,100,6,liar
 mcts_vs_greedy_6px_liar_precommit_20250609_015320,28,28,0.0,42,512,100,6,liar,True,mcts,greedy,False,False,0.97,mcts_honest_vs_greedy_liar_precommit
 mcts_vs_greedy_6px_honest_no-precommit_20250609_023953,28,28,0.0,42,512,100,6,honest,False,mcts,greedy,False,False,0.89,mcts_honest_vs_greedy_liar_honest_first
 mcts_vs_greedy_6px_honest_precommit_20250609_024144,28,28,0.0,42,512,100,6,honest,True,mcts,greedy,False,False,0.91,mcts_honest_vs_greedy_liar_precommit_honest_first
+
 greedy_vs_mcts_6px_liar_no-precommit_20250609_032752,28,28,0.0,42,512,100,6,liar,False,greedy,mcts,False,False,0.63,greedy_honest_vs_mcts_liar_baseline
 greedy_vs_mcts_6px_liar_precommit_20250609_032944,28,28,0.0,42,512,100,6,liar,True,greedy,mcts,False,False,0.96,greedy_honest_vs_mcts_liar_precommit
 greedy_vs_mcts_6px_honest_no-precommit_20250609_041552,28,28,0.0,42,512,100,6,honest,False,greedy,mcts,False,False,0.58,greedy_honest_vs_mcts_liar_honest_first
 greedy_vs_mcts_6px_honest_precommit_20250609_041745,28,28,0.0,42,512,100,6,honest,True,greedy,mcts,False,False,0.88,greedy_honest_vs_mcts_liar_precommit_honest_first
-mcts_vs_greedy_6px_honest_precommit_20250610_002119,28,28,0.0,1,512,10,6,honest,True,mcts,greedy,False,False,1.0,custom_Mixed (mcts honest)
-greedy_vs_mcts_6px_liar_precommit_20250610_002618,28,28,0.0,2,512,10,6,liar,True,greedy,mcts,False,False,1.0,custom_Mixed (greedy honest)
-greedy_vs_mcts_6px_honest_no-precommit_20250610_003531,28,28,0.0,4,512,10,6,honest,False,greedy,mcts,False,False,0.9,custom_Mixed (greedy honest)
-greedy_vs_mcts_6px_liar_no-precommit_20250610_015807,28,28,0.0,77,512,20,6,liar,False,greedy,mcts,False,False,0.75,custom_Mixed (greedy honest)
+
 mcts_vs_greedy_6px_liar_no-precommit_20250613_012322,28,28,0.0,42,512,100,6,liar,False,mcts,greedy,True,False,0.21,mcts_honest_vs_greedy_liar_
 mcts_vs_greedy_6px_liar_precommit_20250613_013252,28,28,0.0,42,512,100,6,liar,True,mcts,greedy,True,False,0.15,mcts_honest_vs_greedy_liar_precommit
 mcts_vs_greedy_6px_honest_no-precommit_20250613_032850,28,28,0.0,42,512,100,6,honest,False,mcts,greedy,True,False,0.04,mcts_honest_vs_greedy_liar_honest_first
 mcts_vs_greedy_6px_honest_precommit_20250613_033833,28,28,0.0,42,512,100,6,honest,True,mcts,greedy,True,False,0.01,mcts_honest_vs_greedy_liar_precommit_honest_first
+
 greedy_vs_mcts_6px_liar_no-precommit_20250613_044223,28,28,0.0,42,512,100,6,liar,False,greedy,mcts,True,False,0.12,greedy_honest_vs_mcts_liar_
 greedy_vs_mcts_6px_liar_precommit_20250613_045155,28,28,0.0,42,512,100,6,liar,True,greedy,mcts,True,False,0.37,greedy_honest_vs_mcts_liar_precommit
 greedy_vs_mcts_6px_honest_no-precommit_20250613_073548,28,28,0.0,42,512,100,6,honest,False,greedy,mcts,True,False,0.01,greedy_honest_vs_mcts_liar_honest_first

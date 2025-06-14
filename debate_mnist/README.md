@@ -11,8 +11,8 @@ This repository contains an implementation of the "AI Safety via Debate" experim
 ├── agents/
 │   ├── base_agent.py           # Base class for DebateAgent
 │   ├── greedy_agent.py         # Greedy agent selecting pixels myopically
-│   ├── mcts_agent.py           # MCTS agent using Monte Carlo Tree Search
-│   └── mcts_fast.py            # Fast MCTS implementation
+│   ├── greedy_adversarial_agent.py # Adversarial agent for judge evaluation
+│   └── mcts_fast.py            # Fast MCTS implementation (replaces mcts_agent.py)
 ├── models/
 │   ├── sparse_cnn.py           # SparseCNN model definition (judge, 2 channels)
 │   ├── 28.pth                  # Pre-trained judge models
@@ -20,7 +20,9 @@ This repository contains an implementation of the "AI Safety via Debate" experim
 │   ├── 28_4px.pth
 │   └── 16_4px.pth
 ├── outputs/
-│   ├── debate_*/               # Directories with debate visualizations
+│   ├── visualizations/         # Organized visualization outputs
+│   │   ├── figures/            # Analysis graphs and plots
+│   │   └── debates/            # Individual debate visualizations
 │   ├── debates.csv             # Log of symmetric debates
 │   ├── debates_asimetricos.csv # Log of asymmetric debates
 │   ├── judges.csv              # Data on trained judge models
@@ -28,12 +30,16 @@ This repository contains an implementation of the "AI Safety via Debate" experim
 ├── utils/
 │   ├── data_utils.py           # Data loading and DebateDataset class
 │   └── helpers.py              # Utility functions with colored visualization support
+├── scripts/                    # Development and analysis tools
+│   ├── analyze_results.py      # Statistical analysis and graph generation
+│   ├── quick_examples.py       # Non-interactive examples
+│   └── backups/                # Backup files
+├── docs/                       # Documentation
+│   └── example_usage.md        # Detailed usage guide
 ├── train_judge.py              # Train the judge with partial masks
-├── eval_judge.py               # Evaluate the judge with randomly masked images
+├── eval_judge.py               # Enhanced judge evaluation with 7 strategies
 ├── run_debate.py               # Run debates between two agents (enhanced)
 ├── run_experiments.py          # Complete automation script
-├── quick_examples.py           # Non-interactive examples
-├── example_usage.md            # Detailed usage guide
 ├── requirements.txt
 └── README.md                   # This file
 ```
@@ -63,7 +69,7 @@ This interactive script handles everything: training judges, running experiments
 ### 3.2 ⚡ Quick Examples (Non-interactive)
 
 ```bash
-python quick_examples.py
+python scripts/quick_examples.py
 ```
 Choose from pre-configured examples like high-precision experiments, agent comparisons, etc.
 
@@ -81,14 +87,20 @@ python run_debate.py --judge_name 28 --agent_type mcts --rollouts 2000 --n_image
 python run_debate.py --judge_name 28 --mixed_agents --honest_agent mcts --rollouts 500 --n_images 50 --save_colored_debate --note "mixed_debate"
 ```
 
-### 3.5 📊 Traditional Usage
+### 3.5 📊 Judge Evaluation (New Feature)
 
 ```bash
-# Train judge
-python train_judge.py --resolution 28 --epochs 64 --judge_name test_judge
+# Evaluate judge with different strategies
+python eval_judge.py --judge_name 28 --strategy random --n_images 1000
+python eval_judge.py --judge_name 28 --strategy optimal --n_images 1000
+python eval_judge.py --judge_name 28 --strategy greedy_adversarial_agent --n_images 500
+```
 
-# Run debate with visualization
-python run_debate.py --judge_name test_judge --agent_type greedy --n_images 100 --save_colored_debate --save_metadata
+### 3.6 📈 Data Analysis
+
+```bash
+# Generate analysis graphs for thesis
+python scripts/analyze_results.py --output-dir outputs/figures
 ```
 ---
 
@@ -148,6 +160,9 @@ Some arguments are used both when training the judge and running the debate, and
 | `--save_colored_debate` | Save colored visualization with move order      | store\_true   | False         |
 | `--mixed_agents`  | Enable asymmetric debates (MCTS vs Greedy)            | store\_true   | False         |
 | `--honest_agent`  | Type of honest agent when using mixed agents          | greedy / mcts | greedy        |
+| `--allow_all_pixels` | Allow agents to select any pixel (not just >thr)    | store\_true   | False         |
+| `--track_confidence` | Track judge confidence progression during debate     | store\_true   | False         |
+| `--strategy`      | Pixel selection strategy for judge evaluation         | see eval_judge.py | random        |
 
 ---
 
@@ -159,18 +174,25 @@ Some arguments are used both when training the judge and running the debate, and
 
   * `base_agent.py`: Provides shared functionality (image/judge handling).
   * `greedy_agent.py`: Picks the pixel maximizing immediate logit difference.
-  * `mcts_agent.py`: Uses Monte Carlo simulations to select optimal pixels.
+  * `greedy_adversarial_agent.py`: Adversarial agent that minimizes true class logits.
+  * `mcts_fast.py`: Optimized MCTS with GPU-batched simulations.
 
 * **utils/**
 
   * `data_utils.py`: Handles MNIST loading and DebateDataset creation.
   * `helpers.py`: General utilities for seeding, image/JSON saving, and CSV logging.
 
-* **scripts/**
+* **Main Scripts:**
 
   * `train_judge.py`: Trains judge model with masked data and saves it.
-  * `eval_judge.py`: Evaluates judge model accuracy and logs results.
+  * `eval_judge.py`: Evaluates judge with 7 different pixel selection strategies.
   * `run_debate.py`: Runs debates, logs outcomes, and evaluates accuracy.
+  * `run_experiments.py`: Interactive automation script for complete workflows.
+
+* **Analysis & Tools (`scripts/`):**
+
+  * `analyze_results.py`: Statistical analysis and thesis-quality graph generation.
+  * `quick_examples.py`: Pre-configured examples for common use cases.
 
 ---
 
@@ -187,6 +209,6 @@ This implementation is based on:
 * The judge is trained using randomly masked pixels, improving sparse image classification.
 * When `--precommit` is enabled, the judge determines the winner based on the agent’s committed class.
 * The liar agent will precommit to a class only if the flag is passed.
-* Greedy agents are fast and useful for debugging or small-scale tests.
-* MCTS agents are more accurate but significantly slower, making them ideal for high-confidence evaluations or paper replication scenarios.
-* You can experiment with different values of `--k`, such as `--k 4` or `--k 6`, depending on how much information the agents are allowed to reveal.
+* **Agent Performance**: Greedy agents are fast, MCTS agents are accurate but slower.
+* **Evaluation Strategies**: 7 different strategies available including adversarial agents for robustness testing.
+

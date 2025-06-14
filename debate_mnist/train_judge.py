@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import argparse
 from utils import data_utils, helpers
+from utils.paths import get_model_path, JUDGES_CSV
 from models.sparse_cnn import SparseCNN
 from tqdm import tqdm
 from datetime import datetime
@@ -25,10 +26,10 @@ def evaluate_model(
     import random, torch, numpy as np
     from models.sparse_cnn import SparseCNN
 
-    # 1) Fijar semillas
+    # 1) Fix seeds
     helpers.set_seed(seed)
 
-    # 2) Cargar modelo
+    # 2) Load model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = SparseCNN(resolution=resolution).to(device)
     model.load_state_dict(torch.load(model_path, map_location=device))
@@ -57,7 +58,7 @@ def evaluate_model(
     )
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=2)
 
-    # 6) Bucle de evaluación
+    # 6) Evaluation loop
     total, correct = 0, 0
     with torch.no_grad():
         from tqdm import tqdm
@@ -74,37 +75,37 @@ def evaluate_model(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Entrenamiento del modelo juez (SparseCNN) para debate en MNIST")
-    parser.add_argument("--resolution", type=int, default=28, help="Resolución de entrada (tamaño de imagen, 16 o 28)")
-    parser.add_argument("--k",  type=int,   default=6, help="Número fijo de píxeles revelados en entrenamiento")
-    parser.add_argument("--thr", type=float, default=0.0, help="Umbral para píxeles relevantes")
-    parser.add_argument("--seed", type=int, default=42, help="Semilla para reproducibilidad")
-    parser.add_argument("--epochs", type=int, default=64, help="Número de épocas de entrenamiento")
-    parser.add_argument("--batch_size", type=int, default=128, help="Tamaño de batch para entrenamiento")
-    parser.add_argument("--lr", type=float, default=1e-4, help="Learning rate para el optimizador")
-    parser.add_argument("--judge_name", type=str, default="judge_model", help="Nombre del modelo juez (sin extensión)")
-    parser.add_argument("--note", type=str, default="", help="Nota opcional para registrar en el CSV")
+    parser = argparse.ArgumentParser(description="Training of judge model (SparseCNN) for MNIST debate")
+    parser.add_argument("--resolution", type=int, default=28, help="Input resolution (image size, 16 or 28)")
+    parser.add_argument("--k",  type=int,   default=6, help="Fixed number of revealed pixels in training")
+    parser.add_argument("--thr", type=float, default=0.0, help="Threshold for relevant pixels")
+    parser.add_argument("--seed", type=int, default=42, help="Seed for reproducibility")
+    parser.add_argument("--epochs", type=int, default=64, help="Number of training epochs")
+    parser.add_argument("--batch_size", type=int, default=128, help="Batch size for training")
+    parser.add_argument("--lr", type=float, default=1e-4, help="Learning rate for optimizer")
+    parser.add_argument("--judge_name", type=str, default="judge_model", help="Judge model name (without extension)")
+    parser.add_argument("--note", type=str, default="", help="Optional note to record in CSV")
     args = parser.parse_args()
     
     # Generate descriptive experiment ID for judge training
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     id = f"judge_{args.judge_name}_{args.resolution}px_{args.k}k_{timestamp}"
     
-    # Fijar semillas para reproducibilidad
+    # Fix seeds for reproducibility
     helpers.set_seed(args.seed)
 
-    # Cargar datos de MNIST con la resolución especificada
+    # Load MNIST data with specified resolution
     train_loader, test_loader = data_utils.load_datasets(resolution=args.resolution, k=args.k, thr=args.thr, batch_size=args.batch_size)
 
-    # Inicializar modelo y mover a dispositivo (GPU si disponible)
+    # Initialize model and move to device (GPU if available)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = SparseCNN(resolution=args.resolution).to(device)
 
-    # Definir función de pérdida y optimizador
+    # Define loss function and optimizer
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
-    # Bucle de entrenamiento
+    # Training loop
     best_loss = float('inf')
     training_losses = []
     for epoch in range(1, args.epochs+1):
@@ -127,23 +128,22 @@ def main():
         if avg_loss < best_loss:
             best_loss = avg_loss
 
-    # Guardar modelo entrenado
-    model_path = f"models/{args.judge_name}.pth"
-    os.makedirs("models", exist_ok=True)
+    # Save trained model
+    model_path = get_model_path(args.judge_name)
     torch.save(model.state_dict(), model_path)
-    print(f"Modelo guardado en {model_path}")
+    print(f"Model saved to {model_path}")
 
-    # Evaluar el modelo final
+    # Evaluate final model
     final_accuracy = evaluate_model(
         model_path,
         resolution=args.resolution,
         thr=args.thr,
-        n_samples=1000,  # Cantidad de muestras de test a evaluar
+        n_samples=1000,  # Number of test samples to evaluate
         batch_size=args.batch_size
         )
-    print(f"Precisión final del modelo: {final_accuracy*100:.2f}%")
+    print(f"Final model accuracy: {final_accuracy*100:.2f}%")
     
-    # Guardar información del entrenamiento en judges.csv
+    # Save training information to judges.csv
     training_info = {
         "timestamp": id,
         "judge_name": args.judge_name,
@@ -159,9 +159,8 @@ def main():
         "note": args.note
     }
     
-    judges_csv_path = "outputs/judges.csv"
-    helpers.log_results_csv(judges_csv_path, training_info)
-    print(f"Información de entrenamiento guardada en {judges_csv_path}")
+    helpers.log_results_csv(str(JUDGES_CSV), training_info)
+    print(f"Training information saved to {JUDGES_CSV}")
 
 if __name__ == "__main__":
     main()

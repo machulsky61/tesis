@@ -3,6 +3,7 @@ import random
 import torch
 import numpy as np
 from utils import data_utils, helpers
+from utils.paths import get_debate_folder, get_model_path, DEBATES_CSV, DEBATES_ASIMETRICOS_CSV
 from models.sparse_cnn import SparseCNN
 from agents.greedy_agent import GreedyAgent
 # from agents.mcts_agent import MCTSAgent
@@ -12,17 +13,17 @@ from tqdm import tqdm
 import os
 
 def load_judge_model(judge_name, resolution, device):
-    """Carga el modelo juez desde disco."""
+    """Loads judge model from disk."""
     judge_model = SparseCNN(resolution=resolution).to(device)
-    model_path = f"models/{judge_name}.pth"
+    model_path = get_model_path(judge_name)
     judge_model.load_state_dict(torch.load(model_path, map_location=device))
     judge_model.eval()
     return judge_model
 
 def get_agents(agent_type, judge_model, label, opponent_label, precommit, image, thr, rollouts, k, mixed_agents=False, honest_agent=None, allow_all_pixels=False):
-    """Inicializa los agentes según el tipo."""
+    """Initializes agents according to type."""
     if mixed_agents:
-        # Modo mixto: un agente MCTS y otro Greedy
+        # Mixed mode: one MCTS agent and one Greedy
         if honest_agent == "mcts":
             agent_truth = MCTSAgent(judge_model, label, opponent_label, precommit, image, thr, rollouts, k, True, allow_all_pixels)
             agent_liar = GreedyAgent(judge_model, opponent_label, label, precommit, image, thr, allow_all_pixels)
@@ -30,7 +31,7 @@ def get_agents(agent_type, judge_model, label, opponent_label, precommit, image,
             agent_truth = GreedyAgent(judge_model, label, opponent_label, precommit, image, thr, allow_all_pixels)
             agent_liar = MCTSAgent(judge_model, opponent_label, label, precommit, image, thr, rollouts, k, False, allow_all_pixels)
     else:
-        # Modo normal: ambos agentes del mismo tipo
+        # Normal mode: both agents of same type
         if agent_type == "greedy":
             agent_truth = GreedyAgent(judge_model, label, opponent_label, precommit, image, thr, allow_all_pixels)
             agent_liar = GreedyAgent(judge_model, opponent_label, label, precommit, image, thr, allow_all_pixels)
@@ -41,15 +42,15 @@ def get_agents(agent_type, judge_model, label, opponent_label, precommit, image,
 
 def run_single_debate(image, agent_truth, agent_liar, args, device):
     """
-    Ejecuta un único debate:
-    - Alterna turnos según el agente inicial (args.starts).
-    - Cada agente juega su movimiento hasta completar k movimientos o agotar opciones.
-    - Devuelve mask final, logits, predicted_label, etc.
+    Executes a single debate:
+    - Alternates turns according to starting agent (args.starts).
+    - Each agent plays its move until completing k moves or exhausting options.
+    - Returns final mask, logits, predicted_label, etc.
     """
     H, W = image.shape[-2], image.shape[-1]
     mask = torch.zeros((H, W), dtype=torch.float32, device=device)
 
-    # Definir orden de agentes
+    # Define agent order
     if args.starts == "honest":
         agent_order = [agent_truth, agent_liar]
         agent_names = ["honest", "liar"]
@@ -57,13 +58,13 @@ def run_single_debate(image, agent_truth, agent_liar, args, device):
         agent_order = [agent_liar, agent_truth]
         agent_names = ["liar", "honest"]
     
-    # Rastrear movimientos para visualización coloreada
+    # Track moves for colored visualization
     debate_moves = []
     
-    # Rastrear confianza del juez si está habilitado
+    # Track judge confidence if enabled
     confidence_progression = []
     if args.track_confidence:
-        # Evaluar estado inicial (sin píxeles revelados)
+        # Evaluate initial state (no pixels revealed)
         values_plane_init = torch.zeros_like(mask)
         judge_input_init = torch.stack([mask, values_plane_init], dim=0).unsqueeze(0)
         with torch.no_grad():
@@ -82,7 +83,7 @@ def run_single_debate(image, agent_truth, agent_liar, args, device):
                 "max_confidence": float(probs_init.max())
             })
     
-    # Alternar turnos
+    # Alternate turns
     for move in range(args.k):
         current_agent_idx = move % 2
         current_agent = agent_order[current_agent_idx]
@@ -94,10 +95,10 @@ def run_single_debate(image, agent_truth, agent_liar, args, device):
         y, x = pixel
         mask[y, x] = 1.0
         
-        # Guardar movimiento para visualización
+        # Save move for visualization
         debate_moves.append((y, x, current_agent_name, move + 1))
         
-        # Trackear confianza del juez después de este movimiento
+        # Track judge confidence after this move
         if args.track_confidence:
             values_plane_current = image * mask
             judge_input_current = torch.stack([mask, values_plane_current], dim=0).unsqueeze(0)
@@ -117,7 +118,7 @@ def run_single_debate(image, agent_truth, agent_liar, args, device):
                     "max_confidence": float(probs_current.max())
                 })
 
-    # Calcular output del juez
+    # Calculate judge output
     values_plane = image * mask
     judge_input = torch.stack([mask, values_plane], dim=0).unsqueeze(0)
     with torch.no_grad():
@@ -131,7 +132,7 @@ def run_single_debate(image, agent_truth, agent_liar, args, device):
         
     predicted_label = output[0].argmax().item()  # Elige el label global máximo
 
-    # Para modo no-precommit, calcular segundo logit más alto
+    # For no-precommit mode, calculate second highest logit
     second_highest_logit = None
     second_highest_class = None
     if not args.precommit:
@@ -215,11 +216,10 @@ def run_exhaustive_precommit(image, label_true, args, judge_model, device):
     return winner_label, logits_avg_dct, winning_logits
 
 def save_outputs(i, image, mask, meta, args, id):
-    """Guarda la imagen, máscara y metadatos en el directorio de salida."""
+    """Saves image, mask and metadata to output directory."""
     if args.save_mask or args.save_play or args.save_images or args.save_metadata or args.save_colored_debate or args.track_confidence:
-        folder_note = f'_{args.note.replace(" ", "_")}' if args.note and len(args.note) < 20 else ""
-        run_folder = f"outputs/debate_{id}{folder_note}"
-        os.makedirs(run_folder, exist_ok=True)
+        folder_note = args.note.replace(" ", "_") if args.note and len(args.note) < 20 else ""
+        run_folder = get_debate_folder(id, folder_note)
     
     if args.save_images or args.save_metadata:
         img_path = os.path.join(run_folder, f"sample_{i}_image.png")
@@ -327,10 +327,8 @@ def save_confidence_data(confidence_progression, sample_index, args, id):
     return confidence_path
 
 def log_results(args, accuracy, id):
-    os.makedirs("outputs", exist_ok=True)
-    
     if args.mixed_agents:
-        # Debates asimétricos - usar archivo específico
+        # Asymmetric debates - use specific file
         liar_agent_type = 'mcts' if args.honest_agent == 'greedy' else 'greedy'
         
         results = {
@@ -351,12 +349,11 @@ def log_results(args, accuracy, id):
             "accuracy": accuracy,
             "note": args.note,
         }
-        debates_csv_path = "outputs/debates_asimetricos.csv"
-        helpers.log_results_csv(debates_csv_path, results)
-        print(f"Resultados de debate asimétrico registrados en {debates_csv_path}")
+        helpers.log_results_csv(str(DEBATES_ASIMETRICOS_CSV), results)
+        print(f"Asymmetric debate results logged to {DEBATES_ASIMETRICOS_CSV}")
         
     else:
-        # Debates simétricos - usar archivo normal
+        # Symmetric debates - use normal file
         results = {
             "timestamp": id,
             "judge_name": args.judge_name,
@@ -374,12 +371,11 @@ def log_results(args, accuracy, id):
             "accuracy": accuracy,
             "note": args.note,
         }
-        debates_csv_path = "outputs/debates.csv"
-        helpers.log_results_csv(debates_csv_path, results)
-        print(f"Resultados registrados en {debates_csv_path}")
+        helpers.log_results_csv(str(DEBATES_CSV), results)
+        print(f"Results logged to {DEBATES_CSV}")
 
 def main():
-    parser = argparse.ArgumentParser(description="Ejecutar experimento de debate AI Safety via Debate en MNIST")
+    parser = argparse.ArgumentParser(description="Run AI Safety via Debate experiment on MNIST")
     parser.add_argument("--resolution", type=int, default=28)
     parser.add_argument("--thr", type=float, default=0.0)
     parser.add_argument("--agent_type", type=str, choices=["greedy", "mcts"], default="greedy")
@@ -391,10 +387,10 @@ def main():
     parser.add_argument("--save_images", action="store_true")
     parser.add_argument("--save_mask", action="store_true")
     parser.add_argument("--save_play", action="store_true")
-    parser.add_argument("--save_metadata", action="store_true", help="Guardar metadatos (imagenes, mascaras y jugadas) de cada debate")
-    parser.add_argument("--save_colored_debate", action="store_true", help="Guardar imagen coloreada del debate con movimientos numerados")
-    parser.add_argument("--mixed_agents", action="store_true", help="Habilitar agentes de tipos diferentes (MCTS vs Greedy)")
-    parser.add_argument("--honest_agent", type=str, choices=["greedy", "mcts"], default="greedy", help="Tipo de agente que será honesto (cuando --mixed_agents está activado)")
+    parser.add_argument("--save_metadata", action="store_true", help="Save metadata (images, masks and plays) for each debate")
+    parser.add_argument("--save_colored_debate", action="store_true", help="Save colored debate image with numbered moves")
+    parser.add_argument("--mixed_agents", action="store_true", help="Enable different agent types (MCTS vs Greedy)")
+    parser.add_argument("--honest_agent", type=str, choices=["greedy", "mcts"], default="greedy", help="Type of agent that will be honest (when --mixed_agents is enabled)")
     parser.add_argument("--precommit", action="store_true")
     parser.add_argument("--note", type=str, default="")
     parser.add_argument("--starts", type=str, choices=["honest", "liar"], default="liar")
@@ -533,7 +529,7 @@ def main():
         total += 1
 
     accuracy = correct / total if total > 0 else 0.0
-    print(f"Precisión del juez con debate: {accuracy*100:.2f}% (sobre {total} muestras)")
+    print(f"Judge accuracy with debate: {accuracy*100:.2f}% (on {total} samples)")
     log_results(args, accuracy, id)
 
 if __name__ == "__main__":

@@ -10,6 +10,7 @@ import os
 import json
 from datetime import datetime
 from collections import defaultdict
+from utils.paths import get_config_path
 
 class ExperimentManager:
     def __init__(self):
@@ -26,23 +27,29 @@ class ExperimentManager:
             'viz_enabled': False,
             'viz_colored': False,
             'viz_metadata': False,
+            'save_images': False,
+            'save_masks': False,
+            'save_play': False,
+            'save_confidence': False,
             'allow_all_pixels': False,
             'track_confidence': False
         }
         
     def print_banner(self):
         print("=" * 80)
-        print("🧪 AI SAFETY DEBATE - EXPERIMENT AUTOMATION v3.0 🧪")
+        print("🧪 AI SAFETY DEBATE - EXPERIMENT AUTOMATION v3.1 🧪")
         print("=" * 80)
-        print("Sistema mejorado con:")
-        print("• Configuración dinámica de píxeles (k)")
-        print("• Rollouts personalizables")
-        print("• Agentes mixtos (MCTS vs Greedy)")
-        print("• Selección irrestricta de píxeles")
-        print("• Tracking de confianza del juez")
-        print("• Estrategias de evaluación del juez")
-        print("• Gestión avanzada de experimentos")
-        print("• Templates y configuraciones guardables\n")
+        print("Enhanced system with:")
+        print("• Dynamic pixel configuration (k)")
+        print("• Customizable rollouts")
+        print("• Mixed agents (MCTS vs Greedy)")
+        print("• Unrestricted pixel selection")
+        print("• Judge confidence tracking")
+        print("• Judge evaluation strategies (8 total)")
+        print("• MCTS adversarial agent integration")
+        print("• Granular saving configuration")
+        print("• Advanced experiment management")
+        print("• Saveable templates and configurations\n")
 
     def get_input(self, prompt, default=None, options=None, input_type=str):
         """Obtiene input del usuario con validación mejorada."""
@@ -517,16 +524,104 @@ class ExperimentManager:
         self._experiment_selection_menu()
 
     def _configure_visualizations(self):
-        """Configura las opciones de visualización."""
-        print("\n🎨 CONFIGURACIÓN DE VISUALIZACIONES")
-        print("-" * 40)
+        """Configure granular saving options for experiments."""
+        print("\n🎨 GRANULAR SAVING CONFIGURATION")
+        print("-" * 50)
         
-        self.config['viz_enabled'] = self.get_yes_no("¿Habilitar visualizaciones?")
+        self.config['viz_enabled'] = self.get_yes_no("Enable any visualizations/saving?")
         if self.config['viz_enabled']:
-            self.config['viz_colored'] = self.get_yes_no(
-                "  • ¿Guardar debates coloreados?")
-            self.config['viz_metadata'] = self.get_yes_no(
-                "  • ¿Guardar metadatos completos?")
+            
+            print("\n📦 Configuration Method:")
+            print("1. Quick presets (fast setup)")
+            print("2. Individual selection (custom setup)")
+            method = self.get_input("Choose method", "1", options=["1", "2"])
+            
+            if method == "1":
+                # Quick presets
+                print("\n📦 Quick Presets:")
+                preset = self.get_input(
+                    "Choose preset", "minimal", 
+                    options=["minimal", "standard", "complete", "analysis"])
+                
+                if preset == "minimal":
+                    # Only CSV logging
+                    self.config.update({
+                        'save_images': False, 'save_masks': False, 
+                        'save_play': False, 'viz_colored': False, 
+                        'save_confidence': False
+                    })
+                    print("✅ Minimal: Only CSV results will be saved")
+                elif preset == "standard":
+                    # Colored debates + play sequences
+                    self.config.update({
+                        'save_images': False, 'save_masks': False, 
+                        'save_play': True, 'viz_colored': True, 
+                        'save_confidence': False
+                    })
+                    print("✅ Standard: Colored debates + play sequences")
+                elif preset == "complete":
+                    # Everything enabled
+                    self.config.update({
+                        'save_images': True, 'save_masks': True, 
+                        'save_play': True, 'viz_colored': True, 
+                        'save_confidence': True
+                    })
+                    print("✅ Complete: All visualizations and metadata")
+                elif preset == "analysis":
+                    # For statistical analysis
+                    self.config.update({
+                        'save_images': False, 'save_masks': False, 
+                        'save_play': True, 'viz_colored': False, 
+                        'save_confidence': True
+                    })
+                    print("✅ Analysis: Play sequences + confidence tracking")
+            
+            else:
+                # Individual selection
+                print("\n📁 Individual Saving Options:")
+                print("Configure each option individually:")
+                
+                self.config['save_images'] = self.get_yes_no(
+                    "  🖼️  Save original images as PNG files?")
+                self.config['save_masks'] = self.get_yes_no(
+                    "  🎭 Save masked images as PNG files?")
+                self.config['save_play'] = self.get_yes_no(
+                    "  📜 Save play sequences as JSON files?")
+                self.config['viz_colored'] = self.get_yes_no(
+                    "  🎨 Save colored debate visualizations?")
+                self.config['save_confidence'] = self.get_yes_no(
+                    "  📊 Save confidence progression data?")
+                
+                print("\n✅ Individual configuration completed!")
+                print("Selected options:")
+                options_summary = []
+                if self.config['save_images']: options_summary.append("Original images")
+                if self.config['save_masks']: options_summary.append("Masked images")
+                if self.config['save_play']: options_summary.append("Play sequences")
+                if self.config['viz_colored']: options_summary.append("Colored debates")
+                if self.config['save_confidence']: options_summary.append("Confidence data")
+                
+                if options_summary:
+                    print(f"  • {', '.join(options_summary)}")
+                else:
+                    print("  • None (only CSV results will be saved)")
+                    
+                # Ask for confirmation
+                confirm = self.get_yes_no("Confirm these selections?")
+                if not confirm:
+                    print("Reverting to minimal preset...")
+                    self.config.update({
+                        'save_images': False, 'save_masks': False, 
+                        'save_play': False, 'viz_colored': False, 
+                        'save_confidence': False
+                    })
+            
+            # Legacy metadata option for compatibility
+            any_metadata = any([
+                self.config['save_images'], self.config['save_masks'], 
+                self.config['save_play'], self.config['save_confidence']
+            ])
+            self.config['viz_metadata'] = any_metadata
 
     def _configure_advanced_options(self):
         """Configura las opciones avanzadas nuevas."""
@@ -540,7 +635,7 @@ class ExperimentManager:
             "¿Trackear confianza del juez turno a turno? (para análisis estadístico)")
 
     def _get_advanced_flags(self):
-        """Genera los flags avanzados para los comandos."""
+        """Generate advanced flags for debate commands with granular saving options."""
         flags = ""
         
         if self.config['allow_all_pixels']:
@@ -549,10 +644,19 @@ class ExperimentManager:
         if self.config['track_confidence']:
             flags += " --track_confidence"
         
-        # Visualizaciones
+        # Granular saving options
         if self.config['viz_enabled']:
+            if self.config['save_images']:
+                flags += " --save_images"
+            if self.config['save_masks']:
+                flags += " --save_mask"
+            if self.config['save_play']:
+                flags += " --save_play"
             if self.config['viz_colored']:
                 flags += " --save_colored_debate"
+            # Note: confidence saving is automatic when track_confidence is enabled
+            
+            # Legacy metadata flag (enables everything that was selected)
             if self.config['viz_metadata']:
                 flags += " --save_metadata"
         
@@ -1011,14 +1115,14 @@ class ExperimentManager:
         if "full_comparison" in experiment_types:
             # Comparación completa de todas las estrategias
             strategies = ["random", "optimal", "adversarial", "adversarial_nonzero", 
-                         "greedy_agent", "mcts_agent", "greedy_adversarial_agent"]
+                         "greedy_agent", "mcts_agent", "greedy_adversarial_agent", "mcts_adversarial_agent"]
             
             for strategy in strategies:
                 cmd = (f"python eval_judge.py --judge_name {self.config['judge_name']} "
                        f"--resolution {self.config['resolution']} --k {self.config['k']} "
                        f"--thr {self.config['thr']} --strategy {strategy} --n_images {n_images}")
                 
-                if strategy == "mcts_agent":
+                if strategy in ["mcts_agent", "mcts_adversarial_agent"]:
                     cmd += " --rollouts 300"
                 
                 cmd += f' --note "judge_eval_comparison_{strategy}"'
@@ -1039,22 +1143,22 @@ class ExperimentManager:
                     self.experiments.append((cmd, f"Judge Eval - {strategy.title()} k={k}"))
                 
                 # Agentes
-                for agent in ["greedy_agent", "mcts_agent", "greedy_adversarial_agent"]:
+                for agent in ["greedy_agent", "mcts_agent", "greedy_adversarial_agent", "mcts_adversarial_agent"]:
                     cmd = base_cmd + f' --strategy {agent}'
-                    if agent == "mcts_agent":
+                    if agent in ["mcts_agent", "mcts_adversarial_agent"]:
                         cmd += " --rollouts 200"
                     cmd += f' --note "judge_eval_agent_{agent}_k{k}"'
                     self.experiments.append((cmd, f"Judge Eval - {agent.replace('_', ' ').title()} k={k}"))
         
         if "agent_scalability" in experiment_types:
             # Análisis de escalabilidad de agentes
-            for agent in ["greedy_agent", "mcts_agent", "greedy_adversarial_agent"]:
+            for agent in ["greedy_agent", "mcts_agent", "greedy_adversarial_agent", "mcts_adversarial_agent"]:
                 for k in [3, 4, 5, 6, 7, 8, 10]:
                     cmd = (f"python eval_judge.py --judge_name {self.config['judge_name']} "
                            f"--resolution {self.config['resolution']} --k {k} "
                            f"--thr {self.config['thr']} --strategy {agent} --n_images {n_images}")
                     
-                    if agent == "mcts_agent":
+                    if agent in ["mcts_agent", "mcts_adversarial_agent"]:
                         cmd += " --rollouts 200"
                     
                     cmd += f' --note "judge_eval_scalability_{agent}_k{k}"'
@@ -1332,8 +1436,7 @@ class ExperimentManager:
             "timestamp": datetime.now().isoformat()
         }
         
-        os.makedirs("configs", exist_ok=True)
-        filepath = f"configs/{filename}"
+        filepath = get_config_path(filename)
         
         with open(filepath, 'w') as f:
             json.dump(config_data, f, indent=2)
@@ -1344,22 +1447,23 @@ class ExperimentManager:
         """Carga una configuración guardada."""
         print("\n📂 CARGAR CONFIGURACIÓN")
         
-        if not os.path.exists("configs"):
-            print("❌ No hay configuraciones guardadas")
+        from utils.paths import CONFIGS_DIR
+        if not CONFIGS_DIR.exists() or not any(CONFIGS_DIR.glob('*.json')):
+            print("❌ No saved configurations found")
             return
             
-        configs = [f for f in os.listdir("configs") if f.endswith('.json')]
+        configs = [f.name for f in CONFIGS_DIR.glob('*.json')]
         if not configs:
-            print("❌ No hay configuraciones guardadas")
+            print("❌ No saved configurations found")
             return
             
-        print("Configuraciones disponibles:")
+        print("Available configurations:")
         for i, config in enumerate(configs, 1):
             print(f"{i}. {config}")
             
-        idx = self.get_input("Selecciona configuración", "1", input_type=int) - 1
+        idx = self.get_input("Select configuration", "1", input_type=int) - 1
         if 0 <= idx < len(configs):
-            filepath = f"configs/{configs[idx]}"
+            filepath = get_config_path(configs[idx])
             with open(filepath, 'r') as f:
                 data = json.load(f)
                 

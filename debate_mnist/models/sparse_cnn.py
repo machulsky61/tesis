@@ -3,38 +3,38 @@ import torch.nn as nn
 
 class SparseCNN(nn.Module):
     """
-    Modelo de juez (clasificador) CNN para MNIST modificado para aceptar dos
-    canales de entrada:
-    - Canal 0: máscara de píxeles revelados (binaria)
-    - Canal 1: valores de los píxeles revelados (0 en los no revelados)
+    Judge model (classifier) CNN for MNIST modified to accept two
+    input channels:
+    - Channel 0: mask of revealed pixels (binary)
+    - Channel 1: values of revealed pixels (0 for unrevealed)
     """
     def __init__(self, resolution=16):
         super(SparseCNN, self).__init__()
-        # Capas convolucionales
-        # Primer conv: entradas de 2 canales -> 32 filtros
+        # Convolutional layers
+        # First conv: 2-channel inputs -> 32 filters
         self.conv1 = nn.Conv2d(2, 32, kernel_size=3, padding=1)
-        self.pool1 = nn.MaxPool2d(2, 2) # reduce a la mitad
+        self.pool1 = nn.MaxPool2d(2, 2) # reduce by half
         self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
         self.pool2 = nn.MaxPool2d(2, 2)
-        # Calcular tamaño de flatten según resolución después de dos pool (dividido por 4)
+        # Calculate flatten size according to resolution after two pools (divided by 4)
         self.resolution = resolution
-        # asumiendo resolution es divisible por 4 (16 y 28 lo son: 16/4=4, 28/4=7)
+        # assuming resolution is divisible by 4 (16 and 28 are: 16/4=4, 28/4=7)
         self.flat_dim = 64 * (resolution // 2 // 2) * (resolution // 2 // 2)
-        # Capas completamente conectadas
+        # Fully connected layers
         self.fc1 = nn.Linear(self.flat_dim, 128)
-        self.fc2 = nn.Linear(128, 10) # 10 clases de dígitos
-        # Función de activación ReLU (usaremos la misma en forward)
+        self.fc2 = nn.Linear(128, 10) # 10 digit classes
+        # ReLU activation function (we'll use the same in forward)
         self.relu = nn.ReLU()
         
     def forward(self, x):
-        # x tiene forma [batch_size, 2, H, W]
+        # x has shape [batch_size, 2, H, W]
         x = self.conv1(x)
         x = self.relu(x)
         x = self.pool1(x)
         x = self.conv2(x)
         x = self.relu(x)
         x = self.pool2(x)
-        # Aplanar para FC
+        # Flatten for FC
         x = x.view(x.size(0), -1)
         x = self.fc1(x)
         x = self.relu(x)
