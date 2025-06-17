@@ -1,90 +1,147 @@
 timestamp,judge_name,strategy,resolution,thr,seed,n_images,pixels,accuracy,rollouts,allow_all_pixels,note
-eval_28_random_28px_6k_20250612_005205,28,random,28,0.0,42,1000,6,0.558,,False,
-eval_28_optimal_28px_6k_20250612_005212,28,optimal,28,0.0,42,1000,6,0.857,,False,
-eval_28_adversarial_28px_6k_20250612_005422,28,adversarial,28,0.0,42,1000,6,0.0,,False,
-eval_28_adversarial_nonzero_28px_6k_20250612_010902,28,adversarial_nonzero,28,0.0,42,1000,6,0.077,,False,
+eval_28_random_28px_6k_20250614_182519,28,random,28,0.0,42,10000,6,0.5841,,False,ref: tab 3.1 "Baseline"
+eval_28_4px_random_28px_4k_20250614_182812,28_4px,random,28,0.0,42,10000,4,0.468,,False,ref: tab 3.1
+eval_16_random_16px_6k_20250614_182923,16,random,16,0.0,42,10000,6,0.5606,,False,ref: tab 3.1
+eval_16_4px_random_16px_4k_20250614_183022,16_4px,random,16,0.0,42,10000,4,0.4573,,False,ref: tab 3.1
+eval_16_optimal_16px_6k_20250614_183012,16,optimal,16,0.0,42,10000,6,0.9237,,False,ref: tab 3.1
+eval_16_4px_optimal_16px_4k_20250614_183115,16_4px,optimal,16,0.0,42,10000,4,0.8978,,False,ref: tab 3.1
+eval_28_optimal_28px_6k_20250614_182549,28,optimal,28,0.0,42,10000,6,0.8628,,False,ref: tab 3.1
+eval_28_4px_optimal_28px_4k_20250614_182847,28_4px,optimal,28,0.0,42,10000,4,0.8925,,False,ref: tab 3.1
+eval_28_adversarial_nonzero_28px_6k_20250615_015025,28,adversarial_nonzero,28,0.0,42,10000,6,0.0785,,False,ref: tab 3.1
+eval_28_4px_adversarial_nonzero_28px_4k_20250615_015307,28_4px,adversarial_nonzero,28,0.0,42,10000,4,0.0491,,False,ref: tab 3.1
+eval_16_adversarial_nonzero_16px_6k_20250614_194259,16,adversarial_nonzero,16,0.0,42,10000,6,0.0905,,False,ref: tab 3.1
+eval_16_4px_adversarial_nonzero_16px_4k_20250614_194321,16_4px,adversarial_nonzero,16,0.0,42,10000,4,0.0652,,False,ref: tab 3.1
 
-eval_28_random_28px_1k_20250612_011352,28,random,28,0.0,42,1000,1,0.185,,False,
-eval_28_random_28px_2k_20250612_011359,28,random,28,0.0,42,1000,2,0.284,,False,
-eval_28_random_28px_3k_20250612_011405,28,random,28,0.0,42,1000,3,0.393,,False,
-eval_28_random_28px_4k_20250612_011412,28,random,28,0.0,42,1000,4,0.444,,False,
-eval_28_random_28px_5k_20250612_011419,28,random,28,0.0,42,1000,5,0.535,,False,
-eval_28_random_28px_6k_20250612_011425,28,random,28,0.0,42,1000,6,0.558,,False,
-eval_28_random_28px_7k_20250612_011432,28,random,28,0.0,42,1000,7,0.597,,False,
-eval_28_random_28px_8k_20250612_011439,28,random,28,0.0,42,1000,8,0.652,,False,
-eval_28_random_28px_10k_20250612_011446,28,random,28,0.0,42,1000,10,0.687,,False,
-eval_28_random_28px_12k_20250612_011454,28,random,28,0.0,42,1000,12,0.745,,False,VariandoK
-eval_28_random_28px_6k_20250612_011929,28,random,28,0.0,42,1000,6,0.558,,False,
-eval_28_random_28px_6k_20250612_011935,28,random,28,0.1,42,1000,6,0.596,,False,
-eval_28_random_28px_6k_20250612_011942,28,random,28,0.2,42,1000,6,0.61,,False,
-eval_28_random_28px_6k_20250612_011950,28,random,28,0.3,42,1000,6,0.628,,False,
-eval_28_random_28px_6k_20250612_011957,28,random,28,0.4,42,1000,6,0.632,,False,
-eval_28_random_28px_6k_20250612_012003,28,random,28,0.5,42,1000,6,0.646,,False,
-eval_28_random_28px_6k_20250614_003826,28,random,28,0.6,42,1000,6,0.653,,False,
-eval_28_random_28px_6k_20250614_003834,28,random,28,0.7,42,1000,6,0.66,,False,
-eval_28_random_28px_6k_20250614_003841,28,random,28,0.8,42,1000,6,0.641,,False,
-eval_28_random_28px_6k_20250614_003848,28,random,28,0.9,42,1000,6,0.652,,False,
-eval_28_random_28px_6k_20250614_003854,28,random,28,1.0,42,1000,6,0.13,,False,VariandoTHR
 
-eval_28_optimal_28px_1k_20250613_121546,28,optimal,28,0.0,42,10000,1,0.8055,,False,se eligen los k pixeles óptimos (al mismo tiempo) tras evaluar todos con el oraculo del jjex
-eval_28_optimal_28px_2k_20250613_123755,28,optimal,28,0.0,42,10000,2,0.8284,,False,
-eval_28_optimal_28px_3k_20250613_130041,28,optimal,28,0.0,42,10000,3,0.8301,,False,
-eval_28_optimal_28px_4k_20250613_132305,28,optimal,28,0.0,42,10000,4,0.8316,,False,
-eval_28_optimal_28px_5k_20250613_134725,28,optimal,28,0.0,42,10000,5,0.8463,,False,
-eval_28_optimal_28px_6k_20250613_140926,28,optimal,28,0.0,42,10000,6,0.8628,,False,
-eval_28_optimal_28px_7k_20250613_143133,28,optimal,28,0.0,42,10000,7,0.872,,False,
-eval_28_optimal_28px_8k_20250613_145330,28,optimal,28,0.0,42,10000,8,0.8816,,False,
-eval_28_optimal_28px_10k_20250613_151703,28,optimal,28,0.0,42,10000,10,0.9012,,False,
-eval_28_optimal_28px_12k_20250613_154052,28,optimal,28,0.0,42,10000,12,0.9137,,False,
 
-eval_28_adversarial_nonzero_28px_1k_20250613_213235,28,adversarial_nonzero,28,0.0,42,1000,1,0.036,,False,
-eval_28_adversarial_nonzero_28px_2k_20250613_213447,28,adversarial_nonzero,28,0.0,42,1000,2,0.046,,False,
-eval_28_adversarial_nonzero_28px_3k_20250613_213655,28,adversarial_nonzero,28,0.0,42,1000,3,0.055,,False,
-eval_28_adversarial_nonzero_28px_4k_20250613_213906,28,adversarial_nonzero,28,0.0,42,1000,4,0.064,,False,
-eval_28_adversarial_nonzero_28px_5k_20250613_214116,28,adversarial_nonzero,28,0.0,42,1000,5,0.074,,False,
-eval_28_adversarial_nonzero_28px_6k_20250613_214326,28,adversarial_nonzero,28,0.0,42,1000,6,0.077,,False,
-eval_28_adversarial_nonzero_28px_7k_20250613_214538,28,adversarial_nonzero,28,0.0,42,1000,7,0.075,,False,
-eval_28_adversarial_nonzero_28px_8k_20250613_214749,28,adversarial_nonzero,28,0.0,42,1000,8,0.08,,False,
-eval_28_adversarial_nonzero_28px_10k_20250613_214958,28,adversarial_nonzero,28,0.0,42,1000,10,0.088,,False,
-eval_28_adversarial_nonzero_28px_12k_20250613_215208,28,adversarial_nonzero,28,0.0,42,1000,12,0.103,,False,
+eval_28_random_28px_1k_20250612_011352,28,random,28,0.0,42,1000,1,0.185,,False,ref: tab 3.2 "Variando K con todas las estrategias"
+eval_28_random_28px_2k_20250612_011359,28,random,28,0.0,42,1000,2,0.284,,False,ref: tab 3.2
+eval_28_random_28px_3k_20250612_011405,28,random,28,0.0,42,1000,3,0.393,,False,ref: tab 3.2
+eval_28_random_28px_4k_20250612_011412,28,random,28,0.0,42,1000,4,0.444,,False,ref: tab 3.2
+eval_28_random_28px_5k_20250612_011419,28,random,28,0.0,42,1000,5,0.535,,False,ref: tab 3.2
+eval_28_random_28px_6k_20250612_011425,28,random,28,0.0,42,1000,6,0.558,,False,ref: tab 3.2
+eval_28_random_28px_7k_20250612_011432,28,random,28,0.0,42,1000,7,0.597,,False,ref: tab 3.2
+eval_28_random_28px_8k_20250612_011439,28,random,28,0.0,42,1000,8,0.652,,False,ref: tab 3.2
+eval_28_random_28px_10k_20250612_011446,28,random,28,0.0,42,1000,10,0.687,,False,ref: tab 3.2
+eval_28_random_28px_12k_20250612_011454,28,random,28,0.0,42,1000,12,0.745,,False,ref: tab 3.2 
+eval_28_optimal_28px_1k_20250613_121546,28,optimal,28,0.0,42,10000,1,0.8055,,False,ref: tab 3.2 (se eligen los top k pixeles óptimos que maximizan la clase verdadera tras evaluar todos con el oraculo del juez)
+eval_28_optimal_28px_2k_20250613_123755,28,optimal,28,0.0,42,10000,2,0.8284,,False,ref: tab 3.2
+eval_28_optimal_28px_3k_20250613_130041,28,optimal,28,0.0,42,10000,3,0.8301,,False,ref: tab 3.2
+eval_28_optimal_28px_4k_20250613_132305,28,optimal,28,0.0,42,10000,4,0.8316,,False,ref: tab 3.2
+eval_28_optimal_28px_5k_20250613_134725,28,optimal,28,0.0,42,10000,5,0.8463,,False,ref: tab 3.2
+eval_28_optimal_28px_6k_20250613_140926,28,optimal,28,0.0,42,10000,6,0.8628,,False,ref: tab 3.2
+eval_28_optimal_28px_7k_20250613_143133,28,optimal,28,0.0,42,10000,7,0.872,,False,ref: tab 3.2
+eval_28_optimal_28px_8k_20250613_145330,28,optimal,28,0.0,42,10000,8,0.8816,,False,ref: tab 3.2
+eval_28_optimal_28px_10k_20250613_151703,28,optimal,28,0.0,42,10000,10,0.9012,,False,ref: tab 3.2
+eval_28_optimal_28px_12k_20250613_154052,28,optimal,28,0.0,42,10000,12,0.9137,,False,ref: tab 3.2 
+eval_28_adversarial_nonzero_28px_1k_20250613_213235,28,adversarial_nonzero,28,0.0,42,1000,1,0.036,,False,ref: tab 3.2 (se eligen los top k pixeles adversariales que minimizan la clase verdadera tras evaluar todos con el oraculo del juez)
+eval_28_adversarial_nonzero_28px_2k_20250613_213447,28,adversarial_nonzero,28,0.0,42,1000,2,0.046,,False,ref: tab 3.2
+eval_28_adversarial_nonzero_28px_3k_20250613_213655,28,adversarial_nonzero,28,0.0,42,1000,3,0.055,,False,ref: tab 3.2
+eval_28_adversarial_nonzero_28px_4k_20250613_213906,28,adversarial_nonzero,28,0.0,42,1000,4,0.064,,False,ref: tab 3.2
+eval_28_adversarial_nonzero_28px_5k_20250613_214116,28,adversarial_nonzero,28,0.0,42,1000,5,0.074,,False,ref: tab 3.2
+eval_28_adversarial_nonzero_28px_6k_20250613_214326,28,adversarial_nonzero,28,0.0,42,1000,6,0.077,,False,ref: tab 3.2
+eval_28_adversarial_nonzero_28px_7k_20250613_214538,28,adversarial_nonzero,28,0.0,42,1000,7,0.075,,False,ref: tab 3.2
+eval_28_adversarial_nonzero_28px_8k_20250613_214749,28,adversarial_nonzero,28,0.0,42,1000,8,0.08,,False,ref: tab 3.2
+eval_28_adversarial_nonzero_28px_10k_20250613_214958,28,adversarial_nonzero,28,0.0,42,1000,10,0.088,,False,ref: tab 3.2
+eval_28_adversarial_nonzero_28px_12k_20250613_215208,28,adversarial_nonzero,28,0.0,42,1000,12,0.103,,False,ref: tab 3.2
 
-eval_28_adversarial_28px_1k_20250613_200856,28,adversarial,28,0.0,42,300,1,0.0,,True,
-eval_28_adversarial_28px_2k_20250613_201211,28,adversarial,28,0.0,42,300,2,0.0,,True,
-eval_28_adversarial_28px_3k_20250613_201519,28,adversarial,28,0.0,42,300,3,0.0,,True,
-eval_28_adversarial_28px_4k_20250613_201831,28,adversarial,28,0.0,42,300,4,0.0,,True,
-eval_28_adversarial_28px_5k_20250613_202146,28,adversarial,28,0.0,42,300,5,0.0,,True,
-eval_28_adversarial_28px_6k_20250613_202503,28,adversarial,28,0.0,42,300,6,0.0,,True,
-eval_28_adversarial_28px_7k_20250613_202817,28,adversarial,28,0.0,42,300,7,0.0,,True,no tiene sentido continuar
 
-eval_28_greedy_agent_28px_1k_20250613_180133,28,greedy_agent,28,0.0,42,1000,1,0.676,,False,
-eval_28_greedy_agent_28px_2k_20250613_180215,28,greedy_agent,28,0.0,42,1000,2,0.857,,False,
-eval_28_greedy_agent_28px_3k_20250613_180332,28,greedy_agent,28,0.0,42,1000,3,0.958,,False,
-eval_28_greedy_agent_28px_4k_20250613_180525,28,greedy_agent,28,0.0,42,1000,4,0.986,,False,
-eval_28_greedy_agent_28px_5k_20250613_180749,28,greedy_agent,28,0.0,42,1000,5,0.991,,False,
-eval_28_greedy_agent_28px_6k_20250614_005042,28,greedy_agent,28,0.0,42,1000,6,0.993,,False,
 
-eval_28_greedy_adversarial_agent_28px_6k_20250613_192639,28,greedy_adversarial_agent,28,0.0,42,100,6,0.01,,False,
-eval_28_greedy_adversarial_agent_28px_1k_20250613_192944,28,greedy_adversarial_agent,28,0.0,42,300,1,0.043333333333333335,,False,
-eval_28_greedy_adversarial_agent_28px_2k_20250613_192957,28,greedy_adversarial_agent,28,0.0,42,300,2,0.016666666666666666,,False,
-eval_28_greedy_adversarial_agent_28px_3k_20250613_193020,28,greedy_adversarial_agent,28,0.0,42,300,3,0.01,,False,
-eval_28_greedy_adversarial_agent_28px_4k_20250613_193054,28,greedy_adversarial_agent,28,0.0,42,300,4,0.006666666666666667,,False,
-eval_28_greedy_adversarial_agent_28px_5k_20250613_193135,28,greedy_adversarial_agent,28,0.0,42,300,5,0.013333333333333334,,False,
-eval_28_greedy_adversarial_agent_28px_6k_20250613_193231,28,greedy_adversarial_agent,28,0.0,42,300,6,0.01,,False,
-eval_28_greedy_adversarial_agent_28px_7k_20250613_193334,28,greedy_adversarial_agent,28,0.0,42,300,7,0.01,,False,
-eval_28_greedy_adversarial_agent_28px_8k_20250613_193447,28,greedy_adversarial_agent,28,0.0,42,300,8,0.01,,False,
-eval_28_greedy_adversarial_agent_28px_10k_20250613_193608,28,greedy_adversarial_agent,28,0.0,42,300,10,0.016666666666666666,,False,
-eval_28_greedy_adversarial_agent_28px_12k_20250613_193752,28,greedy_adversarial_agent,28,0.0,42,300,12,0.02,,False,
+eval_28_random_28px_6k_20250612_011929,28,random,28,0.0,42,1000,6,0.558,,False,ref: tab 3.3 "Variando thr random"
+eval_28_random_28px_6k_20250612_011935,28,random,28,0.1,42,1000,6,0.596,,False,ref: tab 3.3
+eval_28_random_28px_6k_20250612_011942,28,random,28,0.2,42,1000,6,0.61,,False,ref: tab 3.3
+eval_28_random_28px_6k_20250612_011950,28,random,28,0.3,42,1000,6,0.628,,False,ref: tab 3.3
+eval_28_random_28px_6k_20250612_011957,28,random,28,0.4,42,1000,6,0.632,,False,ref: tab 3.3
+eval_28_random_28px_6k_20250612_012003,28,random,28,0.5,42,1000,6,0.646,,False,ref: tab 3.3
+eval_28_random_28px_6k_20250614_003826,28,random,28,0.6,42,1000,6,0.653,,False,ref: tab 3.3
+eval_28_random_28px_6k_20250614_003834,28,random,28,0.7,42,1000,6,0.66,,False,ref: tab 3.3
+eval_28_random_28px_6k_20250614_003841,28,random,28,0.8,42,1000,6,0.641,,False,ref: tab 3.3
+eval_28_random_28px_6k_20250614_003848,28,random,28,0.9,42,1000,6,0.652,,False,ref: tab 3.3
+eval_28_random_28px_6k_20250614_003854,28,random,28,1.0,42,1000,6,0.13,,False,ref: tab 3.3
 
-eval_28_greedy_adversarial_agent_28px_1k_20250613_194141,28,greedy_adversarial_agent,28,0.0,42,300,1,0.0,,True,
-eval_28_greedy_adversarial_agent_28px_2k_20250613_194235,28,greedy_adversarial_agent,28,0.0,42,300,2,0.0,,True,
-eval_28_greedy_adversarial_agent_28px_3k_20250613_194421,28,greedy_adversarial_agent,28,0.0,42,300,3,0.0,,True,
-eval_28_greedy_adversarial_agent_28px_4k_20250613_194657,28,greedy_adversarial_agent,28,0.0,42,300,4,0.0,,True,
-eval_28_greedy_adversarial_agent_28px_5k_20250613_195021,28,greedy_adversarial_agent,28,0.0,42,300,5,0.0,,True,
-eval_28_greedy_adversarial_agent_28px_6k_20250613_195439,28,greedy_adversarial_agent,28,0.0,42,300,6,0.0,,True,no tiene sentido continuar,
 
-eval_28_mcts_agent_28px_1k_20250613_203308,28,mcts_agent,28,0.0,42,100,1,0.81,512,False,
-eval_28_mcts_agent_28px_2k_20250613_203347,28,mcts_agent,28,0.0,42,100,2,1.0,512,False,
-eval_28_mcts_agent_28px_3k_20250613_203501,28,mcts_agent,28,0.0,42,100,3,1.0,512,False,
-eval_28_mcts_agent_28px_4k_20250613_203656,28,mcts_agent,28,0.0,42,100,4,1.0,512,False,
-eval_28_mcts_agent_28px_5k_20250613_203927,28,mcts_agent,28,0.0,42,100,5,1.0,512,False,
-eval_28_mcts_agent_28px_6k_20250613_204243,28,mcts_agent,28,0.0,42,100,6,1.0,512,False,no tiene sentido continuar,
+
+eval_28_greedy_agent_28px_1k_20250613_180133,28,greedy_agent,28,0.0,42,1000,1,0.676,,False,ref: tab 3.4 "Introduccion de los Agentes: Honesto y Deshonesto"
+eval_28_greedy_agent_28px_2k_20250613_180215,28,greedy_agent,28,0.0,42,1000,2,0.857,,False,ref: tab 3.4
+eval_28_greedy_agent_28px_3k_20250613_180332,28,greedy_agent,28,0.0,42,1000,3,0.958,,False,ref: tab 3.4
+eval_28_greedy_agent_28px_4k_20250613_180525,28,greedy_agent,28,0.0,42,1000,4,0.986,,False,ref: tab 3.4
+eval_28_greedy_agent_28px_5k_20250613_180749,28,greedy_agent,28,0.0,42,1000,5,0.991,,False,ref: tab 3.4
+eval_28_greedy_agent_28px_6k_20250614_005042,28,greedy_agent,28,0.0,42,1000,6,0.993,,False,ref: tab 3.4
+eval_28_greedy_agent_28px_7k_20250616_145444,28,greedy_agent,28,0.0,42,1000,7,0.997,,False,ref: tab 3.4
+eval_28_greedy_agent_28px_8k_20250616_145912,28,greedy_agent,28,0.0,42,1000,8,0.997,,False,ref: tab 3.4
+eval_28_greedy_agent_28px_10k_20250616_154331,28,greedy_agent,28,0.0,42,1000,10,0.997,,False,ref: tab 3.4
+eval_28_greedy_agent_28px_12k_20250616_154949,28,greedy_agent,28,0.0,42,1000,12,0.997,,False,ref: tab 3.4
+eval_28_greedy_adversarial_agent_28px_6k_20250613_192639,28,greedy_adversarial_agent,28,0.0,42,100,6,0.01,,False,ref: tab 3.4
+eval_28_greedy_adversarial_agent_28px_1k_20250613_192944,28,greedy_adversarial_agent,28,0.0,42,300,1,0.043333333333333335,,False,ref: tab 3.4
+eval_28_greedy_adversarial_agent_28px_2k_20250613_192957,28,greedy_adversarial_agent,28,0.0,42,300,2,0.016666666666666666,,False,ref: tab 3.4
+eval_28_greedy_adversarial_agent_28px_3k_20250613_193020,28,greedy_adversarial_agent,28,0.0,42,300,3,0.01,,False,ref: tab 3.4
+eval_28_greedy_adversarial_agent_28px_4k_20250613_193054,28,greedy_adversarial_agent,28,0.0,42,300,4,0.006666666666666667,,False,ref: tab 3.4
+eval_28_greedy_adversarial_agent_28px_5k_20250613_193135,28,greedy_adversarial_agent,28,0.0,42,300,5,0.013333333333333334,,False,ref: tab 3.4
+eval_28_greedy_adversarial_agent_28px_6k_20250613_193231,28,greedy_adversarial_agent,28,0.0,42,300,6,0.01,,False,ref: tab 3.4
+eval_28_greedy_adversarial_agent_28px_7k_20250613_193334,28,greedy_adversarial_agent,28,0.0,42,300,7,0.01,,False,ref: tab 3.4
+eval_28_greedy_adversarial_agent_28px_8k_20250613_193447,28,greedy_adversarial_agent,28,0.0,42,300,8,0.01,,False,ref: tab 3.4
+eval_28_greedy_adversarial_agent_28px_10k_20250613_193608,28,greedy_adversarial_agent,28,0.0,42,300,10,0.016666666666666666,,False,ref: tab 3.4
+eval_28_greedy_adversarial_agent_28px_12k_20250613_193752,28,greedy_adversarial_agent,28,0.0,42,300,12,0.02,,False,ref: tab 3.4
+eval_28_mcts_agent_28px_1k_20250613_203308,28,mcts_agent,28,0.0,42,100,1,0.81,512,False,ref: tab 3.4
+eval_28_mcts_agent_28px_2k_20250613_203347,28,mcts_agent,28,0.0,42,100,2,1.0,512,False,ref: tab 3.4
+eval_28_mcts_agent_28px_3k_20250613_203501,28,mcts_agent,28,0.0,42,100,3,1.0,512,False,ref: tab 3.4
+eval_28_mcts_agent_28px_4k_20250613_203656,28,mcts_agent,28,0.0,42,100,4,1.0,512,False,ref: tab 3.4
+eval_28_mcts_agent_28px_5k_20250613_203927,28,mcts_agent,28,0.0,42,100,5,1.0,512,False,ref: tab 3.4
+eval_28_mcts_agent_28px_6k_20250613_204243,28,mcts_agent,28,0.0,42,100,6,1.0,512,False,ref: tab 3.4
+eval_28_mcts_agent_28px_7k_20250617_164331,28,mcts_agent,28,0.0,42,100,7,1.0,512,False,ref: tab 3.4
+eval_28_mcts_agent_28px_8k_20250617_164736,28,mcts_agent,28,0.0,42,100,8,1.0,512,False,ref: tab 3.4
+eval_28_mcts_agent_28px_10k_20250617_165214,28,mcts_agent,28,0.0,42,100,10,1.0,512,False,ref: tab 3.4
+eval_28_mcts_agent_28px_12k_20250617_165800,28,mcts_agent,28,0.0,42,100,12,1.0,512,False,ref: tab 3.4
+eval_28_mcts_adversarial_agent_28px_1k_20250617_173046,28,mcts_adversarial_agent,28,0.0,42,100,1,0.04,,False,ref: tab 3.4
+eval_28_mcts_adversarial_agent_28px_2k_20250617_173126,28,mcts_adversarial_agent,28,0.0,42,100,2,0.02,,False,ref: tab 3.4
+eval_28_mcts_adversarial_agent_28px_3k_20250617_173242,28,mcts_adversarial_agent,28,0.0,42,100,3,0.02,,False,ref: tab 3.4
+eval_28_mcts_adversarial_agent_28px_4k_20250617_173434,28,mcts_adversarial_agent,28,0.0,42,100,4,0.01,,False,ref: tab 3.4
+eval_28_mcts_adversarial_agent_28px_5k_20250617_173658,28,mcts_adversarial_agent,28,0.0,42,100,5,0.01,,False,ref: tab 3.4
+eval_28_mcts_adversarial_agent_28px_6k_20250617_173957,28,mcts_adversarial_agent,28,0.0,42,100,6,0.01,,False,ref: tab 3.4
+eval_28_mcts_adversarial_agent_28px_7k_20250617_170640,28,mcts_adversarial_agent,28,0.0,42,100,7,0.01,,False,ref: tab 3.4
+eval_28_mcts_adversarial_agent_28px_8k_20250617_171059,28,mcts_adversarial_agent,28,0.0,42,100,8,0.01,,False,ref: tab 3.4
+eval_28_mcts_adversarial_agent_28px_10k_20250617_171610,28,mcts_adversarial_agent,28,0.0,42,100,10,0.01,,False,ref: tab 3.4
+eval_28_mcts_adversarial_agent_28px_12k_20250617_172159,28,mcts_adversarial_agent,28,0.0,42,100,12,0.01,,False,ref: tab 3.4
+
+
+
+eval_28_adversarial_28px_6k_20250614_185643,28,adversarial,28,0.0,42,10000,6,0.0,,False,ref: tab 3.8 "Presentando al adeverarial con pixeles negros (informacion nunca vista) comparar esto vs adversarial_nonzero"
+eval_28_4px_adversarial_28px_4k_20250614_190038,28_4px,adversarial,28,0.0,42,10000,4,0.0,,False,ref: tab 3.8
+eval_16_adversarial_16px_6k_20250614_184907,16,adversarial,16,0.0,42,10000,6,0.0,,False,ref: tab 3.8
+eval_16_4px_adversarial_16px_4k_20250614_184954,16_4px,adversarial,16,0.0,42,10000,4,0.0,,False,ref: tab 3.8
+
+eval_28_adversarial_28px_300k_20250615_031455,28,adversarial,28,0.0,42,10,300,0.0,,False,single_eval_adversarial "recien al k = 600 se ve mejora"
+eval_28_greedy_adversarial_agent_28px_300k_20250615_030845,28,greedy_adversarial_agent,28,0.0,42,10,300,0.0,,True,single_eval_greedy_adversarial_agent (greedy para probar aca)
+eval_28_adversarial_28px_390k_20250615_031537,28,adversarial,28,0.0,42,10,390,0.0,,False,single_eval_adversarial
+eval_28_adversarial_28px_600k_20250615_031604,28,adversarial,28,0.0,42,10,600,0.4,,False,single_eval_adversarial
+eval_28_adversarial_28px_600k_20250615_031650,28,adversarial,28,0.0,42,100,600,0.2,,False,single_eval_adversarial
+
+
+
+eval_28_adversarial_28px_1k_20250613_200856,28,adversarial,28,0.0,42,300,1,0.0,,True,ref: tab 3.9 "Vario K con todas las estrategias adversariales"
+eval_28_adversarial_28px_2k_20250613_201211,28,adversarial,28,0.0,42,300,2,0.0,,True,ref: tab 3.9 
+eval_28_adversarial_28px_3k_20250613_201519,28,adversarial,28,0.0,42,300,3,0.0,,True,ref: tab 3.9 
+eval_28_adversarial_28px_4k_20250613_201831,28,adversarial,28,0.0,42,300,4,0.0,,True,ref: tab 3.9 
+eval_28_adversarial_28px_5k_20250613_202146,28,adversarial,28,0.0,42,300,5,0.0,,True,ref: tab 3.9 
+eval_28_adversarial_28px_6k_20250613_202503,28,adversarial,28,0.0,42,300,6,0.0,,True,ref: tab 3.9 
+eval_28_adversarial_28px_7k_20250613_202817,28,adversarial,28,0.0,42,300,7,0.0,,True,ref: tab 3.9 (no tiene sentido continuar experimentando si da 0 ya no mejora)
+eval_28_greedy_adversarial_agent_28px_1k_20250613_194141,28,greedy_adversarial_agent,28,0.0,42,300,1,0.0,,True,ref: tab 3.9 
+eval_28_greedy_adversarial_agent_28px_2k_20250613_194235,28,greedy_adversarial_agent,28,0.0,42,300,2,0.0,,True,ref: tab 3.9 
+eval_28_greedy_adversarial_agent_28px_3k_20250613_194421,28,greedy_adversarial_agent,28,0.0,42,300,3,0.0,,True,ref: tab 3.9 
+eval_28_greedy_adversarial_agent_28px_4k_20250613_194657,28,greedy_adversarial_agent,28,0.0,42,300,4,0.0,,True,ref: tab 3.9 
+eval_28_greedy_adversarial_agent_28px_5k_20250613_195021,28,greedy_adversarial_agent,28,0.0,42,300,5,0.0,,True,ref: tab 3.9 
+eval_28_greedy_adversarial_agent_28px_6k_20250613_195439,28,greedy_adversarial_agent,28,0.0,42,300,6,0.0,,True,ref: tab 3.9 (no tiene sentido continuar)
+eval_28_mcts_adversarial_agent_28px_1k_20250615_032233,28,mcts_adversarial_agent,28,0.0,42,100,1,0.0,,True,ref: tab 3.9
+eval_28_mcts_adversarial_agent_28px_2k_20250615_032610,28,mcts_adversarial_agent,28,0.0,42,100,2,0.0,,True,ref: tab 3.9
+eval_28_mcts_adversarial_agent_28px_3k_20250615_033239,28,mcts_adversarial_agent,28,0.0,42,100,3,0.0,,True,ref: tab 3.9
+eval_28_mcts_adversarial_agent_28px_4k_20250615_034225,28,mcts_adversarial_agent,28,0.0,42,100,4,0.0,,True,ref: tab 3.9
+eval_28_mcts_adversarial_agent_28px_5k_20250615_035435,28,mcts_adversarial_agent,28,0.0,42,100,5,0.0,,True,ref: tab 3.9 (no tiene sentido continuar)
+
+
+
+
+
+
+
+eval_28_4px_optimal_28px_4k_20250617_143250,28_4px,optimal,28,0.0,42,1000,4,0.898,,False,single_eval_optimal
+eval_28_optimal_28px_6k_20250617_143719,28,optimal,28,0.0,42,1000,6,0.857,,False,single_eval_optimal
