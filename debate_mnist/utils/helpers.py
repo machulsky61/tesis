@@ -434,6 +434,33 @@ def save_colored_debate(original_image, debate_moves, filepath, debate_info=None
         except ImportError:
             raise RuntimeError("No se encontró PIL ni cv2 para guardar imágenes coloreadas")
 
+def save_comprehensive_json(metadata, filepath):
+    """
+    Saves comprehensive debate/evaluation metadata in the new JSON format.
+    This replaces the functionality of save_play and track_confidence.
+    """
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    
+    # Convert any numpy arrays or tensors to native Python types
+    def convert_to_serializable(obj):
+        if hasattr(obj, 'item'):  # Single tensor/numpy scalar
+            return obj.item()
+        elif hasattr(obj, 'tolist'):  # Array/tensor
+            return obj.tolist()
+        elif isinstance(obj, dict):
+            return {k: convert_to_serializable(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [convert_to_serializable(item) for item in obj]
+        elif isinstance(obj, tuple):
+            return tuple(convert_to_serializable(item) for item in obj)
+        else:
+            return obj
+    
+    serializable_metadata = convert_to_serializable(metadata)
+    
+    with open(filepath, 'w') as f:
+        json.dump(serializable_metadata, f, indent=2)
+
 def log_results_csv(logfile, results):
     """
     Logs experiment results to a CSV file with unified format.

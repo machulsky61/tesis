@@ -1,34 +1,81 @@
 timestamp,judge_name,resolution,thr,seed,rollouts,n_images,agent_type,pixels,started,precommit,allow_all_pixels,track_confidence,accuracy,note
-greedy_4px_honest_precommit_20250601_030636,28_4px,28,0.0,42,0,10000,greedy,4,honest,True,False,False,0.814,paper=83.8%
-greedy_4px_liar_precommit_20250531_150029,28_4px,28,0.0,42,0,10000,greedy,4,liar,True,False,False,0.8697,paper=86.7%
-greedy_6px_honest_precommit_20250530_211834,28,28,0.0,42,0,10000,greedy,6,honest,True,False,False,0.8481,paper=87.4%
-greedy_6px_liar_precommit_20250602_003723,28,28,0.0,42,0,10000,greedy,6,liar,True,False,False,0.893,paper=90.4%
+mcts_6px_honest_precommit_20250608_170526,28,28,0.0,42,512,100,mcts,6,honest,True,False,False,0.95,paper=87.4% --ref: tab 3.5.1 "Debates Simetricos: MCTS"
+mcts_6px_liar_precommit_20250608_131307,28,28,0.0,42,512,100,mcts,6,liar,True,False,False,0.97,paper=90.4% --ref: tab 3.5.1
+mcts_6px_honest_no-precommit_20250608_165716,28,28,0.0,42,512,100,mcts,6,honest,False,False,False,0.71,paper=67.4% --ref: tab 3.5.1
+mcts_6px_liar_no-precommit_20250608_165041,28,28,0.0,42,512,100,mcts,6,liar,False,False,False,0.82,paper=81.5% --ref: tab 3.5.1
+mcts_4px_liar_no-precommit_20250609_125924,28_4px,28,0.0,42,512,100,mcts,4,liar,False,False,False,0.69,paper=68.4% --ref: tab 3.5.1
+mcts_4px_liar_precommit_20250609_130137,28_4px,28,0.0,42,512,100,mcts,4,liar,True,False,False,0.91,paper=86.7% --ref: tab 3.5.1
+mcts_4px_honest_no-precommit_20250609_135658,28_4px,28,0.0,42,512,100,mcts,4,honest,False,False,False,0.54,paper=51.0% --ref: tab 3.5.1
+mcts_4px_honest_precommit_20250609_135913,28_4px,28,0.0,42,512,100,mcts,4,honest,True,False,False,0.91,paper=83.8% --ref: tab 3.5.1
 
-greedy_4px_honest_no-precommit_20250601_224518,28_4px,28,0.0,42,0,10000,greedy,4,honest,False,False,False,0.4836,paper=51.0%
-greedy_4px_liar_no-precommit_20250601_224409,28_4px,28,0.0,42,0,10000,greedy,4,liar,False,False,False,0.5602,paper=68.4%
-greedy_6px_honest_no-precommit_20250601_224619,28,28,0.0,42,0,10000,greedy,6,honest,False,False,False,0.6241,paper=67.4%
-greedy_6px_liar_no-precommit_20250601_224658,28,28,0.0,42,0,10000,greedy,6,liar,False,False,False,0.6864,paper=81.5%
+greedy_4px_honest_precommit_20250601_030636,28_4px,28,0.0,42,0,10000,greedy,4,honest,True,False,False,0.814,paper=83.8% --ref: tab 3.5.2 "Debates Simetricos: Greedy"
+greedy_4px_liar_precommit_20250531_150029,28_4px,28,0.0,42,0,10000,greedy,4,liar,True,False,False,0.8697,paper=86.7% --ref: tab 3.5.2
+greedy_6px_honest_precommit_20250530_211834,28,28,0.0,42,0,10000,greedy,6,honest,True,False,False,0.8481,paper=87.4% --ref: tab 3.5.2
+greedy_6px_liar_precommit_20250602_003723,28,28,0.0,42,0,10000,greedy,6,liar,True,False,False,0.893,paper=90.4% --ref: tab 3.5.2
+greedy_4px_honest_no-precommit_20250601_224518,28_4px,28,0.0,42,0,10000,greedy,4,honest,False,False,False,0.4836,paper=51.0% --ref: tab 3.5.2
+greedy_4px_liar_no-precommit_20250601_224409,28_4px,28,0.0,42,0,10000,greedy,4,liar,False,False,False,0.5602,paper=68.4% --ref: tab 3.5.2
+greedy_6px_honest_no-precommit_20250601_224619,28,28,0.0,42,0,10000,greedy,6,honest,False,False,False,0.6241,paper=67.4% --ref: tab 3.5.2
+greedy_6px_liar_no-precommit_20250601_224658,28,28,0.0,42,0,10000,greedy,6,liar,False,False,False,0.6864,paper=81.5% --ref: tab 3.5.2
 
-mcts_6px_honest_precommit_20250608_170526,28,28,0.0,42,512,100,mcts,6,honest,True,False,False,0.95,paper=87.4%
-mcts_6px_liar_precommit_20250608_131307,28,28,0.0,42,512,100,mcts,6,liar,True,False,False,0.97,paper=90.4%
-mcts_6px_honest_no-precommit_20250608_165716,28,28,0.0,42,512,100,mcts,6,honest,False,False,False,0.71,paper=67.4%
-mcts_6px_liar_no-precommit_20250608_165041,28,28,0.0,42,512,100,mcts,6,liar,False,False,False,0.82,paper=81.5%
 
-mcts_4px_liar_no-precommit_20250609_125924,28_4px,28,0.0,42,512,100,mcts,4,liar,False,False,False,0.69,paper=68.4%
-mcts_4px_liar_precommit_20250609_130137,28_4px,28,0.0,42,512,100,mcts,4,liar,True,False,False,0.91,paper=86.7%
-mcts_4px_honest_no-precommit_20250609_135658,28_4px,28,0.0,42,512,100,mcts,4,honest,False,False,False,0.54,paper=51.0%
-mcts_4px_honest_precommit_20250609_135913,28_4px,28,0.0,42,512,100,mcts,4,honest,True,False,False,0.91,paper=83.8%
 
-greedy_6px_liar_no-precommit_20250612_013152,28,28,0.0,42,0,1000,greedy,6,liar,False,True,False,0.136,greedy_
-greedy_6px_liar_precommit_20250612_015038,28,28,0.0,42,0,1000,greedy,6,liar,True,True,False,0.219,greedy_precommit
-greedy_6px_honest_no-precommit_20250612_061505,28,28,0.0,42,0,1000,greedy,6,honest,False,True,False,0.076,greedy_honest_first
-greedy_6px_honest_precommit_20250612_063402,28,28,0.0,42,0,1000,greedy,6,honest,True,True,False,0.138,greedy_precommit_honest_first
+greedy_6px_liar_no-precommit_20250612_013152,28,28,0.0,42,0,1000,greedy,6,liar,False,True,False,0.136,greedy_ --ref: tab 3.10 "Debates Simetricos: Agentes Adversariales con pixeles 0"
+greedy_6px_liar_precommit_20250612_015038,28,28,0.0,42,0,1000,greedy,6,liar,True,True,False,0.219,greedy_precommit --ref: tab 3.10
+greedy_6px_honest_no-precommit_20250612_061505,28,28,0.0,42,0,1000,greedy,6,honest,False,True,False,0.076,greedy_honest_first --ref: tab 3.10
+greedy_6px_honest_precommit_20250612_063402,28,28,0.0,42,0,1000,greedy,6,honest,True,True,False,0.138,greedy_precommit_honest_first --ref: tab 3.10
+mcts_6px_liar_no-precommit_20250612_101458,28,28,0.0,42,512,100,mcts,6,liar,False,True,False,0.49,mcts_ --ref: tab 3.10
+mcts_6px_liar_precommit_20250612_174436,28,28,0.0,42,512,100,mcts,6,liar,True,True,False,0.16,mcts_precommit --ref: tab 3.10
+mcts_6px_honest_no-precommit_20250612_213814,28,28,0.0,42,512,100,mcts,6,honest,False,True,False,0.04,mcts_honest_first --ref: tab 3.10
+mcts_6px_honest_precommit_20250612_215708,28,28,0.0,42,512,100,mcts,6,honest,True,True,False,0.11,mcts_precommit_honest_first --ref: tab 3.10
 
-mcts_6px_liar_no-precommit_20250612_101458,28,28,0.0,42,512,100,mcts,6,liar,False,True,False,0.49,mcts_
-mcts_6px_liar_precommit_20250612_174436,28,28,0.0,42,512,100,mcts,6,liar,True,True,False,0.16,mcts_precommit
-mcts_6px_honest_no-precommit_20250612_213814,28,28,0.0,42,512,100,mcts,6,honest,False,True,False,0.04,mcts_honest_first
-mcts_6px_honest_precommit_20250612_215708,28,28,0.0,42,512,100,mcts,6,honest,True,True,False,0.11,mcts_precommit_honest_first
+
+greedy_3px_liar_no-precommit_20250616_175747,28,28,0.0,42,0,1000,greedy,3,liar,False,False,False,0.3,ablation_k3_greedy "Vario K para todas las configuraciones de Greedy"
+greedy_4px_liar_no-precommit_20250616_182350,28,28,0.0,42,0,1000,greedy,4,liar,False,False,False,0.589,ablation_k4_greedy
+greedy_5px_liar_no-precommit_20250616_172247,28,28,0.0,42,0,1000,greedy,5,liar,False,False,False,0.475,ablation_k5_greedy
+greedy_6px_liar_no-precommit_20250616_182603,28,28,0.0,42,0,1000,greedy,6,liar,False,False,False,0.686,ablation_k6_greedy
+greedy_7px_liar_no-precommit_20250616_172528,28,28,0.0,42,0,1000,greedy,7,liar,False,False,False,0.611,ablation_k7_greedy
+greedy_8px_liar_no-precommit_20250616_172930,28,28,0.0,42,0,1000,greedy,8,liar,False,False,False,0.743,ablation_k8_greedy
+greedy_3px_honest_no-precommit_20250617_225146,28,28,0.0,42,0,1000,greedy,3,honest,False,False,False,0.656,ablation_k3_greedy_honest_first
+greedy_4px_honest_no-precommit_20250618_012432,28,28,0.0,42,0,1000,greedy,4,honest,False,False,False,0.488,ablation_k4_greedy_honest_first
+greedy_5px_honest_no-precommit_20250618_110041,28,28,0.0,42,0,1000,greedy,5,honest,False,False,False,0.713,ablation_k5_greedy_honest_first
+greedy_6px_honest_no-precommit_20250618_135503,28,28,0.0,42,0,1000,greedy,6,honest,False,False,False,0.621,ablation_k6_greedy_honest_first
+greedy_7px_honest_no-precommit_20250618_182841,28,28,0.0,42,0,1000,greedy,7,honest,False,False,False,0.771,ablation_k7_greedy_honest_first
+
+greedy_3px_liar_precommit_20250617_215212,28,28,0.0,42,0,1000,greedy,3,liar,True,False,False,0.465,ablation_k3_greedy_precommit
+greedy_4px_liar_precommit_20250617_234828,28,28,0.0,42,0,1000,greedy,4,liar,True,False,False,0.879,ablation_k4_greedy_precommit
+greedy_5px_liar_precommit_20250618_100009,28,28,0.0,42,0,1000,greedy,5,liar,True,False,False,0.735,ablation_k5_greedy_precommit
+greedy_6px_liar_precommit_20250618_121232,28,28,0.0,42,0,1000,greedy,6,liar,True,False,False,0.886,ablation_k6_greedy_precommit
+greedy_7px_liar_precommit_20250618_165505,28,28,0.0,42,0,1000,greedy,7,liar,True,False,False,0.79,ablation_k7_greedy_precommit
+greedy_3px_honest_precommit_20250617_225402,28,28,0.0,42,0,1000,greedy,3,honest,True,False,False,0.955,ablation_k3_greedy_precommit_honest_first
+greedy_4px_honest_precommit_20250618_013123,28,28,0.0,42,0,1000,greedy,4,honest,True,False,False,0.807,ablation_k4_greedy_precommit_honest_first
+greedy_5px_honest_precommit_20250618_110313,28,28,0.0,42,0,1000,greedy,5,honest,True,False,False,0.921,ablation_k5_greedy_precommit_honest_first
+greedy_6px_honest_precommit_20250618_140303,28,28,0.0,42,0,1000,greedy,6,honest,True,False,False,0.825,ablation_k6_greedy_precommit_honest_first
+greedy_7px_honest_precommit_20250618_183233,28,28,0.0,42,0,1000,greedy,7,honest,True,False,False,0.91,ablation_k7_greedy_precommit_honest_first
+
+
+
+mcts_3px_liar_no-precommit_20250616_173346,28,28,0.0,42,512,100,mcts,3,liar,False,False,False,0.25,ablation_k3_mcts "Vario K para todas las configuraciones de MCTS"
+mcts_4px_liar_no-precommit_20250616_182920,28,28,0.0,42,512,100,mcts,4,liar,False,False,False,0.73,ablation_k4_mcts
+mcts_5px_liar_no-precommit_20250616_173528,28,28,0.0,42,512,100,mcts,5,liar,False,False,False,0.5,ablation_k5_mcts
+mcts_6px_liar_no-precommit_20250616_183135,28,28,0.0,42,512,100,mcts,6,liar,False,False,False,0.82,ablation_k6_mcts
+mcts_7px_liar_no-precommit_20250616_173816,28,28,0.0,42,512,100,mcts,7,liar,False,False,False,0.67,ablation_k7_mcts
+mcts_8px_liar_no-precommit_20250616_174207,28,28,0.0,42,512,100,mcts,8,liar,False,False,False,0.87,ablation_k8_mcts
+
+
+
+
+mcts_6px_liar_precommit_20250618_132054,28,28,0.0,42,512,20,mcts,6,liar,True,False,True,0.95,mcts_precommit "Visualizaciones y Exploracion de Logits"
+
 
 greedy_4px_liar_no-precommit_20250613_094720,28,28,0.0,42,0,300,greedy,4,liar,False,True,False,0.08,adversarial_unrestricted_greedy_k4
 greedy_6px_liar_no-precommit_20250613_095043,28,28,0.0,42,0,300,greedy,6,liar,False,True,False,0.13666666666666666,adversarial_unrestricted_greedy_k6
 greedy_8px_liar_no-precommit_20250613_095522,28,28,0.0,42,0,300,greedy,8,liar,False,True,False,0.14666666666666667,adversarial_unrestricted_greedy_k8
+greedy_6px_liar_no-precommit_20250614_012927,28,28,0.0,42,0,100,greedy,6,liar,False,False,True,0.76,confidence_greedy_k6
+greedy_6px_liar_no-precommit_20250614_012951,28,28,0.0,42,0,200,greedy,6,liar,False,False,True,0.75,confidence_greedy_k6
+mcts_6px_liar_no-precommit_20250614_013045,28,28,0.0,42,512,200,mcts,6,liar,False,False,True,0.82,confidence_mcts_k6_r512
+greedy_6px_liar_no-precommit_20250615_125149,28,28,0.0,42,0,10,greedy,6,liar,False,False,False,0.8,comparison_restricted_greedy
+greedy_6px_liar_no-precommit_20250615_125158,28,28,0.0,42,0,10,greedy,6,liar,False,True,False,0.1,comparison_unrestricted_greedy
+
+
+greedy_8px_liar_precommit_20250618_201229,28,28,0.0,42,0,1000,greedy,8,liar,True,False,False,0.88,ablation_k8_greedy_precommit
+greedy_8px_honest_no-precommit_20250618_220649,28,28,0.0,42,0,1000,greedy,8,honest,False,False,False,0.714,ablation_k8_greedy_honest_first

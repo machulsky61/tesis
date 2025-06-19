@@ -308,7 +308,8 @@ def main():
         "adversarial_nonzero": "adversarial_nonzero",
         "greedy_agent": "greedy_agent",
         "mcts_agent": "mcts_agent",
-        "greedy_adversarial_agent": "greedy_adversarial_agent"
+        "greedy_adversarial_agent": "greedy_adversarial_agent",
+        "mcts_adversarial_agent": "mcts_adversarial_agent"
     }[args.strategy]
     
     with torch.no_grad():

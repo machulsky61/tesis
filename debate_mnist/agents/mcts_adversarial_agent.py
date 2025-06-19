@@ -1,28 +1,25 @@
 import torch
 import numpy as np
 from agents.base_agent import DebateAgent
-from agents.mcts_fast import FastMCTSAgent
 
 class MCTSAdversarialAgent(DebateAgent):
     """
-    Adversarial agent that uses MCTS to strategically select pixels to MINIMIZE 
-    the logits of the true class. This is a sophisticated adversarial agent that 
-    uses Monte Carlo Tree Search to find the most damaging pixel sequences.
+    MCTS Adversarial agent that mimics mcts_fast liar behavior in solo evaluation. 
+    Chooses ALL k pixels sequentially to maximize wrong predictions.
     
-    This agent simulates an intelligent adversary that can think ahead multiple moves
-    to find the optimal strategy to confuse the judge.
+    - No opponent: chooses all k pixels by itself
+    - Same vectorized rollout efficiency as mcts_fast  
+    - Same liar logic: maximize (predicted_class != true_class)
+    - Supports allow_all_pixels for unrestricted selection
     """
     
     def __init__(self, judge_model, true_class, original_image, thr=0.0, 
-                 allow_all_pixels=False, rollouts=100):
-        # For this adversarial agent:
-        # - my_class = None (defends no class)
-        # - opponent_class = true_class (wants to minimize this class)
-        # - precommit = False (liar-type no-precommit behavior)
+                 allow_all_pixels=False, rollouts=512):
+        # Configure as mcts_fast liar: my_class=None, opponent_class=true_class, precommit=False
         super().__init__(
             judge_model=judge_model, 
             my_class=None,  # Defends no class
-            opponent_class=true_class,  # Wants to minimize true class
+            opponent_class=true_class,  # Attacks true class
             precommit=False, 
             original_image=original_image, 
             thr=thr, 
@@ -30,154 +27,130 @@ class MCTSAdversarialAgent(DebateAgent):
         )
         self.true_class = true_class
         self.rollouts = rollouts
+        self.device = next(judge_model.parameters()).device
         
-        # Create an internal MCTS agent but modify its evaluation logic
-        self.mcts_engine = FastMCTSAgent(
-            judge_model=judge_model,
-            my_class=None,  # No class to defend
-            opponent_class=true_class,  # Class to attack
-            precommit=False,
-            original_image=original_image,
-            thr=thr,
-            rollouts=rollouts,
-            allow_all_pixels=allow_all_pixels
-        )
+        # Precompute coordinates tensor for efficiency
+        if allow_all_pixels:
+            H, W = self.image.shape[-2:]
+            all_coords = [(i, j) for i in range(H) for j in range(W)]
+            self.all_coords_tensor = torch.tensor(all_coords, device=self.device, dtype=torch.long)
+        else:
+            self.all_coords_tensor = torch.tensor(
+                self.relevant_coords, device=self.device, dtype=torch.long
+            )
     
     def choose_pixel(self, mask, reveal_count=None):
         """
-        Uses MCTS to select the pixel that most effectively minimizes 
-        the true class logits through strategic lookahead.
+        Choose best pixel using MCTS rollouts.
+        Uses vectorized evaluation for efficiency with high rollout counts.
         """
-        # Get available pixel coordinates
+        # Get available candidates
         if self.allow_all_pixels:
-            # Can select any pixel
-            H, W = self.original_image.shape[-2:]
-            all_coords = [(i, j) for i in range(H) for j in range(W)]
+            H, W = self.image.shape[-2:]
+            all_candidates = [(i, j) for i in range(H) for j in range(W)]
         else:
-            # Only select pixels above threshold
-            image_2d = self.original_image.squeeze()
-            coords_above_thr = torch.nonzero(image_2d > self.thr, as_tuple=False).cpu().numpy()
-            all_coords = [(int(coord[0]), int(coord[1])) for coord in coords_above_thr]
+            all_candidates = [(y, x) for (y, x) in self.relevant_coords]
         
-        # Filter out already revealed pixels
-        mask_2d = mask.squeeze()
-        available_coords = [
-            (i, j) for i, j in all_coords 
-            if mask_2d[i, j] == 0  # Not yet revealed
-        ]
+        # Filter unrevealed pixels
+        candidates = [(y, x) for (y, x) in all_candidates if mask[y, x].item() == 0]
         
-        if not available_coords:
-            # No pixels available, return random coordinate
-            H, W = self.original_image.shape[-2:]
-            return (np.random.randint(0, H), np.random.randint(0, W))
+        if not candidates:
+            return None
         
-        # Use MCTS to evaluate each potential move
-        best_coord = None
-        best_score = float('inf')  # We want to minimize true class logits
+        n_candidates = len(candidates)
+        H, W = mask.shape
         
-        device = next(self.judge_model.parameters()).device
+        # Create base masks after revealing each candidate
+        base_masks = mask.unsqueeze(0).expand(n_candidates, -1, -1).clone()
+        for i, (y, x) in enumerate(candidates):
+            base_masks[i, y, x] = 1.0
         
-        for coord in available_coords:
-            # Create hypothetical mask with this pixel revealed
-            test_mask = mask.clone()
-            test_mask[0, 0, coord[0], coord[1]] = 1.0
-            
-            # Evaluate this move using MCTS lookahead
-            score = self._evaluate_adversarial_move(test_mask, coord)
-            
-            if score < best_score:  # Lower score is better for adversarial agent
-                best_score = score
-                best_coord = coord
+        # Calculate remaining moves (we choose all remaining pixels)
+        moves_left = max(0, 6 - (reveal_count + 1)) if reveal_count is not None else 5
         
-        return best_coord if best_coord else available_coords[0]
+        # Simulate rollouts from each candidate (vectorized)
+        final_masks = self._simulate_rollouts(base_masks, moves_left)
+        
+        # Evaluate all rollouts using batch forward pass
+        win_rates = self._evaluate_candidates(final_masks, n_candidates)
+        
+        # Select best candidate
+        best_idx = torch.argmax(win_rates).item()
+        return candidates[best_idx]
     
-    def _evaluate_adversarial_move(self, mask_with_move, move_coord):
+    def _simulate_rollouts(self, base_masks, moves_left):
         """
-        Evaluates how good a move is for the adversarial agent.
-        Uses simplified MCTS rollouts focused on minimizing true class confidence.
+        Vectorized rollout simulation.
+        Efficiently generates [n_candidates * rollouts] final masks.
         """
-        device = next(self.judge_model.parameters()).device
+        n_candidates = base_masks.size(0)
+        H, W = base_masks.shape[1], base_masks.shape[2]
         
-        # Immediate evaluation: how much does this single move hurt the true class?
-        image_input = torch.stack([mask_with_move.squeeze(), self.original_image.squeeze()], dim=0)
-        image_input = image_input.unsqueeze(0).to(device)
+        # Expand base_masks for all rollouts: [n_candidates, rollouts, H, W]
+        rollout_masks = base_masks.unsqueeze(1).expand(-1, self.rollouts, -1, -1).clone()
         
+        if moves_left > 0:
+            # Generate random moves for completing the masks
+            # Shape: [n_candidates, rollouts, moves_left]
+            n_coords = len(self.all_coords_tensor)
+            random_indices = torch.randint(
+                0, n_coords,
+                (n_candidates, self.rollouts, moves_left),
+                device=self.device
+            )
+            
+            # Convert to coordinates: [n_candidates, rollouts, moves_left, 2]
+            random_coords = self.all_coords_tensor[random_indices]
+            
+            # Apply moves sequentially (vectorized)
+            for move_idx in range(moves_left):
+                coords = random_coords[:, :, move_idx]  # [n_candidates, rollouts, 2]
+                y_coords = coords[:, :, 0]  # [n_candidates, rollouts]
+                x_coords = coords[:, :, 1]  # [n_candidates, rollouts]
+                
+                # Apply mask using advanced indexing
+                flat_masks = rollout_masks.view(-1, H, W)
+                flat_y = y_coords.view(-1)
+                flat_x = x_coords.view(-1)
+                batch_indices = torch.arange(flat_masks.size(0), device=self.device)
+                
+                flat_masks[batch_indices, flat_y, flat_x] = 1.0
+                rollout_masks = flat_masks.view(n_candidates, self.rollouts, H, W)
+        
+        # Flatten for batch evaluation: [n_candidates * rollouts, H, W]
+        return rollout_masks.view(-1, H, W)
+    
+    def _evaluate_candidates(self, final_masks, n_candidates):
+        """
+        Batch evaluation but with liar logic.
+        """
+        # Create revealed values
+        values_plane = self.image.unsqueeze(0) * final_masks  # Broadcasting
+        
+        # Create input for judge: [mask, values] as channels
+        judge_input = torch.stack([final_masks, values_plane], dim=1)
+        
+        # Forward pass in batches to avoid OOM )
+        outputs = self._forward_batched(judge_input, batch_size=2048)
+        
+        # Reshape: [n_candidates, rollouts, 10]
+        outputs = outputs.view(n_candidates, self.rollouts, -1)
+        
+        # Liar logic from mcts_fast line 127: wins = (predicted_classes != self.opp_class).float()
+        predicted_classes = outputs.argmax(dim=2)  # [n_candidates, rollouts]
+        wins = (predicted_classes != self.true_class).float()  # [n_candidates, rollouts]
+        win_rates = wins.mean(dim=1)  # [n_candidates]
+        
+        return win_rates
+    
+    def _forward_batched(self, inp, batch_size=2048):
+        """Forward pass in batches"""
+        outputs = []
         with torch.no_grad():
-            logits = self.judge_model(image_input)
-            true_class_logit = logits[0, self.true_class].item()
-        
-        # For adversarial agent, lower true class logit is better
-        immediate_score = true_class_logit
-        
-        # Add some rollout simulation for strategic depth
-        rollout_penalty = self._simulate_opponent_response(mask_with_move)
-        
-        # Combine immediate effect with strategic considerations
-        total_score = immediate_score + 0.3 * rollout_penalty
-        
-        return total_score
-    
-    def _simulate_opponent_response(self, current_mask):
-        """
-        Simulates how an honest agent might respond to our adversarial move.
-        Returns a penalty score based on how easily the honest agent could recover.
-        """
-        device = next(self.judge_model.parameters()).device
-        
-        # Count revealed pixels
-        revealed_count = (current_mask > 0).sum().item()
-        total_pixels = current_mask.numel()
-        
-        if revealed_count >= total_pixels * 0.8:  # If most pixels revealed
-            return 0  # No penalty, game almost over
-        
-        # Simple simulation: assume honest agent picks best remaining pixel
-        image_2d = self.original_image.squeeze()
-        mask_2d = current_mask.squeeze()
-        
-        # Find unrevealed pixels above threshold
-        if self.allow_all_pixels:
-            H, W = image_2d.shape
-            available_coords = [(i, j) for i in range(H) for j in range(W)]
-        else:
-            coords_above_thr = torch.nonzero(image_2d > self.thr, as_tuple=False).cpu().numpy()
-            available_coords = [(int(coord[0]), int(coord[1])) for coord in coords_above_thr]
-        
-        available_coords = [
-            (i, j) for i, j in available_coords 
-            if mask_2d[i, j] == 0  # Not yet revealed
-        ]
-        
-        if not available_coords:
-            return 0
-        
-        # Evaluate best honest response
-        best_honest_improvement = 0
-        
-        for coord in available_coords[:min(5, len(available_coords))]:  # Check top 5 to save time
-            test_mask = current_mask.clone()
-            test_mask[0, 0, coord[0], coord[1]] = 1.0
-            
-            image_input = torch.stack([test_mask.squeeze(), image_2d], dim=0)
-            image_input = image_input.unsqueeze(0).to(device)
-            
-            with torch.no_grad():
-                logits = self.judge_model(image_input)
-                true_class_logit = logits[0, self.true_class].item()
-            
-            # Current true class logit
-            current_input = torch.stack([current_mask.squeeze(), image_2d], dim=0)
-            current_input = current_input.unsqueeze(0).to(device)
-            
-            with torch.no_grad():
-                current_logits = self.judge_model(current_input)
-                current_true_logit = current_logits[0, self.true_class].item()
-            
-            improvement = true_class_logit - current_true_logit
-            best_honest_improvement = max(best_honest_improvement, improvement)
-        
-        # Return penalty: higher if honest agent can easily recover
-        return best_honest_improvement
+            for i in range(0, inp.size(0), batch_size):
+                batch = inp[i:i+batch_size]
+                outputs.append(self.judge(batch))
+        return torch.cat(outputs, dim=0)
     
     def get_strategy_name(self):
         """Returns a descriptive name for this agent strategy."""
