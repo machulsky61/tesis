@@ -40,19 +40,9 @@ class ExperimentManager:
         
     def print_banner(self):
         print("=" * 80)
-        print("🧪 AI SAFETY DEBATE - EXPERIMENT AUTOMATION v3.5 🧪")
-        print("=" * 80)
-        print("Complete system featuring:")
-        print("• Intelligent global configuration")
-        print("• 9 types of automated experiments")
-        print("• CSV data export for custom analysis")
-        print("• MCTS adversarial agent")
-        print("• Judge evaluation (8 strategies)")
-        print("• Granular saving configuration")
-        print("• Templates and saveable configurations")
-        print("• Advanced experiment management")
-        print("• Optimized values (k=6, MCTS=100img, 512rollouts)")
         print()
+        print("🧪 AI SAFETY DEBATE - EXPERIMENT AUTOMATION v3.5 🧪")
+
 
     def get_input(self, prompt, default=None, options=None, input_type=str):
         """Gets user input with validation."""
@@ -395,6 +385,7 @@ class ExperimentManager:
         
         include_agents = self.get_yes_no("¿Incluir estrategias de agentes (más lento)?", "y")
         allow_all_pixels = self.get_yes_no("¿Permitir píxeles negros para agentes?")
+        save_comparison_outputs = self.get_yes_no("¿Guardar visualizaciones para comparación (una muestra por estrategia)?")
         
         strategies = ["random", "optimal", "adversarial", "adversarial_nonzero"]
         
@@ -415,6 +406,15 @@ class ExperimentManager:
             if strategy in ["greedy_agent", "mcts_agent", "greedy_adversarial_agent", "mcts_adversarial_agent"] and allow_all_pixels:
                 cmd += " --allow_all_pixels"
             
+            # Add saving options for comparison visualizations
+            if save_comparison_outputs:
+                # Save only a few samples for comparison purposes
+                cmd += " --save_visualizations"
+                # Limit to fewer images when saving outputs to avoid clutter
+                if n_images > 50:
+                    cmd = cmd.replace(f"--n_images {n_images}", "--n_images 10")
+                    print(f"ℹ️  Limitando a 10 imágenes para {strategy} (visualización habilitada)")
+            
             if self.run_command(cmd, f"Comparación - {strategy.replace('_', ' ').title()}"):
                 print(f"✅ {strategy.replace('_', ' ').title()} completado")
             else:
@@ -424,6 +424,8 @@ class ExperimentManager:
         
         print("\n📊 Suite de comparación completada.")
         print("📁 Resultados guardados en outputs/evaluations.csv")
+        if save_comparison_outputs:
+            print("📁 Visualizaciones guardadas en outputs/visualizations/evaluations/")
         print("💡 Use option 4 (Data Analysis) to export CSV data for analysis")
 
     def _evaluate_single_strategy(self, judge_name, resolution, default_k, strategy):
@@ -448,10 +450,18 @@ class ExperimentManager:
             if self.get_yes_no("¿Permitir selección de píxeles negros?"):
                 cmd += " --allow_all_pixels"
         
+        # Ask about saving evaluation outputs
+        print("\n📁 Opciones de guardado para evaluación:")
+        save_outputs = self.get_yes_no("¿Guardar imágenes y visualizaciones de la evaluación?")
+        if save_outputs:
+            cmd += " --save_metadata"  # This includes images, masks, and visualizations
+        
         cmd += f' --note "single_eval_{strategy}"'
         
         if self.run_command(cmd, f"Evaluación {strategy.replace('_', ' ').title()}"):
             print(f"✅ Evaluación {strategy} completada")
+            if save_outputs:
+                print(f"📁 Archivos guardados en outputs/visualizations/evaluations/")
             print("📁 Resultados guardados en outputs/evaluations.csv")
         else:
             print(f"❌ Error en evaluación {strategy}")
@@ -485,6 +495,8 @@ class ExperimentManager:
         if strategy in ["greedy_agent", "mcts_agent", "greedy_adversarial_agent", "mcts_adversarial_agent"]:
             allow_all_pixels = self.get_yes_no("¿Permitir píxeles negros?")
         
+        save_k_analysis_outputs = self.get_yes_no("¿Guardar visualizaciones para análisis k (pocas muestras)?")
+        
         print(f"\n🚀 Ejecutando análisis de k para {strategy}...")
         print(f"Valores de k: {k_values}")
         
@@ -498,6 +510,14 @@ class ExperimentManager:
             
             if allow_all_pixels:
                 cmd += " --allow_all_pixels"
+            
+            # Add saving options for k analysis
+            if save_k_analysis_outputs:
+                cmd += " --save_visualizations"
+                # Limit to very few images for k analysis
+                if n_images > 20:
+                    cmd = cmd.replace(f"--n_images {n_images}", "--n_images 5")
+                    print(f"ℹ️  Limitando a 5 imágenes para k={k} (visualización habilitada)")
             
             cmd += f' --note "k_analysis_{strategy}_k{k}"'
             
@@ -668,7 +688,7 @@ class ExperimentManager:
         print("-" * 50)
         print("Trackea la evolución de las predicciones del juez durante el debate")
         
-        track_enabled = self.get_yes_no("¿Habilitar tracking de logits?", default=False)
+        track_enabled = self.get_yes_no("¿Habilitar tracking de logits?", default="n")
         
         if track_enabled:
             print("\n📊 Opciones de tracking:")

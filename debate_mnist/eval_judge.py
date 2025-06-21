@@ -12,7 +12,7 @@ import os
 from models.sparse_cnn import SparseCNN
 from utils.data_utils import DebateDataset
 from utils import helpers
-from utils.paths import get_model_path, EVALUATIONS_CSV
+from utils.paths import get_model_path, get_evaluation_folder, EVALUATIONS_CSV
 
 def select_optimal_pixels(image, model, true_label, k, thr, device):
     """
@@ -253,6 +253,66 @@ def select_agent_pixels(image, model, true_label, k, thr, device, agent_type, **
         # Fallback a selección aleatoria si el agente no puede seleccionar
         return select_random_pixels(image, k, thr)
 
+def save_evaluation_outputs(i, image, mask, chosen_coords, logits, true_label, pred, args, eval_id):
+    """Saves image, mask and metadata to evaluation output directory."""
+    if args.save_images or args.save_masks or args.save_metadata or args.save_visualizations:
+        folder_note = args.note.replace(" ", "_") if args.note and len(args.note) < 20 else ""
+        eval_folder = get_evaluation_folder(eval_id, folder_note)
+    
+    if args.save_images or args.save_metadata:
+        img_path = os.path.join(eval_folder, f"sample_{i}_image.png")
+        helpers.save_image(image, img_path)   
+         
+    if args.save_masks or args.save_metadata:
+        img_path = os.path.join(eval_folder, f"sample_{i}_mask.png")
+        helpers.save_mask(image, mask, img_path)
+        
+    if args.save_metadata:
+        # Create comprehensive metadata
+        meta = {
+            "sample_index": i,
+            "true_label": int(true_label),
+            "predicted_label": int(pred),
+            "is_correct": bool(pred == true_label),
+            "strategy": args.strategy,
+            "resolution": args.resolution,
+            "threshold": args.thr,
+            "k_pixels": args.k,
+            "pixels_revealed": int(mask.sum().item()),
+            "selected_coordinates": [(int(coord[0]), int(coord[1])) for coord in chosen_coords],
+            "final_logits": {str(i): float(logits[i]) for i in range(len(logits))},
+            "confidence": float(torch.softmax(torch.tensor(logits), dim=0).max().item()),
+            "judge_name": args.judge_name,
+            "seed": args.seed,
+            "rollouts": args.rollouts if hasattr(args, 'rollouts') else None,
+            "allow_all_pixels": args.allow_all_pixels,
+            "eval_id": eval_id
+        }
+        
+        meta_path = os.path.join(eval_folder, f"sample_{i}_metadata.json")
+        helpers.save_play(meta, meta_path)
+        
+    if args.save_visualizations or args.save_metadata:
+        # Create evaluation visualization
+        viz_path = os.path.join(eval_folder, f"sample_{i}_evaluation.png")
+        
+        # Prepare evaluation info for visualization
+        eval_info = {
+            'eval_id': eval_id,
+            'sample_index': i,
+            'true_label': int(true_label),
+            'predicted_label': int(pred),
+            'strategy': args.strategy,
+            'accuracy': bool(pred == true_label),
+            'confidence': float(torch.softmax(torch.tensor(logits), dim=0).max().item()),
+            'logits': {str(i): float(logits[i]) for i in range(len(logits))}
+        }
+        
+        # Convert chosen_coords to list format expected by save_evaluation_visualization
+        coords_list = [(int(coord[0]), int(coord[1])) for coord in chosen_coords]
+        
+        helpers.save_evaluation_visualization(image, mask, coords_list, viz_path, eval_info)
+
 def main():
     parser = argparse.ArgumentParser(description="Evalúa la precisión del juez débil (SparseCNN) con diferentes estrategias de selección de píxeles")
     parser.add_argument("--resolution", type=int,   default=28,             help="Resolución de las imágenes (16 o 28)")
@@ -267,6 +327,12 @@ def main():
     parser.add_argument("--rollouts",   type=int,   default=500,            help="Rollouts para MCTS agent (solo usado con strategy=mcts_agent)")
     parser.add_argument("--allow_all_pixels", action="store_true",         help="Permitir selección de cualquier píxel (incluye píxeles negros)")
     parser.add_argument("--note",       type=str,   default="",             help="Nota opcional para registrar en el CSV")
+    
+    # Evaluation output options
+    parser.add_argument("--save_images", action="store_true",               help="Save original images for each evaluation sample")
+    parser.add_argument("--save_masks", action="store_true",                help="Save masked images for each evaluation sample")
+    parser.add_argument("--save_metadata", action="store_true",             help="Save comprehensive metadata (images, masks, and JSON) for each sample")
+    parser.add_argument("--save_visualizations", action="store_true",       help="Save colored visualization images showing pixel selection order")
     args = parser.parse_args()
 
     # Generate descriptive experiment ID for judge evaluation
@@ -314,7 +380,7 @@ def main():
     
     with torch.no_grad():
         pbar = tqdm(test_subset, desc=f"Evaluating with {strategy_name} strategy")
-        for image, label in pbar:
+        for sample_idx, (image, label) in enumerate(pbar):
             image = image.to(device)
             true_label = label
             
@@ -367,6 +433,14 @@ def main():
             if pred == true_label:
                 correct += 1
             total += 1
+            
+            # Save outputs if requested
+            if args.save_images or args.save_masks or args.save_metadata or args.save_visualizations:
+                logits = output[0].cpu().numpy()
+                save_evaluation_outputs(
+                    sample_idx, image, mask, chosen_coords, logits, 
+                    true_label, pred, args, id
+                )
             
             pbar.set_postfix({'accuracy': f'{(correct/total)*100:.2f}%'})
 

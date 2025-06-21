@@ -28,3 +28,14 @@ mcts_vs_greedy_6px_liar_no-precommit_20250614_013732,28,28,0.0,42,512,200,6,liar
 greedy_vs_mcts_6px_liar_no-precommit_20250618_020613,28,28,0.0,42,512,20,6,liar,False,greedy,mcts,False,True,0.7,greedy_honest_vs_mcts_liar_ "Visualizaciones y Exploracion de Logits"
 greedy_vs_mcts_6px_liar_precommit_20250618_071147,28,28,0.0,42,512,20,6,liar,True,greedy,mcts,False,True,0.95,greedy_honest_vs_mcts_liar_precommit
 greedy_vs_mcts_6px_liar_precommit_20250618_134950,28,28,0.0,42,512,20,6,liar,True,greedy,mcts,False,True,0.95,greedy_honest_vs_mcts_liar_precommit
+mcts_vs_greedy_6px_liar_no-precommit_20250620_003445,28,28,0.0,42,512,100,6,liar,False,mcts,greedy,False,False,0.94,robustness_mixed_s42
+mcts_vs_greedy_6px_liar_no-precommit_20250620_003633,28,28,0.0,123,512,100,6,liar,False,mcts,greedy,False,False,0.93,robustness_mixed_s123
+mcts_vs_greedy_6px_liar_no-precommit_20250620_003821,28,28,0.0,456,512,100,6,liar,False,mcts,greedy,False,False,0.94,robustness_mixed_s456
+mcts_vs_greedy_6px_liar_no-precommit_20250620_004009,28,28,0.0,789,512,100,6,liar,False,mcts,greedy,False,False,0.93,robustness_mixed_s789
+mcts_vs_greedy_6px_liar_no-precommit_20250620_004157,28,28,0.0,1337,512,100,6,liar,False,mcts,greedy,False,False,0.94,robustness_mixed_s1337
+greedy_vs_mcts_6px_liar_no-precommit_20250620_004345,28,28,0.0,42,512,100,6,liar,False,greedy,mcts,False,False,0.63,robustness_mixed_s42
+greedy_vs_mcts_6px_liar_no-precommit_20250620_004534,28,28,0.0,123,512,100,6,liar,False,greedy,mcts,False,False,0.62,robustness_mixed_s123
+greedy_vs_mcts_6px_liar_no-precommit_20250620_004738,28,28,0.0,456,512,100,6,liar,False,greedy,mcts,False,False,0.64,robustness_mixed_s456
+greedy_vs_mcts_6px_liar_no-precommit_20250620_004927,28,28,0.0,789,512,100,6,liar,False,greedy,mcts,False,False,0.65,robustness_mixed_s789
+greedy_vs_mcts_6px_liar_no-precommit_20250620_005116,28,28,0.0,1337,512,100,6,liar,False,greedy,mcts,False,False,0.64,robustness_mixed_s1337
+greedy_vs_mcts_6px_liar_no-precommit_20250620_213849,28,28,0.0,42,512,40,6,liar,False,greedy,mcts,False,True,0.75,greedy_honest_vs_mcts_liar_

@@ -493,3 +493,292 @@ def log_results_csv(logfile, results):
             if col not in results:
                 results[col] = ""
         writer.writerow(results)
+
+def save_probability_progression(probability_data, filepath):
+    """
+    Saves probability progression data in the standardized format for visualization.
+    
+    Args:
+        probability_data: Dictionary containing:
+            - metadata: Dict with run information
+            - probability_progression: List of turn-by-turn probability data
+        filepath: Path where to save the JSON file
+    """
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    
+    # Ensure the data has the correct structure
+    formatted_data = {
+        "analysis_type": "judge_probability_progression",
+        "description": "Statistical analysis data focusing on judge probability evolution during debate",
+        "metadata": probability_data.get('metadata', {}),
+        "probability_progression": probability_data.get('probability_progression', [])
+    }
+    
+    # Convert to serializable format
+    def convert_to_serializable(obj):
+        if hasattr(obj, 'item'):  # Single tensor/numpy scalar
+            return obj.item()
+        elif hasattr(obj, 'tolist'):  # Array/tensor
+            return obj.tolist()
+        elif isinstance(obj, dict):
+            return {k: convert_to_serializable(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [convert_to_serializable(item) for item in obj]
+        elif isinstance(obj, tuple):
+            return tuple(convert_to_serializable(item) for item in obj)
+        else:
+            return obj
+    
+    serializable_data = convert_to_serializable(formatted_data)
+    
+    with open(filepath, 'w') as f:
+        json.dump(serializable_data, f, indent=4)
+
+def save_evaluation_visualization(original_image, mask, selected_coords, filepath, eval_info=None):
+    """
+    Saves a PNG image showing evaluation pixels colored by selection order,
+    similar to save_colored_debate but for judge evaluations.
+    
+    Args:
+        original_image: imagen original (Tensor HxW o 1xHxW)
+        mask: máscara binaria indicando píxeles seleccionados
+        selected_coords: lista de coordenadas seleccionadas [(y, x), ...]
+        filepath: ruta donde guardar la imagen
+        eval_info: diccionario con información de la evaluación {
+            'eval_id': str, 'sample_index': int,
+            'true_label': int, 'predicted_label': int, 
+            'strategy': str, 'accuracy': bool,
+            'confidence': float, 'logits': dict
+        }
+    """
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    
+    # Generar texto informativo
+    def generate_eval_info_text():
+        if not eval_info:
+            return []
+        
+        info_lines = []
+        
+        # Título general
+        info_lines.append("Judge Evaluation")
+        info_lines.append("")
+        
+        # Configuración
+        strategy = eval_info.get('strategy', 'unknown').replace('_', ' ').title()
+        sample_idx = eval_info.get('sample_index', '?')
+        
+        info_lines.append("Configuration:")
+        info_lines.append(f"  - Strategy: {strategy}")
+        info_lines.append(f"  - Sample: #{sample_idx}")
+        info_lines.append(f"  - Pixels revealed: {len(selected_coords)}")
+        info_lines.append("")
+        
+        # Resultado
+        true_label = eval_info.get('true_label', '?')
+        pred_label = eval_info.get('predicted_label', '?')
+        confidence = eval_info.get('confidence', 0.0)
+        
+        if str(true_label) == str(pred_label):
+            result_symbol = "Correct ✓"
+        else:
+            result_symbol = "Incorrect ✗"
+        
+        info_lines.append("Outcome:")
+        info_lines.append(f"  - True label: {true_label}")
+        info_lines.append(f"  - Predicted: {pred_label} → {result_symbol}")
+        info_lines.append(f"  - Confidence: {confidence:.3f}")
+        info_lines.append("")
+        
+        # Logits information
+        if 'logits' in eval_info and eval_info['logits']:
+            logits = eval_info['logits']
+            sorted_logits = sorted(logits.items(), key=lambda x: x[1], reverse=True)
+            
+            info_lines.append("Top Predictions:")
+            for i, (class_idx, logit_val) in enumerate(sorted_logits[:3]):
+                marker = "→" if int(class_idx) == pred_label else " "
+                info_lines.append(f"  {marker} Class {class_idx}: {logit_val:.2f}")
+            info_lines.append("")
+        
+        # Eval ID al final
+        eval_id = eval_info.get('eval_id', '?????')
+        info_lines.append(f"Evaluation ID: {eval_id}")
+        
+        return info_lines
+    
+    info_text = generate_eval_info_text()
+    
+    # Convertir imagen a numpy array
+    if torch.is_tensor(original_image):
+        img = original_image.clone().detach().cpu()
+        if img.dim() == 3:
+            img = img[0]
+    else:
+        img = torch.tensor(original_image)
+    
+    img_np = (img.numpy() * 255).astype(np.uint8)
+    H, W = img_np.shape
+    
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+        
+        # Escalar la imagen para mejor visualización
+        scale_factor = max(1, 600 // max(H, W))  # Ligeramente menor que debates
+        scaled_H, scaled_W = H * scale_factor, W * scale_factor
+        
+        # Calcular espacio para información
+        info_panel_width = 500 if info_text else 0
+        total_width = scaled_W + info_panel_width
+        total_height = max(scaled_H, len(info_text) * 28 + 80) if info_text else scaled_H
+        
+        # Crear imagen completa
+        full_img = Image.new('RGB', (total_width, total_height), color=(245, 245, 245))
+        
+        # Convertir imagen original a RGB y escalar
+        img_rgb = np.stack([img_np, img_np, img_np], axis=-1)
+        img_pil = Image.fromarray(img_rgb, mode='RGB')
+        img_pil = img_pil.resize((scaled_W, scaled_H), Image.NEAREST)
+        
+        # Pegar la imagen escalada
+        full_img.paste(img_pil, (0, 0))
+        
+        # Dibujar sobre la imagen
+        draw = ImageDraw.Draw(full_img)
+        
+        # Color para píxeles seleccionados (verde para evaluación)
+        selection_color = (0, 150, 0)
+        
+        # Dibujar píxeles seleccionados con números de orden
+        for order, coord in enumerate(selected_coords, 1):
+            if len(coord) >= 2:
+                y, x = int(coord[0]), int(coord[1])
+                
+                # Coordenadas escaladas
+                scaled_x_start = x * scale_factor
+                scaled_y_start = y * scale_factor
+                scaled_x_end = (x + 1) * scale_factor - 1
+                scaled_y_end = (y + 1) * scale_factor - 1
+                
+                # Colorear píxel
+                draw.rectangle([
+                    scaled_x_start, scaled_y_start, 
+                    scaled_x_end, scaled_y_end
+                ], fill=selection_color)
+                
+                # Agregar número de orden
+                if scale_factor >= 6:
+                    try:
+                        text = str(order)
+                        font_size = max(16, int(scale_factor * 0.6))
+                        try:
+                            font = ImageFont.truetype("arial.ttf", font_size)
+                        except:
+                            font = ImageFont.load_default()
+                        
+                        # Calcular posición centrada
+                        text_bbox = draw.textbbox((0, 0), text, font=font)
+                        text_width = text_bbox[2] - text_bbox[0]
+                        text_height = text_bbox[3] - text_bbox[1]
+                        
+                        text_x = scaled_x_start + (scale_factor - text_width) // 2
+                        text_y = scaled_y_start + (scale_factor - text_height) // 2
+                        
+                        # Contorno blanco
+                        for offset_x in [-1, 0, 1]:
+                            for offset_y in [-1, 0, 1]:
+                                if offset_x != 0 or offset_y != 0:
+                                    draw.text((text_x + offset_x, text_y + offset_y), text, 
+                                            fill=(255, 255, 255), font=font)
+                        
+                        # Texto principal negro
+                        draw.text((text_x, text_y), text, fill=(0, 0, 0), font=font)
+                        
+                    except Exception:
+                        pass  # Si falla el texto, continuar
+        
+        # Dibujar panel de información
+        if info_text and info_panel_width > 0:
+            info_x = scaled_W + 20
+            info_y = 20
+            
+            # Cargar fuentes
+            title_font = load_times_font(24, bold=True)
+            header_font = load_times_font(20, bold=True)
+            content_font = load_times_font(18, bold=False)
+            
+            # Dibujar cada línea
+            for line in info_text:
+                if line == "":
+                    info_y += 16
+                elif line.startswith("Judge Evaluation"):
+                    draw.text((info_x, info_y), line, fill=(0, 0, 0), font=title_font)
+                    info_y += 35
+                elif line.startswith("Configuration:") or line.startswith("Outcome:") or \
+                     line.startswith("Top Predictions:"):
+                    draw.text((info_x, info_y), line, fill=(0, 0, 0), font=header_font)
+                    info_y += 28
+                elif line.startswith("  -") or line.startswith("  →") or line.startswith("   "):
+                    draw.text((info_x, info_y), line, fill=(0, 0, 0), font=content_font)
+                    info_y += 24
+                elif line.startswith("Evaluation ID:"):
+                    small_font = load_times_font(14, bold=False)
+                    draw.text((info_x, info_y), line, fill=(100, 100, 100), font=small_font)
+                    info_y += 20
+                else:
+                    draw.text((info_x, info_y), line, fill=(0, 0, 0), font=content_font)
+                    info_y += 26
+        
+        full_img.save(filepath)
+        
+    except ImportError:
+        # Fallback usando OpenCV
+        try:
+            import cv2
+            
+            scale_factor = max(1, 600 // max(H, W))
+            new_H, new_W = H * scale_factor, W * scale_factor
+            
+            # Convertir a BGR y escalar
+            img_bgr = cv2.cvtColor(img_np, cv2.COLOR_GRAY2BGR)
+            img_bgr = cv2.resize(img_bgr, (new_W, new_H), interpolation=cv2.INTER_NEAREST)
+            
+            for order, coord in enumerate(selected_coords, 1):
+                if len(coord) >= 2:
+                    y, x = int(coord[0]), int(coord[1])
+                    color = (0, 150, 0)  # Verde en BGR
+                    
+                    scaled_x_start = x * scale_factor
+                    scaled_y_start = y * scale_factor
+                    scaled_x_end = (x + 1) * scale_factor
+                    scaled_y_end = (y + 1) * scale_factor
+                    
+                    cv2.rectangle(img_bgr, (scaled_x_start, scaled_y_start), 
+                                (scaled_x_end-1, scaled_y_end-1), color, -1)
+                    
+                    if scale_factor >= 6:
+                        font_scale = max(0.6, min(1.2, scale_factor * 0.05))
+                        text_size = cv2.getTextSize(str(order), cv2.FONT_HERSHEY_SIMPLEX, font_scale, 1)[0]
+                        text_width, text_height = text_size
+                        
+                        text_x = scaled_x_start + (scale_factor - text_width) // 2
+                        text_y = scaled_y_start + (scale_factor + text_height) // 2
+                        
+                        # Contorno blanco
+                        cv2.putText(img_bgr, str(order), (text_x-1, text_y), 
+                                   cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 255, 255), 1)
+                        cv2.putText(img_bgr, str(order), (text_x+1, text_y), 
+                                   cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 255, 255), 1)
+                        cv2.putText(img_bgr, str(order), (text_x, text_y-1), 
+                                   cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 255, 255), 1)
+                        cv2.putText(img_bgr, str(order), (text_x, text_y+1), 
+                                   cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 255, 255), 1)
+                        
+                        # Texto principal negro
+                        cv2.putText(img_bgr, str(order), (text_x, text_y), 
+                                   cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 0, 0), 1)
+            
+            cv2.imwrite(filepath, img_bgr)
+            
+        except ImportError:
+            raise RuntimeError("Neither PIL nor cv2 found for saving evaluation visualizations")

@@ -16,6 +16,7 @@ DATA_DIR = BASE_DIR / "data"
 # Output subdirectories
 VISUALIZATIONS_DIR = OUTPUTS_DIR / "visualizations"
 DEBATES_VIZ_DIR = VISUALIZATIONS_DIR / "debates"
+EVALUATIONS_VIZ_DIR = VISUALIZATIONS_DIR / "evaluations"
 FIGURES_DIR = VISUALIZATIONS_DIR / "figures"
 
 # CSV files
@@ -33,6 +34,7 @@ def ensure_directories():
         CONFIGS_DIR,
         VISUALIZATIONS_DIR,
         DEBATES_VIZ_DIR,
+        EVALUATIONS_VIZ_DIR,
         FIGURES_DIR,
     ]
     
@@ -55,6 +57,13 @@ def get_config_path(config_name):
     if not config_name.endswith('.json'):
         config_name += '.json'
     return CONFIGS_DIR / config_name
+
+def get_evaluation_folder(eval_id, note=""):
+    """Get the path for an evaluation visualization folder."""
+    folder_name = f"eval_{eval_id}"
+    if note:
+        folder_name += f"_{note}"
+    return EVALUATIONS_VIZ_DIR / folder_name
 
 def get_figure_path(figure_name):
     """Get the path for analysis figure files."""

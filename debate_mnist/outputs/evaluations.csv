@@ -1,7 +1,7 @@
 timestamp,judge_name,strategy,resolution,thr,seed,n_images,pixels,accuracy,rollouts,allow_all_pixels,note
-eval_28_random_28px_6k_20250614_182519,28,random,28,0.0,42,10000,6,0.5841,,False,ref: tab 3.1 "Baseline"
-eval_28_4px_random_28px_4k_20250614_182812,28_4px,random,28,0.0,42,10000,4,0.468,,False,ref: tab 3.1
-eval_16_random_16px_6k_20250614_182923,16,random,16,0.0,42,10000,6,0.5606,,False,ref: tab 3.1
+eval_28_random_28px_6k_20250614_182519,28,random,28,0.0,42,10000,6,0.5841,,False,ref: tab 3.1 (paper=59.4%) --"Baseline"--
+eval_28_4px_random_28px_4k_20250614_182812,28_4px,random,28,0.0,42,10000,4,0.468,,False,ref: tab 3.1 (paper=48.2%)
+eval_16_random_16px_6k_20250614_182923,16,random,16,0.0,42,10000,6,0.5606,,False,ref: tab 3.1 
 eval_16_4px_random_16px_4k_20250614_183022,16_4px,random,16,0.0,42,10000,4,0.4573,,False,ref: tab 3.1
 eval_16_optimal_16px_6k_20250614_183012,16,optimal,16,0.0,42,10000,6,0.9237,,False,ref: tab 3.1
 eval_16_4px_optimal_16px_4k_20250614_183115,16_4px,optimal,16,0.0,42,10000,4,0.8978,,False,ref: tab 3.1
@@ -14,7 +14,7 @@ eval_16_4px_adversarial_nonzero_16px_4k_20250614_194321,16_4px,adversarial_nonze
 
 
 
-eval_28_random_28px_1k_20250612_011352,28,random,28,0.0,42,1000,1,0.185,,False,ref: tab 3.2 "Variando K con todas las estrategias"
+eval_28_random_28px_1k_20250612_011352,28,random,28,0.0,42,1000,1,0.185,,False,ref: tab 3.2 --"Variando K con todas las estrategias"--
 eval_28_random_28px_2k_20250612_011359,28,random,28,0.0,42,1000,2,0.284,,False,ref: tab 3.2
 eval_28_random_28px_3k_20250612_011405,28,random,28,0.0,42,1000,3,0.393,,False,ref: tab 3.2
 eval_28_random_28px_4k_20250612_011412,28,random,28,0.0,42,1000,4,0.444,,False,ref: tab 3.2
@@ -47,7 +47,7 @@ eval_28_adversarial_nonzero_28px_12k_20250613_215208,28,adversarial_nonzero,28,0
 
 
 
-eval_28_random_28px_6k_20250612_011929,28,random,28,0.0,42,1000,6,0.558,,False,ref: tab 3.3 "Variando thr random"
+eval_28_random_28px_6k_20250612_011929,28,random,28,0.0,42,1000,6,0.558,,False,ref: tab 3.3 --"Variando thr random"--
 eval_28_random_28px_6k_20250612_011935,28,random,28,0.1,42,1000,6,0.596,,False,ref: tab 3.3
 eval_28_random_28px_6k_20250612_011942,28,random,28,0.2,42,1000,6,0.61,,False,ref: tab 3.3
 eval_28_random_28px_6k_20250612_011950,28,random,28,0.3,42,1000,6,0.628,,False,ref: tab 3.3
@@ -61,7 +61,7 @@ eval_28_random_28px_6k_20250614_003854,28,random,28,1.0,42,1000,6,0.13,,False,re
 
 
 
-eval_28_greedy_agent_28px_1k_20250613_180133,28,greedy_agent,28,0.0,42,1000,1,0.676,,False,ref: tab 3.4 "Introduccion de los Agentes: Honesto y Deshonesto"
+eval_28_greedy_agent_28px_1k_20250613_180133,28,greedy_agent,28,0.0,42,1000,1,0.676,,False,ref: tab 3.4 --"Introduccion de los Agentes: Honesto y Deshonesto"--
 eval_28_greedy_agent_28px_2k_20250613_180215,28,greedy_agent,28,0.0,42,1000,2,0.857,,False,ref: tab 3.4
 eval_28_greedy_agent_28px_3k_20250613_180332,28,greedy_agent,28,0.0,42,1000,3,0.958,,False,ref: tab 3.4
 eval_28_greedy_agent_28px_4k_20250613_180525,28,greedy_agent,28,0.0,42,1000,4,0.986,,False,ref: tab 3.4
@@ -105,7 +105,7 @@ eval_28_mcts_adversarial_agent_28px_12k_20250617_172159,28,mcts_adversarial_agen
 
 
 
-eval_28_adversarial_28px_6k_20250614_185643,28,adversarial,28,0.0,42,10000,6,0.0,,False,ref: tab 3.8 "Presentando al adeverarial con pixeles negros (informacion nunca vista) comparar esto vs adversarial_nonzero"
+eval_28_adversarial_28px_6k_20250614_185643,28,adversarial,28,0.0,42,10000,6,0.0,,False,ref: tab 3.8 --"Presentando al adeverarial con pixeles negros (informacion nunca vista) comparar esto vs adversarial_nonzero"--
 eval_28_4px_adversarial_28px_4k_20250614_190038,28_4px,adversarial,28,0.0,42,10000,4,0.0,,False,ref: tab 3.8
 eval_16_adversarial_16px_6k_20250614_184907,16,adversarial,16,0.0,42,10000,6,0.0,,False,ref: tab 3.8
 eval_16_4px_adversarial_16px_4k_20250614_184954,16_4px,adversarial,16,0.0,42,10000,4,0.0,,False,ref: tab 3.8
@@ -118,7 +118,7 @@ eval_28_adversarial_28px_600k_20250615_031650,28,adversarial,28,0.0,42,100,600,0
 
 
 
-eval_28_adversarial_28px_1k_20250613_200856,28,adversarial,28,0.0,42,300,1,0.0,,True,ref: tab 3.9 "Vario K con todas las estrategias adversariales"
+eval_28_adversarial_28px_1k_20250613_200856,28,adversarial,28,0.0,42,300,1,0.0,,True,ref: tab 3.9 --"Vario K con todas las estrategias adversariales"--
 eval_28_adversarial_28px_2k_20250613_201211,28,adversarial,28,0.0,42,300,2,0.0,,True,ref: tab 3.9 
 eval_28_adversarial_28px_3k_20250613_201519,28,adversarial,28,0.0,42,300,3,0.0,,True,ref: tab 3.9 
 eval_28_adversarial_28px_4k_20250613_201831,28,adversarial,28,0.0,42,300,4,0.0,,True,ref: tab 3.9 
@@ -145,3 +145,8 @@ eval_28_mcts_adversarial_agent_28px_5k_20250615_035435,28,mcts_adversarial_agent
 
 eval_28_4px_optimal_28px_4k_20250617_143250,28_4px,optimal,28,0.0,42,1000,4,0.898,,False,single_eval_optimal
 eval_28_optimal_28px_6k_20250617_143719,28,optimal,28,0.0,42,1000,6,0.857,,False,single_eval_optimal
+eval_28_optimal_28px_6k_20250620_220657,28,optimal,28,0.0,42,20,6,0.9,,False,single_eval_optimal
+eval_28_adversarial_nonzero_28px_6k_20250620_220722,28,adversarial_nonzero,28,0.0,42,10,6,0.1,,False,single_eval_adversarial_nonzero
+eval_28_random_28px_6k_20250620_220752,28,random,28,0.0,42,20,6,0.5,,False,single_eval_random
+eval_28_mcts_agent_28px_6k_20250621_005818,28,mcts_agent,28,0.0,42,20,6,1.0,512,False,single_eval_mcts_agent
+eval_28_adversarial_28px_6k_20250621_011723,28,adversarial,28,0.0,42,20,6,0.0,,False,single_eval_adversarial
