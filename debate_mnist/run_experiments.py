@@ -4,6 +4,7 @@ import os
 import json
 from datetime import datetime
 from collections import defaultdict
+from pathlib import Path
 from utils.paths import get_config_path
 
 class ExperimentManager:
@@ -202,18 +203,53 @@ class ExperimentManager:
                 self._complete_thesis_analysis()
 
     def _generate_all_thesis_figures(self):
-        """Analysis and visualization features have been moved to private development module."""
-        print("\n📊 Analysis and Visualization Module")
-        print("=" * 50)
-        print("The analysis and visualization capabilities have been moved to a private")
-        print("development module for specialized thesis work.")
-        print()
-        print("Available analysis tools:")
-        print("• scripts/analyze_results.py - Basic statistical analysis")
-        print("• Manual data analysis using CSV outputs")
-        print("• Custom visualization development as needed")
-        print()
-        print("💡 Tip: Use the CSV outputs (debates.csv, evaluations.csv) for custom analysis")
+        """Ejecuta el módulo private analysis para generar figuras de tesis."""
+        print("\n📊 MÓDULO PRIVATE ANALYSIS - FIGURAS DE TESIS")
+        print("=" * 60)
+        print("📍 Ejecutando módulo private analysis real")
+        print("🎯 Ubicación: .private_analysis/analysis/run_visualizations.py")
+        
+        try:
+            # Change to the private analysis directory
+            private_analysis_dir = Path(".private_analysis/analysis")
+            original_dir = Path.cwd()
+            
+            if not private_analysis_dir.exists():
+                print("❌ Módulo private analysis no encontrado")
+                print("💡 Esperado en: .private_analysis/analysis/")
+                return
+            
+            print(f"\n🔧 Cambiando al directorio: {private_analysis_dir.absolute()}")
+            os.chdir(private_analysis_dir)
+            
+            # Execute the private analysis visualization manager
+            print("🚀 Ejecutando run_visualizations.py...")
+            result = subprocess.run([
+                sys.executable, "run_visualizations.py"
+            ], capture_output=True, text=True, timeout=300)
+            
+            print("\n📋 SALIDA DEL MÓDULO PRIVATE ANALYSIS:")
+            print("-" * 50)
+            if result.stdout:
+                print(result.stdout)
+            if result.stderr:
+                print("⚠️ Advertencias/Errores:")
+                print(result.stderr)
+            
+            if result.returncode == 0:
+                print("\n✅ MÓDULO PRIVATE ANALYSIS EJECUTADO EXITOSAMENTE")
+                print("📁 Revisa: .private_analysis/analysis/output/")
+            else:
+                print(f"\n❌ Error en módulo private analysis (código: {result.returncode})")
+                
+        except subprocess.TimeoutExpired:
+            print("⏰ Timeout del módulo private analysis (5 minutos)")
+        except Exception as e:
+            print(f"❌ Error ejecutando módulo private analysis: {e}")
+        finally:
+            # Always return to original directory
+            os.chdir(original_dir)
+            print(f"🔙 Retornado a: {original_dir}")
 
     def _complete_thesis_analysis(self):
         """Análisis completo de tesis."""
@@ -785,13 +821,14 @@ class ExperimentManager:
             print("6. 🧠 Experimentos de Confianza")
             print("7. 🚫 Experimentos con Píxeles Irrestrictos")
             print("8. 🤖 Experimentos de Evaluación de Juez")
-            print("9. 🔬 Experimentos Personalizados")
-            print("10. 📊 Ver cola de experimentos")
-            print("11. 🚀 Ejecutar experimentos")
-            print("12. 💾 Guardar configuración")
+            print("9. 🎯 Experimentos de Threshold Testing")
+            print("10. 🔬 Experimentos Personalizados")
+            print("11. 📊 Ver cola de experimentos")
+            print("12. 🚀 Ejecutar experimentos")
+            print("13. 💾 Guardar configuración")
             print("0. ↩️  Volver al menú principal")
             
-            choice = self.get_input("Selecciona opción", "11")
+            choice = self.get_input("Selecciona opción", "12")
             
             if choice == "1":
                 self._add_symmetric_experiments()
@@ -810,13 +847,15 @@ class ExperimentManager:
             elif choice == "8":
                 self._add_judge_evaluation_experiments()
             elif choice == "9":
-                self._add_custom_experiments()
+                self._add_threshold_testing_experiments()
             elif choice == "10":
-                self._show_experiment_queue()
+                self._add_custom_experiments()
             elif choice == "11":
+                self._show_experiment_queue()
+            elif choice == "12":
                 self._execute_experiments()
                 break
-            elif choice == "12":
+            elif choice == "13":
                 self._save_configuration()
             elif choice == "0":
                 break
@@ -933,13 +972,48 @@ class ExperimentManager:
         if self.get_yes_no("• Precommit + Honest primero"):
             variants.append(("precommit_honest", " --precommit --starts honest", "precommit_honest_first"))
             
-        # Experimentos asimétricos
+        # Experimentos asimétricos con granularidad completa
         asymmetric = self.get_yes_no("• Incluir experimentos asimétricos")
+        asymmetric_combinations = []
+        asymmetric_rollouts = {}
+        
         if asymmetric:
-            print("  Configuración asimétrica: un agente greedy vs uno MCTS")
-            asymmetric_rollouts = 100
-            if agent_type == "mcts":
-                asymmetric_rollouts = self.get_input("  Rollouts para MCTS en asimétrico", "100", input_type=int)
+            print("\n🔧 CONFIGURACIÓN GRANULAR DE EXPERIMENTOS ASIMÉTRICOS")
+            print("-" * 50)
+            print("Selecciona qué combinaciones asimétricas incluir:")
+            
+            if self.get_yes_no("  • Greedy (honesto) vs MCTS (mentiroso)"):
+                rollouts = self.get_input("    Rollouts para MCTS", "100", input_type=int)
+                asymmetric_combinations.append(("greedy", "mcts"))
+                asymmetric_rollouts[("greedy", "mcts")] = rollouts
+                
+            if self.get_yes_no("  • MCTS (honesto) vs Greedy (mentiroso)"):
+                rollouts = self.get_input("    Rollouts para MCTS", "100", input_type=int)
+                asymmetric_combinations.append(("mcts", "greedy"))
+                asymmetric_rollouts[("mcts", "greedy")] = rollouts
+            
+            # Variantes específicas para asimétricos
+            print("\nSelecciona variantes específicas para experimentos asimétricos:")
+            asymmetric_variants = []
+            if self.get_yes_no("  • Baseline asimétrico (liar primero, sin precommit)"):
+                asymmetric_variants.append(("baseline", "", ""))
+            if self.get_yes_no("  • Asimétrico con precommit"):
+                asymmetric_variants.append(("precommit", " --precommit", "precommit"))
+            if self.get_yes_no("  • Asimétrico honest primero"):
+                asymmetric_variants.append(("honest_first", " --starts honest", "honest_first"))
+            if self.get_yes_no("  • Asimétrico precommit + honest primero"):
+                asymmetric_variants.append(("precommit_honest", " --precommit --starts honest", "precommit_honest_first"))
+            
+            if not asymmetric_variants:
+                asymmetric_variants = [("baseline", "", "")]  # Default
+                
+            print(f"\n📊 Configuración asimétrica:")
+            print(f"    Combinaciones: {len(asymmetric_combinations)}")
+            print(f"    Variantes: {len(asymmetric_variants)}")
+            for combo in asymmetric_combinations:
+                print(f"    • {combo[0]} vs {combo[1]} (rollouts: {asymmetric_rollouts[combo]})")
+        else:
+            asymmetric_variants = []
         
         if not variants:
             variants = [("baseline", "", "")]  # Default to baseline if none selected
@@ -970,38 +1044,38 @@ class ExperimentManager:
                     
                 self.experiments.append((cmd, desc))
             
-            # Experimentos asimétricos
-            if asymmetric:
-                for variant_name, variant_flags, variant_suffix in variants:
-                    # Greedy vs MCTS
-                    cmd_asym1 = (f"python run_debate.py --judge_name {self.global_config['judge_name']} "
-                                f"--resolution {self.global_config['resolution']} --k {k} "
-                                f"--thr {self.global_config['thr']} --n_images {n_images} "
-                                f"--seed {self.global_config['seed']} --mixed_agents "
-                                f"--honest_agent greedy --rollouts {asymmetric_rollouts}")
-                    cmd_asym1 += variant_flags
-                    variant_note = f"_{variant_suffix}" if variant_suffix else ""
-                    cmd_asym1 += f'{advanced_flags} --note "ablation_k{k}_asym_greedy_vs_mcts{variant_note}"'
-                    desc_asym1 = f"Ablación k={k} - Asimétrico (Greedy vs MCTS)"
-                    if variant_suffix:
-                        desc_asym1 += f" - {variant_name}"
-                    self.experiments.append((cmd_asym1, desc_asym1))
+            # Experimentos asimétricos con configuración granular
+            if asymmetric and asymmetric_combinations:
+                for honest_agent, liar_agent in asymmetric_combinations:
+                    current_rollouts = asymmetric_rollouts[(honest_agent, liar_agent)]
                     
-                    # MCTS vs Greedy
-                    cmd_asym2 = (f"python run_debate.py --judge_name {self.global_config['judge_name']} "
-                                f"--resolution {self.global_config['resolution']} --k {k} "
-                                f"--thr {self.global_config['thr']} --n_images {n_images} "
-                                f"--seed {self.global_config['seed']} --mixed_agents "
-                                f"--honest_agent mcts --rollouts {asymmetric_rollouts}")
-                    cmd_asym2 += variant_flags
-                    cmd_asym2 += f'{advanced_flags} --note "ablation_k{k}_asym_mcts_vs_greedy{variant_note}"'
-                    desc_asym2 = f"Ablación k={k} - Asimétrico (MCTS vs Greedy)"
-                    if variant_suffix:
-                        desc_asym2 += f" - {variant_name}"
-                    self.experiments.append((cmd_asym2, desc_asym2))
+                    for variant_name, variant_flags, variant_suffix in asymmetric_variants:
+                        cmd_asym = (f"python run_debate.py --judge_name {self.global_config['judge_name']} "
+                                   f"--resolution {self.global_config['resolution']} --k {k} "
+                                   f"--thr {self.global_config['thr']} --n_images {n_images} "
+                                   f"--seed {self.global_config['seed']} --mixed_agents "
+                                   f"--honest_agent {honest_agent} --rollouts {current_rollouts}")
+                        cmd_asym += variant_flags
+                        variant_note = f"_{variant_suffix}" if variant_suffix else ""
+                        cmd_asym += f'{advanced_flags} --note "ablation_k{k}_asym_{honest_agent}_vs_{liar_agent}{variant_note}"'
+                        
+                        desc_asym = f"Ablación k={k} - Asimétrico ({honest_agent.title()} vs {liar_agent.title()})"
+                        if variant_suffix:
+                            desc_asym += f" - {variant_name}"
+                        
+                        self.experiments.append((cmd_asym, desc_asym))
             
-        total_experiments = len(k_values) * len(variants) * (3 if asymmetric else 1)
+        # Calcular total de experimentos con granularidad
+        symmetric_total = len(k_values) * len(variants)
+        asymmetric_total = 0
+        if asymmetric and asymmetric_combinations:
+            asymmetric_total = len(k_values) * len(asymmetric_combinations) * len(asymmetric_variants)
+        
+        total_experiments = symmetric_total + asymmetric_total
         print(f"✅ Añadidos {total_experiments} experimentos de ablación")
+        print(f"    • Simétricos: {symmetric_total}")
+        if asymmetric_total > 0:
+            print(f"    • Asimétricos: {asymmetric_total} ({len(asymmetric_combinations)} combinaciones × {len(asymmetric_variants)} variantes)")
 
     def _add_scalability_experiments(self):
         """Añade experimentos de escalabilidad de rollouts."""
@@ -1260,7 +1334,7 @@ class ExperimentManager:
             experiment_types.append("full_comparison")
         if self.get_yes_no("• Análisis de agentes vs estrategias estáticas"):
             experiment_types.append("agent_vs_static")
-        if self.get_yes_no("• Análisis de escalabilidad de agentes (diferentes k)"):
+        if self.get_yes_no("• Análisis de escalabilidad granular (estrategias y k personalizables)"):
             experiment_types.append("agent_scalability")
         if self.get_yes_no("• Análisis de rollouts para MCTS"):
             experiment_types.append("mcts_rollouts")
@@ -1310,19 +1384,89 @@ class ExperimentManager:
                     self.experiments.append((cmd, f"Judge Eval - {agent.replace('_', ' ').title()} k={k}"))
         
         if "agent_scalability" in experiment_types:
-            # Análisis de escalabilidad de agentes
-            for agent in ["greedy_agent", "mcts_agent", "greedy_adversarial_agent", "mcts_adversarial_agent"]:
-                for k in [3, 4, 5, 6, 7, 8, 10]:
-                    cmd = (f"python eval_judge.py --judge_name {self.global_config['judge_name']} "
-                           f"--resolution {self.global_config['resolution']} --k {k} "
-                           f"--thr {self.global_config['thr']} --strategy {agent} --n_images {n_images} "
-                           f"--seed {self.global_config['seed']}")
+            # Análisis de escalabilidad granular con selección personalizada
+            print("\n🔧 CONFIGURACIÓN GRANULAR DE ESCALABILIDAD")
+            print("-" * 50)
+            
+            # Selección granular de estrategias para escalabilidad
+            all_strategies = ["random", "optimal", "adversarial", "adversarial_nonzero", 
+                             "greedy_agent", "mcts_agent", "greedy_adversarial_agent", "mcts_adversarial_agent"]
+            
+            selected_scalability_strategies = []
+            scalability_strategy_configs = {}
+            
+            print("Selecciona estrategias para análisis de escalabilidad:")
+            for strategy in all_strategies:
+                if self.get_yes_no(f"  • {strategy.replace('_', ' ').title()}"):
+                    selected_scalability_strategies.append(strategy)
                     
-                    if agent in ["mcts_agent", "mcts_adversarial_agent"]:
-                        cmd += " --rollouts 200"
+                    # Configuración específica para estrategias MCTS
+                    if strategy in ["mcts_agent", "mcts_adversarial_agent"]:
+                        rollouts = self.get_input(f"    Rollouts para {strategy}", "200", input_type=int)
+                        scalability_strategy_configs[strategy] = {"rollouts": rollouts}
+                    else:
+                        scalability_strategy_configs[strategy] = {}
+            
+            if not selected_scalability_strategies:
+                print("  ❌ No se seleccionaron estrategias para escalabilidad")
+            else:
+                # Selección granular de valores de k
+                print("\nSelecciona valores de k para escalabilidad:")
+                available_k_scalability = [3, 4, 5, 6, 7, 8, 10, 12, 15]
+                selected_k_scalability = []
+                
+                for k in available_k_scalability:
+                    if self.get_yes_no(f"  • k = {k}"):
+                        selected_k_scalability.append(k)
+                
+                if not selected_k_scalability:
+                    selected_k_scalability = [3, 4, 5, 6, 7, 8, 10]  # Default
+                    print(f"  Usando valores de k por defecto: {selected_k_scalability}")
+                
+                # Configuración granular de thresholds para escalabilidad
+                print("\nConfiguración de threshold para escalabilidad:")
+                thr_mode = self.get_input("Usar threshold global o personalizado (global/personalizado)", 
+                                         "global", ["global", "personalizado"])
+                
+                if thr_mode == "global":
+                    scalability_thresholds = [self.global_config['thr']]
+                else:
+                    scalability_thresholds = []
+                    threshold_options = [0.0, 0.1, 0.2, 0.3, 0.5, 0.7, 1.0]
+                    print("Selecciona thresholds para escalabilidad:")
+                    for thr in threshold_options:
+                        if self.get_yes_no(f"  • Threshold {thr}"):
+                            scalability_thresholds.append(thr)
                     
-                    cmd += f' --note "judge_eval_scalability_{agent}_k{k}"'
-                    self.experiments.append((cmd, f"Judge Eval Scalability - {agent.replace('_', ' ').title()} k={k}"))
+                    if not scalability_thresholds:
+                        scalability_thresholds = [self.global_config['thr']]  # Default
+                
+                # Generar experimentos de escalabilidad
+                scalability_count = 0
+                print(f"\n📊 Generando experimentos de escalabilidad:")
+                print(f"    Estrategias: {len(selected_scalability_strategies)}")
+                print(f"    Valores de k: {len(selected_k_scalability)}")
+                print(f"    Thresholds: {len(scalability_thresholds)}")
+                
+                for strategy in selected_scalability_strategies:
+                    for k in selected_k_scalability:
+                        for thr in scalability_thresholds:
+                            cmd = (f"python eval_judge.py --judge_name {self.global_config['judge_name']} "
+                                   f"--resolution {self.global_config['resolution']} --k {k} "
+                                   f"--thr {thr} --strategy {strategy} --n_images {n_images} "
+                                   f"--seed {self.global_config['seed']}")
+                            
+                            # Añadir configuración específica de la estrategia
+                            if strategy in scalability_strategy_configs and "rollouts" in scalability_strategy_configs[strategy]:
+                                cmd += f" --rollouts {scalability_strategy_configs[strategy]['rollouts']}"
+                            
+                            cmd += f' --note "judge_eval_scalability_{strategy}_k{k}_thr{thr}"'
+                            
+                            desc = f"Judge Eval Scalability - {strategy.replace('_', ' ').title()} (k={k}, thr={thr})"
+                            self.experiments.append((cmd, desc))
+                            scalability_count += 1
+                
+                print(f"    Total experimentos de escalabilidad: {scalability_count}")
         
         if "mcts_rollouts" in experiment_types:
             # Análisis de rollouts para MCTS
@@ -1338,6 +1482,131 @@ class ExperimentManager:
                           if "judge_eval" in exp[0]])
         print(f"✅ Añadidos experimentos de evaluación de juez")
         print(f"    Total: {total_added} experimentos que evalúan capacidades del juez")
+
+    def _add_threshold_testing_experiments(self):
+        """Añade experimentos de threshold testing con granularidad completa."""
+        print("\n🎯 EXPERIMENTOS DE THRESHOLD TESTING")
+        print("-" * 40)
+        print("Testa el juez con todas las estrategias disponibles")
+        print("para valores de threshold personalizables")
+        
+        # Selección granular de estrategias
+        print("\n🔧 SELECCIÓN GRANULAR DE ESTRATEGIAS")
+        print("-" * 40)
+        available_strategies = ["random", "optimal", "adversarial", "adversarial_nonzero", 
+                               "greedy_agent", "mcts_agent", "greedy_adversarial_agent", "mcts_adversarial_agent"]
+        
+        selected_strategies = []
+        strategy_configs = {}
+        
+        for strategy in available_strategies:
+            if self.get_yes_no(f"• {strategy.replace('_', ' ').title()}"):
+                selected_strategies.append(strategy)
+                
+                # Configuración específica para estrategias MCTS
+                if strategy in ["mcts_agent", "mcts_adversarial_agent"]:
+                    rollouts = self.get_input(f"  Rollouts para {strategy}", "200", input_type=int)
+                    strategy_configs[strategy] = {"rollouts": rollouts}
+                else:
+                    strategy_configs[strategy] = {}
+        
+        if not selected_strategies:
+            print("❌ No se seleccionó ninguna estrategia")
+            return
+        
+        # Configuración granular de thresholds
+        print("\n🎚️ CONFIGURACIÓN DE THRESHOLDS")
+        print("-" * 40)
+        threshold_mode = self.get_input("Modo de threshold (completo/personalizado/rango)", 
+                                      "completo", ["completo", "personalizado", "rango"])
+        
+        if threshold_mode == "completo":
+            # Thresholds completos de 0.0 a 1.0 con incrementos de 0.1
+            thresholds = [round(i * 0.1, 1) for i in range(11)]
+            print(f"  Usando thresholds completos: {thresholds}")
+        
+        elif threshold_mode == "personalizado":
+            # Selección manual de thresholds específicos
+            all_thresholds = [round(i * 0.1, 1) for i in range(11)]
+            thresholds = []
+            print("Selecciona thresholds específicos:")
+            for thr in all_thresholds:
+                if self.get_yes_no(f"  • Threshold {thr}"):
+                    thresholds.append(thr)
+            
+            if not thresholds:
+                thresholds = [0.0, 0.5, 1.0]  # Default
+                print(f"  Usando thresholds por defecto: {thresholds}")
+        
+        elif threshold_mode == "rango":
+            # Rango personalizado con incremento específico
+            start = self.get_input("Threshold inicial", "0.0", input_type=float)
+            end = self.get_input("Threshold final", "1.0", input_type=float)
+            step = self.get_input("Incremento", "0.1", input_type=float)
+            
+            thresholds = []
+            current = start
+            while current <= end:
+                thresholds.append(round(current, 1))
+                current += step
+            print(f"  Usando rango personalizado: {thresholds}")
+        
+        # Configuración granular de parámetros
+        print("\n⚙️ CONFIGURACIÓN DE PARÁMETROS")
+        print("-" * 40)
+        
+        # Valores de k personalizables
+        k_mode = self.get_input("Usar k global o personalizado (global/personalizado)", 
+                               "global", ["global", "personalizado"])
+        
+        if k_mode == "global":
+            k_values = [self.global_config['k']]
+        else:
+            k_values = []
+            available_k = [3, 4, 5, 6, 7, 8, 10, 12]
+            print("Selecciona valores de k:")
+            for k in available_k:
+                if self.get_yes_no(f"  • k = {k}"):
+                    k_values.append(k)
+            
+            if not k_values:
+                k_values = [self.global_config['k']]  # Default
+        
+        n_images = self.get_input("Imágenes por experimento", "300", input_type=int)
+        
+        # Generar experimentos
+        total_added = 0
+        
+        print(f"\n📊 GENERANDO EXPERIMENTOS...")
+        print(f"    Estrategias: {len(selected_strategies)}")
+        print(f"    Thresholds: {len(thresholds)}")
+        print(f"    Valores de k: {len(k_values)}")
+        
+        for strategy in selected_strategies:
+            print(f"\n  Configurando {strategy}...")
+            
+            for k in k_values:
+                for thr in thresholds:
+                    cmd = (f"python eval_judge.py --judge_name {self.global_config['judge_name']} "
+                           f"--resolution {self.global_config['resolution']} --k {k} "
+                           f"--thr {thr} --strategy {strategy} --n_images {n_images} "
+                           f"--seed {self.global_config['seed']}")
+                    
+                    # Añadir configuración específica de la estrategia
+                    if strategy in strategy_configs and "rollouts" in strategy_configs[strategy]:
+                        cmd += f" --rollouts {strategy_configs[strategy]['rollouts']}"
+                    
+                    cmd += f' --note "threshold_test_{strategy}_k{k}_thr{thr}"'
+                    
+                    desc = f"Threshold Test - {strategy.replace('_', ' ').title()} (k={k}, thr={thr})"
+                    self.experiments.append((cmd, desc))
+                    total_added += 1
+        
+        print(f"✅ Añadidos {total_added} experimentos de threshold testing")
+        print(f"    Estrategias: {', '.join([s.replace('_', ' ').title() for s in selected_strategies])}")
+        print(f"    Thresholds: {len(thresholds)} valores ({min(thresholds)} - {max(thresholds)})")
+        print(f"    Valores de k: {k_values}")
+        print(f"    Total combinaciones: {len(selected_strategies)} × {len(k_values)} × {len(thresholds)} = {total_added}")
 
     def _add_custom_experiments(self):
         """Añade experimentos completamente personalizados."""

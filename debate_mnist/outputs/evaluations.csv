@@ -47,7 +47,7 @@ eval_28_adversarial_nonzero_28px_12k_20250613_215208,28,adversarial_nonzero,28,0
 
 
 
-eval_28_random_28px_6k_20250612_011929,28,random,28,0.0,42,1000,6,0.558,,False,ref: tab 3.3 --"Variando thr random"--
+eval_28_random_28px_6k_20250612_011929,28,random,28,0.0,42,1000,6,0.558,,False,ref: tab 3.3 --"Variando thr"--
 eval_28_random_28px_6k_20250612_011935,28,random,28,0.1,42,1000,6,0.596,,False,ref: tab 3.3
 eval_28_random_28px_6k_20250612_011942,28,random,28,0.2,42,1000,6,0.61,,False,ref: tab 3.3
 eval_28_random_28px_6k_20250612_011950,28,random,28,0.3,42,1000,6,0.628,,False,ref: tab 3.3
@@ -58,6 +58,40 @@ eval_28_random_28px_6k_20250614_003834,28,random,28,0.7,42,1000,6,0.66,,False,re
 eval_28_random_28px_6k_20250614_003841,28,random,28,0.8,42,1000,6,0.641,,False,ref: tab 3.3
 eval_28_random_28px_6k_20250614_003848,28,random,28,0.9,42,1000,6,0.652,,False,ref: tab 3.3
 eval_28_random_28px_6k_20250614_003854,28,random,28,1.0,42,1000,6,0.13,,False,ref: tab 3.3
+eval_28_optimal_28px_6k_20250621_125607,28,optimal,28,0.0,42,1000,6,0.857,,False,ref: tab 3.3
+eval_28_optimal_28px_6k_20250621_125832,28,optimal,28,0.1,42,1000,6,0.863,,False,ref: tab 3.3
+eval_28_optimal_28px_6k_20250621_130046,28,optimal,28,0.2,42,1000,6,0.86,,False,ref: tab 3.3
+eval_28_optimal_28px_6k_20250621_130251,28,optimal,28,0.3,42,1000,6,0.858,,False,ref: tab 3.3
+eval_28_optimal_28px_6k_20250621_130448,28,optimal,28,0.4,42,1000,6,0.859,,False,ref: tab 3.3
+eval_28_optimal_28px_6k_20250621_130627,28,optimal,28,0.5,42,1000,6,0.857,,False,ref: tab 3.3
+eval_28_optimal_28px_6k_20250621_130809,28,optimal,28,0.6,42,1000,6,0.856,,False,ref: tab 3.3
+eval_28_optimal_28px_6k_20250621_130946,28,optimal,28,0.7,42,1000,6,0.858,,False,ref: tab 3.3
+eval_28_optimal_28px_6k_20250621_131115,28,optimal,28,0.8,42,1000,6,0.861,,False,ref: tab 3.3
+eval_28_optimal_28px_6k_20250621_131229,28,optimal,28,0.9,42,1000,6,0.873,,False,ref: tab 3.3
+eval_28_optimal_28px_6k_20250621_131334,28,optimal,28,1.0,42,1000,6,0.908,,False,ref: tab 3.3
+eval_28_adversarial_nonzero_28px_6k_20250623_013003,28,adversarial_nonzero,28,0.0,42,1000,6,0.077,,False,ref: tab 3.3
+eval_28_adversarial_nonzero_28px_6k_20250623_013227,28,adversarial_nonzero,28,0.1,42,1000,6,0.075,,False,ref: tab 3.3
+eval_28_adversarial_nonzero_28px_6k_20250623_013438,28,adversarial_nonzero,28,0.2,42,1000,6,0.076,,False,ref: tab 3.3
+eval_28_adversarial_nonzero_28px_6k_20250623_013646,28,adversarial_nonzero,28,0.3,42,1000,6,0.073,,False,ref: tab 3.3
+eval_28_adversarial_nonzero_28px_6k_20250623_013837,28,adversarial_nonzero,28,0.4,42,1000,6,0.076,,False,ref: tab 3.3
+eval_28_adversarial_nonzero_28px_6k_20250623_014026,28,adversarial_nonzero,28,0.5,42,1000,6,0.078,,False,ref: tab 3.3
+eval_28_adversarial_nonzero_28px_6k_20250623_014202,28,adversarial_nonzero,28,0.6,42,1000,6,0.08,,False,ref: tab 3.3
+eval_28_adversarial_nonzero_28px_6k_20250623_014330,28,adversarial_nonzero,28,0.7,42,1000,6,0.081,,False,ref: tab 3.3
+eval_28_adversarial_nonzero_28px_6k_20250623_014452,28,adversarial_nonzero,28,0.8,42,1000,6,0.085,,False,ref: tab 3.3
+eval_28_adversarial_nonzero_28px_6k_20250623_014611,28,adversarial_nonzero,28,0.9,42,1000,6,0.098,,False,ref: tab 3.3
+eval_28_adversarial_nonzero_28px_6k_20250623_014719,28,adversarial_nonzero,28,1.0,42,1000,6,0.0,,False,ref: tab 3.3
+
+eval_28_adversarial_28px_6k_20250621_132530,28,adversarial,28,0.0,42,1000,6,0.0,,False,ref: tab 3.3
+eval_28_adversarial_28px_6k_20250621_133643,28,adversarial,28,0.1,42,1000,6,0.0,,False,ref: tab 3.3
+eval_28_adversarial_28px_6k_20250621_134911,28,adversarial,28,0.2,42,1000,6,0.0,,False,ref: tab 3.3
+eval_28_adversarial_28px_6k_20250621_140107,28,adversarial,28,0.3,42,1000,6,0.0,,False,ref: tab 3.3
+eval_28_adversarial_28px_6k_20250621_141229,28,adversarial,28,0.4,42,1000,6,0.0,,False,ref: tab 3.3
+eval_28_adversarial_28px_6k_20250621_142355,28,adversarial,28,0.5,42,1000,6,0.0,,False,ref: tab 3.3
+eval_28_adversarial_28px_6k_20250621_143529,28,adversarial,28,0.6,42,1000,6,0.0,,False,ref: tab 3.3
+eval_28_adversarial_28px_6k_20250621_144654,28,adversarial,28,0.7,42,1000,6,0.0,,False,ref: tab 3.3
+eval_28_adversarial_28px_6k_20250621_145819,28,adversarial,28,0.8,42,1000,6,0.0,,False,ref: tab 3.3
+eval_28_adversarial_28px_6k_20250621_150953,28,adversarial,28,0.9,42,1000,6,0.0,,False,ref: tab 3.3
+eval_28_adversarial_28px_6k_20250621_152116,28,adversarial,28,1.0,42,1000,6,0.0,,False,ref: tab 3.3
 
 
 
@@ -150,3 +184,5 @@ eval_28_adversarial_nonzero_28px_6k_20250620_220722,28,adversarial_nonzero,28,0.
 eval_28_random_28px_6k_20250620_220752,28,random,28,0.0,42,20,6,0.5,,False,single_eval_random
 eval_28_mcts_agent_28px_6k_20250621_005818,28,mcts_agent,28,0.0,42,20,6,1.0,512,False,single_eval_mcts_agent
 eval_28_adversarial_28px_6k_20250621_011723,28,adversarial,28,0.0,42,20,6,0.0,,False,single_eval_adversarial
+
+eval_28_random_28px_6k_20250625_004140,28,random,28,0.0,42,100,6,0.45,,False,single_eval_random
