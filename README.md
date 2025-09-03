@@ -1,39 +1,60 @@
 # Evaluating Argumentative Strategies in AI Debates
 
-This repository contains the development of my **Data Science Bachelor's Thesis (UBA)** on evaluating argumentative strategies in debates between AI systems. The research explores the dynamics of using debate as an alignment technique, focusing on scenarios with agents of different capabilities and cognitively limited judges.
+**Data Science Master's Thesis (UBA)** investigating argumentative strategies in debates between AI systems with asymmetric capabilities and cognitively limited judges.
 
-## 📖 Overview
+## 🎯 Research Focus
 
-The goal of this thesis is to study how unrestricted AI agents can exploit tactics such as deception, misleading arguments, or false consensus appeals to win debates against honest and harmless agents. Additionally, the research will analyze the impact of having a lower-capacity judge evaluate arguments from more advanced agents and how this affects the debate’s convergence towards the truth.
+This thesis explores how unrestricted AI agents exploit deceptive tactics to win debates against honest agents, and analyzes the impact of lower-capacity judges evaluating arguments from more advanced agents.
 
-The work will include:
+### Key Research Questions
 
-- Simulating debates between agents with asymmetric capabilities.
-- Evaluating argumentative strategies and their effectiveness.
-- Analyzing the impact of judges with limited knowledge.
-- Comparing different metrics to assess the truthfulness and coherence of debates.
+- How do asymmetric agent capabilities affect debate outcomes?
+- What argumentative strategies emerge under different conditions?
+- How does judge bias impact convergence towards truth?
+- Can debate serve as an effective AI alignment technique?
 
+## 🧪 Implementation: AI Safety via Debate on MNIST
 
-## 📌 Key Topics
+The [`debate_mnist/`](debate_mnist/) directory contains a complete implementation replicating Irving et al. (2018) with additional extensions:
 
-- **AI Safety via Debate**: Using debate as a mechanism to improve AI safety.
-- **Game Theory**: Modeling strategic interactions between agents.
-- **Natural Language Processing (NLP)**: Implementing language models for argumentation.
-- **Evaluation Models**: Designing metrics to measure the quality of arguments.
+- **Asymmetric Debates**: MCTS vs Greedy agent competitions
+- **Judge Evaluation**: 8 different pixel selection strategies
+- **Bias Analysis**: Precommit strategies and adversarial evaluation
+- **Logits Tracking**: Progressive judge decision-making analysis
 
-## 📚 References
+### Quick Start
 
-This research is based on AI safety and alignment techniques, including:
+```bash
+cd debate_mnist
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+python run_experiments.py  # Complete automation
+```
 
-- [AI Safety via Debate](https://arxiv.org/abs/1805.00899)
-- [Scalable AI Safety via Doubly-Efficient Debate](https://arxiv.org/abs/2311.14125)
-- [Measuring Progress on Scalable Oversight for LLMs](https://arxiv.org/abs/2211.03540)
-- [Open Problems and Limitations of RLHF](https://arxiv.org/abs/2307.15217)
-- [AI Control: Improving Safety Despite Intentional Subversion](https://arxiv.org/abs/2312.06942)
+## 📊 Key Contributions
+
+1. **Asymmetric Agent Analysis**: First systematic study of mixed-capability debates
+2. **Judge Bias Quantification**: Novel metrics for evaluating judge robustness
+3. **Strategic Behavior Emergence**: Documentation of deceptive patterns in pixel selection
+4. **Scalable Evaluation Framework**: Automated experimentation with comprehensive logging
+
+## 📚 Theoretical Foundation
+
+Based on recent advances in AI safety and alignment:
+
+- **AI Safety via Debate** (Irving et al., 2018) - Core methodology
+- **Scalable AI Safety via Doubly-Efficient Debate** (Khan et al., 2023)
+- **Measuring Progress on Scalable Oversight** (Bowman et al., 2022)
+- **AI Control: Improving Safety Despite Intentional Subversion** (Greenblatt et al., 2023)
+
+## 📈 Expected Outcomes
+
+- Quantitative analysis of debate dynamics under capability asymmetry
+- Taxonomy of emergent argumentative strategies
+- Framework for evaluating judge bias in AI systems
+- Recommendations for debate-based alignment techniques
 
 ## 📬 Contact
 
-**Joaquín Salvador Machulsky**  
-Email: [jmachulsky@dc.uba.ar](mailto:jmachulsky@dc.uba.ar)  
-
----
+**Joaquín Salvador Machulsky**
+Email: [jmachulsky@dc.uba.ar](mailto:jmachulsky@dc.uba.ar)
