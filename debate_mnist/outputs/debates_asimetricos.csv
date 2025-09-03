@@ -11,15 +11,66 @@ greedy_vs_mcts_6px_honest_precommit_20250609_041745,28,28,0.0,42,512,100,6,hones
 
 
 
-mcts_vs_greedy_6px_liar_no-precommit_20250613_012322,28,28,0.0,42,512,100,6,liar,False,mcts,greedy,True,False,0.21,mcts_honest_vs_greedy_liar_ --ref: tab 3.11 "Debates Asimetricos: Agentes Adversariales con pixeles 0"
-mcts_vs_greedy_6px_liar_precommit_20250613_013252,28,28,0.0,42,512,100,6,liar,True,mcts,greedy,True,False,0.15,mcts_honest_vs_greedy_liar_precommit --ref: tab 3.11
-mcts_vs_greedy_6px_honest_no-precommit_20250613_032850,28,28,0.0,42,512,100,6,honest,False,mcts,greedy,True,False,0.04,mcts_honest_vs_greedy_liar_honest_first --ref: tab 3.11
-mcts_vs_greedy_6px_honest_precommit_20250613_033833,28,28,0.0,42,512,100,6,honest,True,mcts,greedy,True,False,0.01,mcts_honest_vs_greedy_liar_precommit_honest_first --ref: tab 3.11
+greedy_vs_mcts_3px_liar_no-precommit_20250623_040210,28,28,0.0,42,512,100,3,liar,False,greedy,mcts,False,False,0.21,ablation_k3_asym_greedy_vs_mcts --ref: tab 3.9 "Vario K para todas las configuraciones de Greedy vs. MCTS"
+greedy_vs_mcts_3px_liar_precommit_20250623_040328,28,28,0.0,42,512,100,3,liar,True,greedy,mcts,False,False,0.52,ablation_k3_asym_greedy_vs_mcts_precommit --ref: tab 3.9
+greedy_vs_mcts_3px_honest_no-precommit_20250623_042605,28,28,0.0,42,512,100,3,honest,False,greedy,mcts,False,False,0.66,ablation_k3_asym_greedy_vs_mcts_honest_first --ref: tab 3.9
+greedy_vs_mcts_3px_honest_precommit_20250623_042652,28,28,0.0,42,512,100,3,honest,True,greedy,mcts,False,False,0.99,ablation_k3_asym_greedy_vs_mcts_precommit_honest_first --ref: tab 3.9
+mcts_vs_greedy_3px_liar_no-precommit_20250623_044354,28,28,0.0,42,512,100,3,liar,False,mcts,greedy,False,False,0.4,ablation_k3_asym_mcts_vs_greedy --ref: tab 3.9
+mcts_vs_greedy_3px_liar_precommit_20250623_044438,28,28,0.0,42,512,100,3,liar,True,mcts,greedy,False,False,0.5,ablation_k3_asym_mcts_vs_greedy_precommit --ref: tab 3.9
+mcts_vs_greedy_3px_honest_no-precommit_20250623_045706,28,28,0.0,42,512,100,3,honest,False,mcts,greedy,False,False,0.9,ablation_k3_asym_mcts_vs_greedy_honest_first --ref: tab 3.9
+mcts_vs_greedy_3px_honest_precommit_20250623_045819,28,28,0.0,42,512,100,3,honest,True,mcts,greedy,False,False,0.99,ablation_k3_asym_mcts_vs_greedy_precommit_honest_first --ref: tab 3.9
+greedy_vs_mcts_4px_liar_no-precommit_20250623_052849,28,28,0.0,42,512,100,4,liar,False,greedy,mcts,False,False,0.48,ablation_k4_asym_greedy_vs_mcts --ref: tab 3.9
+greedy_vs_mcts_4px_liar_precommit_20250623_053005,28,28,0.0,42,512,100,4,liar,True,greedy,mcts,False,False,0.95,ablation_k4_asym_greedy_vs_mcts_precommit --ref: tab 3.9
+greedy_vs_mcts_4px_honest_no-precommit_20250623_060052,28,28,0.0,42,512,100,4,honest,False,greedy,mcts,False,False,0.44,ablation_k4_asym_greedy_vs_mcts_honest_first --ref: tab 3.9
+greedy_vs_mcts_4px_honest_precommit_20250623_060208,28,28,0.0,42,512,100,4,honest,True,greedy,mcts,False,False,0.81,ablation_k4_asym_greedy_vs_mcts_precommit_honest_first --ref: tab 3.9
+mcts_vs_greedy_4px_liar_no-precommit_20250623_063109,28,28,0.0,42,512,100,4,liar,False,mcts,greedy,False,False,0.83,ablation_k4_asym_mcts_vs_greedy --ref: tab 3.9
+mcts_vs_greedy_4px_liar_precommit_20250623_063225,28,28,0.0,42,512,100,4,liar,True,mcts,greedy,False,False,0.95,ablation_k4_asym_mcts_vs_greedy_precommit --ref: tab 3.9
+mcts_vs_greedy_4px_honest_no-precommit_20250623_070300,28,28,0.0,42,512,100,4,honest,False,mcts,greedy,False,False,0.66,ablation_k4_asym_mcts_vs_greedy_honest_first --ref: tab 3.9
+mcts_vs_greedy_4px_honest_precommit_20250623_070416,28,28,0.0,42,512,100,4,honest,True,mcts,greedy,False,False,0.85,ablation_k4_asym_mcts_vs_greedy_precommit_honest_first --ref: tab 3.9
+greedy_vs_mcts_5px_liar_no-precommit_20250623_073359,28,28,0.0,42,512,100,5,liar,False,greedy,mcts,False,False,0.34,ablation_k5_asym_greedy_vs_mcts --ref: tab 3.9
+greedy_vs_mcts_5px_liar_precommit_20250623_073547,28,28,0.0,42,512,100,5,liar,True,greedy,mcts,False,False,0.75,ablation_k5_asym_greedy_vs_mcts_precommit --ref: tab 3.9
+greedy_vs_mcts_5px_honest_no-precommit_20250623_081715,28,28,0.0,42,512,100,5,honest,False,greedy,mcts,False,False,0.66,ablation_k5_asym_greedy_vs_mcts_honest_first --ref: tab 3.9
+greedy_vs_mcts_5px_honest_precommit_20250623_081835,28,28,0.0,42,512,100,5,honest,True,greedy,mcts,False,False,0.97,ablation_k5_asym_greedy_vs_mcts_precommit_honest_first --ref: tab 3.9
+mcts_vs_greedy_5px_liar_no-precommit_20250623_085034,28,28,0.0,42,512,100,5,liar,False,mcts,greedy,False,False,0.68,ablation_k5_asym_mcts_vs_greedy --ref: tab 3.9
+mcts_vs_greedy_5px_liar_precommit_20250623_085154,28,28,0.0,42,512,100,5,liar,True,mcts,greedy,False,False,0.76,ablation_k5_asym_mcts_vs_greedy_precommit --ref: tab 3.9
+mcts_vs_greedy_5px_honest_no-precommit_20250623_092113,28,28,0.0,42,512,100,5,honest,False,mcts,greedy,False,False,0.96,ablation_k5_asym_mcts_vs_greedy_honest_first --ref: tab 3.9
+mcts_vs_greedy_5px_honest_precommit_20250623_092300,28,28,0.0,42,512,100,5,honest,True,mcts,greedy,False,False,0.97,ablation_k5_asym_mcts_vs_greedy_precommit_honest_first --ref: tab 3.9
+greedy_vs_mcts_6px_liar_no-precommit_20250623_101531,28,28,0.0,42,512,100,6,liar,False,greedy,mcts,False,False,0.63,ablation_k6_asym_greedy_vs_mcts --ref: tab 3.9
+greedy_vs_mcts_6px_liar_precommit_20250623_101722,28,28,0.0,42,512,100,6,liar,True,greedy,mcts,False,False,0.96,ablation_k6_asym_greedy_vs_mcts_precommit --ref: tab 3.9
+greedy_vs_mcts_6px_honest_no-precommit_20250623_110420,28,28,0.0,42,512,100,6,honest,False,greedy,mcts,False,False,0.58,ablation_k6_asym_greedy_vs_mcts_honest_first --ref: tab 3.9
+greedy_vs_mcts_6px_honest_precommit_20250623_110641,28,28,0.0,42,512,100,6,honest,True,greedy,mcts,False,False,0.88,ablation_k6_asym_greedy_vs_mcts_precommit_honest_first --ref: tab 3.9
+mcts_vs_greedy_6px_liar_no-precommit_20250623_120349,28,28,0.0,42,512,100,6,liar,False,mcts,greedy,False,False,0.94,ablation_k6_asym_mcts_vs_greedy --ref: tab 3.9
+mcts_vs_greedy_6px_liar_precommit_20250623_120609,28,28,0.0,42,512,100,6,liar,True,mcts,greedy,False,False,0.97,ablation_k6_asym_mcts_vs_greedy_precommit --ref: tab 3.9
+mcts_vs_greedy_6px_honest_no-precommit_20250623_130433,28,28,0.0,42,512,100,6,honest,False,mcts,greedy,False,False,0.89,ablation_k6_asym_mcts_vs_greedy_honest_first --ref: tab 3.9
+mcts_vs_greedy_6px_honest_precommit_20250623_130653,28,28,0.0,42,512,100,6,honest,True,mcts,greedy,False,False,0.91,ablation_k6_asym_mcts_vs_greedy_precommit_honest_first --ref: tab 3.9
+greedy_vs_mcts_7px_liar_no-precommit_20250623_140331,28,28,0.0,42,512,100,7,liar,False,greedy,mcts,False,False,0.5,ablation_k7_asym_greedy_vs_mcts --ref: tab 3.9
+greedy_vs_mcts_7px_liar_precommit_20250623_140551,28,28,0.0,42,512,100,7,liar,True,greedy,mcts,False,False,0.83,ablation_k7_asym_greedy_vs_mcts_precommit --ref: tab 3.9
+greedy_vs_mcts_7px_honest_no-precommit_20250623_150456,28,28,0.0,42,512,100,7,honest,False,greedy,mcts,False,False,0.71,ablation_k7_asym_greedy_vs_mcts_honest_first --ref: tab 3.9
+greedy_vs_mcts_7px_honest_precommit_20250623_150649,28,28,0.0,42,512,100,7,honest,True,greedy,mcts,False,False,0.96,ablation_k7_asym_greedy_vs_mcts_precommit_honest_first --ref: tab 3.9
+mcts_vs_greedy_7px_liar_no-precommit_20250623_155429,28,28,0.0,42,512,100,7,liar,False,mcts,greedy,False,False,0.8,ablation_k7_asym_mcts_vs_greedy --ref: tab 3.9
+mcts_vs_greedy_7px_liar_precommit_20250623_155621,28,28,0.0,42,512,100,7,liar,True,mcts,greedy,False,False,0.8,ablation_k7_asym_mcts_vs_greedy_precommit --ref: tab 3.9
+mcts_vs_greedy_7px_honest_no-precommit_20250623_164020,28,28,0.0,42,512,100,7,honest,False,mcts,greedy,False,False,0.99,ablation_k7_asym_mcts_vs_greedy_honest_first --ref: tab 3.9
+mcts_vs_greedy_7px_honest_precommit_20250623_164241,28,28,0.0,42,512,100,7,honest,True,mcts,greedy,False,False,0.97,ablation_k7_asym_mcts_vs_greedy_precommit_honest_first --ref: tab 3.9
+greedy_vs_mcts_8px_liar_no-precommit_20250623_174355,28,28,0.0,42,512,100,8,liar,False,greedy,mcts,False,False,0.67,ablation_k8_asym_greedy_vs_mcts --ref: tab 3.9
+greedy_vs_mcts_8px_liar_precommit_20250623_174619,28,28,0.0,42,512,100,8,liar,True,greedy,mcts,False,False,0.94,ablation_k8_asym_greedy_vs_mcts_precommit --ref: tab 3.9
+greedy_vs_mcts_8px_honest_no-precommit_20250623_184747,28,28,0.0,42,512,100,8,honest,False,greedy,mcts,False,False,0.61,ablation_k8_asym_greedy_vs_mcts_honest_first --ref: tab 3.9
+greedy_vs_mcts_8px_honest_precommit_20250623_185011,28,28,0.0,42,512,100,8,honest,True,greedy,mcts,False,False,0.92,ablation_k8_asym_greedy_vs_mcts_precommit_honest_first --ref: tab 3.9
+mcts_vs_greedy_8px_liar_no-precommit_20250623_195037,28,28,0.0,42,512,100,8,liar,False,mcts,greedy,False,False,0.94,ablation_k8_asym_mcts_vs_greedy --ref: tab 3.9
+mcts_vs_greedy_8px_liar_precommit_20250623_195300,28,28,0.0,42,512,100,8,liar,True,mcts,greedy,False,False,0.95,ablation_k8_asym_mcts_vs_greedy_precommit --ref: tab 3.9
+mcts_vs_greedy_8px_honest_no-precommit_20250623_205354,28,28,0.0,42,512,100,8,honest,False,mcts,greedy,False,False,0.91,ablation_k8_asym_mcts_vs_greedy_honest_first --ref: tab 3.9
+mcts_vs_greedy_8px_honest_precommit_20250623_205618,28,28,0.0,42,512,100,8,honest,True,mcts,greedy,False,False,0.89,ablation_k8_asym_mcts_vs_greedy_precommit_honest_first --ref: tab 3.9
 
-greedy_vs_mcts_6px_liar_no-precommit_20250613_044223,28,28,0.0,42,512,100,6,liar,False,greedy,mcts,True,False,0.12,greedy_honest_vs_mcts_liar_ --ref: tab 3.11
-greedy_vs_mcts_6px_liar_precommit_20250613_045155,28,28,0.0,42,512,100,6,liar,True,greedy,mcts,True,False,0.37,greedy_honest_vs_mcts_liar_precommit --ref: tab 3.11
-greedy_vs_mcts_6px_honest_no-precommit_20250613_073548,28,28,0.0,42,512,100,6,honest,False,greedy,mcts,True,False,0.01,greedy_honest_vs_mcts_liar_honest_first --ref: tab 3.11
-greedy_vs_mcts_6px_honest_precommit_20250613_074519,28,28,0.0,42,512,100,6,honest,True,greedy,mcts,True,False,0.16,greedy_honest_vs_mcts_liar_precommit_honest_first --ref: tab 3.11
+
+
+mcts_vs_greedy_6px_liar_no-precommit_20250613_012322,28,28,0.0,42,512,100,6,liar,False,mcts,greedy,True,False,0.21,mcts_honest_vs_greedy_liar_ --ref: tab 3.12 "Debates Asimetricos: Agentes Adversariales con pixeles 0"
+mcts_vs_greedy_6px_liar_precommit_20250613_013252,28,28,0.0,42,512,100,6,liar,True,mcts,greedy,True,False,0.15,mcts_honest_vs_greedy_liar_precommit --ref: tab 3.12
+mcts_vs_greedy_6px_honest_no-precommit_20250613_032850,28,28,0.0,42,512,100,6,honest,False,mcts,greedy,True,False,0.04,mcts_honest_vs_greedy_liar_honest_first --ref: tab 3.12
+mcts_vs_greedy_6px_honest_precommit_20250613_033833,28,28,0.0,42,512,100,6,honest,True,mcts,greedy,True,False,0.01,mcts_honest_vs_greedy_liar_precommit_honest_first --ref: tab 3.12
+
+greedy_vs_mcts_6px_liar_no-precommit_20250613_044223,28,28,0.0,42,512,100,6,liar,False,greedy,mcts,True,False,0.12,greedy_honest_vs_mcts_liar_ --ref: tab 3.12
+greedy_vs_mcts_6px_liar_precommit_20250613_045155,28,28,0.0,42,512,100,6,liar,True,greedy,mcts,True,False,0.37,greedy_honest_vs_mcts_liar_precommit --ref: tab 3.12
+greedy_vs_mcts_6px_honest_no-precommit_20250613_073548,28,28,0.0,42,512,100,6,honest,False,greedy,mcts,True,False,0.01,greedy_honest_vs_mcts_liar_honest_first --ref: tab 3.12
+greedy_vs_mcts_6px_honest_precommit_20250613_074519,28,28,0.0,42,512,100,6,honest,True,greedy,mcts,True,False,0.16,greedy_honest_vs_mcts_liar_precommit_honest_first --ref: tab 3.12
 
 
 
@@ -28,6 +79,9 @@ mcts_vs_greedy_6px_liar_no-precommit_20250614_013732,28,28,0.0,42,512,200,6,liar
 greedy_vs_mcts_6px_liar_no-precommit_20250618_020613,28,28,0.0,42,512,20,6,liar,False,greedy,mcts,False,True,0.7,greedy_honest_vs_mcts_liar_ "Visualizaciones y Exploracion de Logits"
 greedy_vs_mcts_6px_liar_precommit_20250618_071147,28,28,0.0,42,512,20,6,liar,True,greedy,mcts,False,True,0.95,greedy_honest_vs_mcts_liar_precommit
 greedy_vs_mcts_6px_liar_precommit_20250618_134950,28,28,0.0,42,512,20,6,liar,True,greedy,mcts,False,True,0.95,greedy_honest_vs_mcts_liar_precommit
+
+
+
 mcts_vs_greedy_6px_liar_no-precommit_20250620_003445,28,28,0.0,42,512,100,6,liar,False,mcts,greedy,False,False,0.94,robustness_mixed_s42
 mcts_vs_greedy_6px_liar_no-precommit_20250620_003633,28,28,0.0,123,512,100,6,liar,False,mcts,greedy,False,False,0.93,robustness_mixed_s123
 mcts_vs_greedy_6px_liar_no-precommit_20250620_003821,28,28,0.0,456,512,100,6,liar,False,mcts,greedy,False,False,0.94,robustness_mixed_s456
@@ -39,54 +93,5 @@ greedy_vs_mcts_6px_liar_no-precommit_20250620_004738,28,28,0.0,456,512,100,6,lia
 greedy_vs_mcts_6px_liar_no-precommit_20250620_004927,28,28,0.0,789,512,100,6,liar,False,greedy,mcts,False,False,0.65,robustness_mixed_s789
 greedy_vs_mcts_6px_liar_no-precommit_20250620_005116,28,28,0.0,1337,512,100,6,liar,False,greedy,mcts,False,False,0.64,robustness_mixed_s1337
 greedy_vs_mcts_6px_liar_no-precommit_20250620_213849,28,28,0.0,42,512,40,6,liar,False,greedy,mcts,False,True,0.75,greedy_honest_vs_mcts_liar_
-
-greedy_vs_mcts_3px_liar_no-precommit_20250623_040210,28,28,0.0,42,512,100,3,liar,False,greedy,mcts,False,False,0.21,ablation_k3_asym_greedy_vs_mcts
-greedy_vs_mcts_3px_liar_precommit_20250623_040328,28,28,0.0,42,512,100,3,liar,True,greedy,mcts,False,False,0.52,ablation_k3_asym_greedy_vs_mcts_precommit
-greedy_vs_mcts_3px_honest_no-precommit_20250623_042605,28,28,0.0,42,512,100,3,honest,False,greedy,mcts,False,False,0.66,ablation_k3_asym_greedy_vs_mcts_honest_first
-greedy_vs_mcts_3px_honest_precommit_20250623_042652,28,28,0.0,42,512,100,3,honest,True,greedy,mcts,False,False,0.99,ablation_k3_asym_greedy_vs_mcts_precommit_honest_first
-mcts_vs_greedy_3px_liar_no-precommit_20250623_044354,28,28,0.0,42,512,100,3,liar,False,mcts,greedy,False,False,0.4,ablation_k3_asym_mcts_vs_greedy
-mcts_vs_greedy_3px_liar_precommit_20250623_044438,28,28,0.0,42,512,100,3,liar,True,mcts,greedy,False,False,0.5,ablation_k3_asym_mcts_vs_greedy_precommit
-mcts_vs_greedy_3px_honest_no-precommit_20250623_045706,28,28,0.0,42,512,100,3,honest,False,mcts,greedy,False,False,0.9,ablation_k3_asym_mcts_vs_greedy_honest_first
-mcts_vs_greedy_3px_honest_precommit_20250623_045819,28,28,0.0,42,512,100,3,honest,True,mcts,greedy,False,False,0.99,ablation_k3_asym_mcts_vs_greedy_precommit_honest_first
-greedy_vs_mcts_4px_liar_no-precommit_20250623_052849,28,28,0.0,42,512,100,4,liar,False,greedy,mcts,False,False,0.48,ablation_k4_asym_greedy_vs_mcts
-greedy_vs_mcts_4px_liar_precommit_20250623_053005,28,28,0.0,42,512,100,4,liar,True,greedy,mcts,False,False,0.95,ablation_k4_asym_greedy_vs_mcts_precommit
-greedy_vs_mcts_4px_honest_no-precommit_20250623_060052,28,28,0.0,42,512,100,4,honest,False,greedy,mcts,False,False,0.44,ablation_k4_asym_greedy_vs_mcts_honest_first
-greedy_vs_mcts_4px_honest_precommit_20250623_060208,28,28,0.0,42,512,100,4,honest,True,greedy,mcts,False,False,0.81,ablation_k4_asym_greedy_vs_mcts_precommit_honest_first
-mcts_vs_greedy_4px_liar_no-precommit_20250623_063109,28,28,0.0,42,512,100,4,liar,False,mcts,greedy,False,False,0.83,ablation_k4_asym_mcts_vs_greedy
-mcts_vs_greedy_4px_liar_precommit_20250623_063225,28,28,0.0,42,512,100,4,liar,True,mcts,greedy,False,False,0.95,ablation_k4_asym_mcts_vs_greedy_precommit
-mcts_vs_greedy_4px_honest_no-precommit_20250623_070300,28,28,0.0,42,512,100,4,honest,False,mcts,greedy,False,False,0.66,ablation_k4_asym_mcts_vs_greedy_honest_first
-mcts_vs_greedy_4px_honest_precommit_20250623_070416,28,28,0.0,42,512,100,4,honest,True,mcts,greedy,False,False,0.85,ablation_k4_asym_mcts_vs_greedy_precommit_honest_first
-greedy_vs_mcts_5px_liar_no-precommit_20250623_073359,28,28,0.0,42,512,100,5,liar,False,greedy,mcts,False,False,0.34,ablation_k5_asym_greedy_vs_mcts
-greedy_vs_mcts_5px_liar_precommit_20250623_073547,28,28,0.0,42,512,100,5,liar,True,greedy,mcts,False,False,0.75,ablation_k5_asym_greedy_vs_mcts_precommit
-greedy_vs_mcts_5px_honest_no-precommit_20250623_081715,28,28,0.0,42,512,100,5,honest,False,greedy,mcts,False,False,0.66,ablation_k5_asym_greedy_vs_mcts_honest_first
-greedy_vs_mcts_5px_honest_precommit_20250623_081835,28,28,0.0,42,512,100,5,honest,True,greedy,mcts,False,False,0.97,ablation_k5_asym_greedy_vs_mcts_precommit_honest_first
-mcts_vs_greedy_5px_liar_no-precommit_20250623_085034,28,28,0.0,42,512,100,5,liar,False,mcts,greedy,False,False,0.68,ablation_k5_asym_mcts_vs_greedy
-mcts_vs_greedy_5px_liar_precommit_20250623_085154,28,28,0.0,42,512,100,5,liar,True,mcts,greedy,False,False,0.76,ablation_k5_asym_mcts_vs_greedy_precommit
-mcts_vs_greedy_5px_honest_no-precommit_20250623_092113,28,28,0.0,42,512,100,5,honest,False,mcts,greedy,False,False,0.96,ablation_k5_asym_mcts_vs_greedy_honest_first
-mcts_vs_greedy_5px_honest_precommit_20250623_092300,28,28,0.0,42,512,100,5,honest,True,mcts,greedy,False,False,0.97,ablation_k5_asym_mcts_vs_greedy_precommit_honest_first
-greedy_vs_mcts_6px_liar_no-precommit_20250623_101531,28,28,0.0,42,512,100,6,liar,False,greedy,mcts,False,False,0.63,ablation_k6_asym_greedy_vs_mcts
-greedy_vs_mcts_6px_liar_precommit_20250623_101722,28,28,0.0,42,512,100,6,liar,True,greedy,mcts,False,False,0.96,ablation_k6_asym_greedy_vs_mcts_precommit
-greedy_vs_mcts_6px_honest_no-precommit_20250623_110420,28,28,0.0,42,512,100,6,honest,False,greedy,mcts,False,False,0.58,ablation_k6_asym_greedy_vs_mcts_honest_first
-greedy_vs_mcts_6px_honest_precommit_20250623_110641,28,28,0.0,42,512,100,6,honest,True,greedy,mcts,False,False,0.88,ablation_k6_asym_greedy_vs_mcts_precommit_honest_first
-mcts_vs_greedy_6px_liar_no-precommit_20250623_120349,28,28,0.0,42,512,100,6,liar,False,mcts,greedy,False,False,0.94,ablation_k6_asym_mcts_vs_greedy
-mcts_vs_greedy_6px_liar_precommit_20250623_120609,28,28,0.0,42,512,100,6,liar,True,mcts,greedy,False,False,0.97,ablation_k6_asym_mcts_vs_greedy_precommit
-mcts_vs_greedy_6px_honest_no-precommit_20250623_130433,28,28,0.0,42,512,100,6,honest,False,mcts,greedy,False,False,0.89,ablation_k6_asym_mcts_vs_greedy_honest_first
-mcts_vs_greedy_6px_honest_precommit_20250623_130653,28,28,0.0,42,512,100,6,honest,True,mcts,greedy,False,False,0.91,ablation_k6_asym_mcts_vs_greedy_precommit_honest_first
-greedy_vs_mcts_7px_liar_no-precommit_20250623_140331,28,28,0.0,42,512,100,7,liar,False,greedy,mcts,False,False,0.5,ablation_k7_asym_greedy_vs_mcts
-greedy_vs_mcts_7px_liar_precommit_20250623_140551,28,28,0.0,42,512,100,7,liar,True,greedy,mcts,False,False,0.83,ablation_k7_asym_greedy_vs_mcts_precommit
-greedy_vs_mcts_7px_honest_no-precommit_20250623_150456,28,28,0.0,42,512,100,7,honest,False,greedy,mcts,False,False,0.71,ablation_k7_asym_greedy_vs_mcts_honest_first
-greedy_vs_mcts_7px_honest_precommit_20250623_150649,28,28,0.0,42,512,100,7,honest,True,greedy,mcts,False,False,0.96,ablation_k7_asym_greedy_vs_mcts_precommit_honest_first
-mcts_vs_greedy_7px_liar_no-precommit_20250623_155429,28,28,0.0,42,512,100,7,liar,False,mcts,greedy,False,False,0.8,ablation_k7_asym_mcts_vs_greedy
-mcts_vs_greedy_7px_liar_precommit_20250623_155621,28,28,0.0,42,512,100,7,liar,True,mcts,greedy,False,False,0.8,ablation_k7_asym_mcts_vs_greedy_precommit
-mcts_vs_greedy_7px_honest_no-precommit_20250623_164020,28,28,0.0,42,512,100,7,honest,False,mcts,greedy,False,False,0.99,ablation_k7_asym_mcts_vs_greedy_honest_first
-mcts_vs_greedy_7px_honest_precommit_20250623_164241,28,28,0.0,42,512,100,7,honest,True,mcts,greedy,False,False,0.97,ablation_k7_asym_mcts_vs_greedy_precommit_honest_first
-greedy_vs_mcts_8px_liar_no-precommit_20250623_174355,28,28,0.0,42,512,100,8,liar,False,greedy,mcts,False,False,0.67,ablation_k8_asym_greedy_vs_mcts
-greedy_vs_mcts_8px_liar_precommit_20250623_174619,28,28,0.0,42,512,100,8,liar,True,greedy,mcts,False,False,0.94,ablation_k8_asym_greedy_vs_mcts_precommit
-greedy_vs_mcts_8px_honest_no-precommit_20250623_184747,28,28,0.0,42,512,100,8,honest,False,greedy,mcts,False,False,0.61,ablation_k8_asym_greedy_vs_mcts_honest_first
-greedy_vs_mcts_8px_honest_precommit_20250623_185011,28,28,0.0,42,512,100,8,honest,True,greedy,mcts,False,False,0.92,ablation_k8_asym_greedy_vs_mcts_precommit_honest_first
-mcts_vs_greedy_8px_liar_no-precommit_20250623_195037,28,28,0.0,42,512,100,8,liar,False,mcts,greedy,False,False,0.94,ablation_k8_asym_mcts_vs_greedy
-mcts_vs_greedy_8px_liar_precommit_20250623_195300,28,28,0.0,42,512,100,8,liar,True,mcts,greedy,False,False,0.95,ablation_k8_asym_mcts_vs_greedy_precommit
-mcts_vs_greedy_8px_honest_no-precommit_20250623_205354,28,28,0.0,42,512,100,8,honest,False,mcts,greedy,False,False,0.91,ablation_k8_asym_mcts_vs_greedy_honest_first
-mcts_vs_greedy_8px_honest_precommit_20250623_205618,28,28,0.0,42,512,100,8,honest,True,mcts,greedy,False,False,0.89,ablation_k8_asym_mcts_vs_greedy_precommit_honest_first
 
 mcts_vs_greedy_6px_liar_no-precommit_20250626_211424,28,28,0.0,42,500,100,6,liar,False,mcts,greedy,False,True,0.94,custom_Mixed (mcts honest)

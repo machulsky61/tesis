@@ -370,41 +370,44 @@ class ExperimentManager:
             print("📋 ESTRATEGIAS DE EVALUACIÓN")
             print("="*60)
             print("1. 🎲 Random Pixels - Selección aleatoria (baseline)")
-            print("2. ⭐ Optimal Pixels - Píxeles que maximizan confianza")
-            print("3. 💀 Adversarial Pixels - Píxeles que minimizan confianza")
-            print("4. 🚫 Adversarial Non-Zero - Adversariales SIN píxeles negros")
-            print("5. 🤖 Greedy Agent - Selección secuencial con agente Greedy")
-            print("6. 🧠 MCTS Agent - Selección secuencial con agente MCTS")
-            print("7. 💀 Greedy Adversarial Agent - Minimiza logits de clase verdadera")
-            print("8. 🧠 MCTS Adversarial Agent - MCTS que maximiza predicciones incorrectas")
-            print("9. 📊 Comparison Suite - Comparar todas las estrategias")
-            print("10. 🔬 K-Range Analysis - Analizar diferentes valores de k")
+            print("2. 🎯 Random OOD - Selección aleatoria CON píxeles negros")
+            print("3. ⭐ Optimal Pixels - Píxeles que maximizan confianza")
+            print("4. 💀 Adversarial Pixels - Píxeles que minimizan confianza")
+            print("5. 🚫 Adversarial Non-Zero - Adversariales SIN píxeles negros")
+            print("6. 🤖 Greedy Agent - Selección secuencial con agente Greedy")
+            print("7. 🧠 MCTS Agent - Selección secuencial con agente MCTS")
+            print("8. 💀 Greedy Adversarial Agent - Minimiza logits de clase verdadera")
+            print("9. 🧠 MCTS Adversarial Agent - MCTS que maximiza predicciones incorrectas")
+            print("10. 📊 Comparison Suite - Comparar todas las estrategias")
+            print("11. 🔬 K-Range Analysis - Analizar diferentes valores de k")
             print("0. ↩️  Volver al menú principal")
             
-            choice = self.get_input("Selecciona estrategia", "9", 
-                                  ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+            choice = self.get_input("Selecciona estrategia", "10", 
+                                  ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"])
             
             if choice == "0":
                 break
             elif choice == "1":
                 self._evaluate_single_strategy(judge_name, resolution, default_k, "random")
             elif choice == "2":
-                self._evaluate_single_strategy(judge_name, resolution, default_k, "optimal")
+                self._evaluate_single_strategy(judge_name, resolution, default_k, "random_ood")
             elif choice == "3":
-                self._evaluate_single_strategy(judge_name, resolution, default_k, "adversarial")
+                self._evaluate_single_strategy(judge_name, resolution, default_k, "optimal")
             elif choice == "4":
-                self._evaluate_single_strategy(judge_name, resolution, default_k, "adversarial_nonzero")
+                self._evaluate_single_strategy(judge_name, resolution, default_k, "adversarial")
             elif choice == "5":
-                self._evaluate_single_strategy(judge_name, resolution, default_k, "greedy_agent")
+                self._evaluate_single_strategy(judge_name, resolution, default_k, "adversarial_nonzero")
             elif choice == "6":
-                self._evaluate_single_strategy(judge_name, resolution, default_k, "mcts_agent")
+                self._evaluate_single_strategy(judge_name, resolution, default_k, "greedy_agent")
             elif choice == "7":
-                self._evaluate_single_strategy(judge_name, resolution, default_k, "greedy_adversarial_agent")
+                self._evaluate_single_strategy(judge_name, resolution, default_k, "mcts_agent")
             elif choice == "8":
-                self._evaluate_single_strategy(judge_name, resolution, default_k, "mcts_adversarial_agent")
+                self._evaluate_single_strategy(judge_name, resolution, default_k, "greedy_adversarial_agent")
             elif choice == "9":
-                self._evaluate_comparison_suite(judge_name, resolution, default_k)
+                self._evaluate_single_strategy(judge_name, resolution, default_k, "mcts_adversarial_agent")
             elif choice == "10":
+                self._evaluate_comparison_suite(judge_name, resolution, default_k)
+            elif choice == "11":
                 self._evaluate_k_range_analysis(judge_name, resolution, default_k)
 
     def _evaluate_comparison_suite(self, judge_name, resolution, default_k):
@@ -412,7 +415,7 @@ class ExperimentManager:
         print("\n📊 SUITE DE COMPARACIÓN COMPLETA")
         print("-" * 50)
         print("Compara todas las estrategias de evaluación del juez:")
-        print("• Estáticas: random, optimal, adversarial, adversarial_nonzero")
+        print("• Estáticas: random, random_ood, optimal, adversarial, adversarial_nonzero")
         print("• Agentes: greedy, MCTS, greedy adversarial, MCTS adversarial")
         
         k = self.get_input("Número de píxeles (k)", str(default_k), input_type=int)
@@ -423,7 +426,7 @@ class ExperimentManager:
         allow_all_pixels = self.get_yes_no("¿Permitir píxeles negros para agentes?")
         save_comparison_outputs = self.get_yes_no("¿Guardar visualizaciones para comparación (una muestra por estrategia)?")
         
-        strategies = ["random", "optimal", "adversarial", "adversarial_nonzero"]
+        strategies = ["random", "random_ood", "optimal", "adversarial", "adversarial_nonzero"]
         
         if include_agents:
             strategies.extend(["greedy_agent", "mcts_agent", "greedy_adversarial_agent", "mcts_adversarial_agent"])

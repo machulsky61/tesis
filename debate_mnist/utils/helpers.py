@@ -649,6 +649,9 @@ def save_evaluation_visualization(original_image, mask, selected_coords, filepat
         # Color para píxeles seleccionados (verde para evaluación)
         selection_color = (0, 150, 0)
         
+        # Detectar si es estrategia OOD para recuadros blancos (adversarial o random OOD)
+        is_ood_strategy = eval_info and eval_info.get('strategy') in ['adversarial', 'random_ood']
+        
         # Dibujar píxeles seleccionados con números de orden
         for order, coord in enumerate(selected_coords, 1):
             if len(coord) >= 2:
@@ -660,11 +663,25 @@ def save_evaluation_visualization(original_image, mask, selected_coords, filepat
                 scaled_x_end = (x + 1) * scale_factor - 1
                 scaled_y_end = (y + 1) * scale_factor - 1
                 
-                # Colorear píxel
-                draw.rectangle([
-                    scaled_x_start, scaled_y_start, 
-                    scaled_x_end, scaled_y_end
-                ], fill=selection_color)
+                # Obtener valor del píxel original
+                pixel_value = img_np[y, x] if y < H and x < W else 0
+                
+                # Para estrategias OOD: recuadro blanco si píxel es muy oscuro
+                if is_ood_strategy and pixel_value <= 25:  # Píxeles muy oscuros/negros
+                    # Dibujar recuadro blanco grueso alrededor del píxel
+                    border_width = max(2, scale_factor // 4)
+                    draw.rectangle([
+                        scaled_x_start - border_width, scaled_y_start - border_width,
+                        scaled_x_end + border_width, scaled_y_end + border_width
+                    ], outline=(255, 255, 255), width=border_width)
+                    
+                    # No colorear el píxel, mantener la imagen original visible
+                else:
+                    # Colorear píxel normalmente para otras estrategias
+                    draw.rectangle([
+                        scaled_x_start, scaled_y_start, 
+                        scaled_x_end, scaled_y_end
+                    ], fill=selection_color)
                 
                 # Agregar número de orden
                 if scale_factor >= 6:
@@ -684,15 +701,25 @@ def save_evaluation_visualization(original_image, mask, selected_coords, filepat
                         text_x = scaled_x_start + (scale_factor - text_width) // 2
                         text_y = scaled_y_start + (scale_factor - text_height) // 2
                         
-                        # Contorno blanco
-                        for offset_x in [-1, 0, 1]:
-                            for offset_y in [-1, 0, 1]:
-                                if offset_x != 0 or offset_y != 0:
-                                    draw.text((text_x + offset_x, text_y + offset_y), text, 
-                                            fill=(255, 255, 255), font=font)
-                        
-                        # Texto principal negro
-                        draw.text((text_x, text_y), text, fill=(0, 0, 0), font=font)
+                        # Para píxeles OOD: texto más visible
+                        if is_ood_strategy and pixel_value <= 25:
+                            # Contorno negro grueso para destacar sobre fondo claro
+                            for offset_x in [-2, -1, 0, 1, 2]:
+                                for offset_y in [-2, -1, 0, 1, 2]:
+                                    if offset_x != 0 or offset_y != 0:
+                                        draw.text((text_x + offset_x, text_y + offset_y), text, 
+                                                fill=(0, 0, 0), font=font)
+                            # Texto principal blanco
+                            draw.text((text_x, text_y), text, fill=(255, 255, 255), font=font)
+                        else:
+                            # Contorno blanco normal
+                            for offset_x in [-1, 0, 1]:
+                                for offset_y in [-1, 0, 1]:
+                                    if offset_x != 0 or offset_y != 0:
+                                        draw.text((text_x + offset_x, text_y + offset_y), text, 
+                                                fill=(255, 255, 255), font=font)
+                            # Texto principal negro
+                            draw.text((text_x, text_y), text, fill=(0, 0, 0), font=font)
                         
                     except Exception:
                         pass  # Si falla el texto, continuar

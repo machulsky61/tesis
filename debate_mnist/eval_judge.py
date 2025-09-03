@@ -163,6 +163,26 @@ def select_random_pixels(image, k, thr):
     
     return chosen_coords
 
+def select_random_ood_pixels(image, k, thr):
+    """
+    Selecciona k píxeles aleatoriamente de TODOS los píxeles (incluyendo negros).
+    Estrategia OOD para comparar contra random normal y adversarial OOD.
+    Ignora el threshold y considera píxeles negros/background.
+    """
+    H, W = image.shape[-2], image.shape[-1]
+    
+    # Para random OOD, consideramos TODOS los píxeles, incluyendo los negros
+    coords = torch.cartesian_prod(torch.arange(H), torch.arange(W))
+    
+    if coords.size(0) <= k:
+        chosen_coords = coords
+    else:
+        # Selección aleatoria uniforme de todos los píxeles
+        chosen_indices = random.sample(range(coords.size(0)), k)
+        chosen_coords = coords[chosen_indices]
+    
+    return chosen_coords
+
 def select_agent_pixels(image, model, true_label, k, thr, device, agent_type, **agent_kwargs):
     """
     Selecciona k píxeles usando un agente específico (greedy o mcts) de forma secuencial.
@@ -323,7 +343,7 @@ def main():
     parser.add_argument("--batch_size", type=int,   default=128,            help="Tamaño de batch para evaluación")
     parser.add_argument("--judge_name", type=str,   default="judge_model",  help="Nombre del modelo juez (sin extensión)")
     parser.add_argument("--strategy",   type=str,   default="random",       help="Pixel selection strategy", 
-                        choices=["random", "optimal", "adversarial", "adversarial_nonzero", "greedy_agent", "mcts_agent", "greedy_adversarial_agent", "mcts_adversarial_agent"])
+                        choices=["random", "random_ood", "optimal", "adversarial", "adversarial_nonzero", "greedy_agent", "mcts_agent", "greedy_adversarial_agent", "mcts_adversarial_agent"])
     parser.add_argument("--rollouts",   type=int,   default=500,            help="Rollouts para MCTS agent (solo usado con strategy=mcts_agent)")
     parser.add_argument("--allow_all_pixels", action="store_true",         help="Permitir selección de cualquier píxel (incluye píxeles negros)")
     parser.add_argument("--note",       type=str,   default="",             help="Nota opcional para registrar en el CSV")
@@ -369,6 +389,7 @@ def main():
     
     strategy_name = {
         "random": "random", 
+        "random_ood": "random_ood",
         "optimal": "optimal", 
         "adversarial": "adversarial", 
         "adversarial_nonzero": "adversarial_nonzero",
@@ -387,6 +408,8 @@ def main():
             # Seleccionar píxeles según la estrategia
             if args.strategy == "random":
                 chosen_coords = select_random_pixels(image, args.k, args.thr)
+            elif args.strategy == "random_ood":
+                chosen_coords = select_random_ood_pixels(image, args.k, args.thr)
             elif args.strategy == "optimal":
                 chosen_coords = select_optimal_pixels(image, model, true_label, args.k, args.thr, device)
             elif args.strategy == "adversarial":
