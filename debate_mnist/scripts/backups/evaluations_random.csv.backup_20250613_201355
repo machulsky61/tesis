@@ -1,5 +1,0 @@
-timestamp,judge_name,strategy,resolution,thr,seed,n_images,pixels,accuracy,note
-eval_28_4px_28px_4k_20250601_135340,28_4px,random,28,0.0,42,10000,4,0.4759,paper=48.2%
-eval_28_28px_6k_20250601_135520,28,random,28,0.0,42,10000,6,0.5842,paper=59.4%
-eval_16_16px_6k_20250601_140233,16,random,16,0.0,42,10000,6,0.5647,
-eval_16_4px_16px_4k_20250601_140328,16_4px,random,16,0.0,42,10000,4,0.4498,

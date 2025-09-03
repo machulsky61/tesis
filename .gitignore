@@ -173,26 +173,122 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-# latex stuff
+# ============================================================================
+# THESIS PROJECT SPECIFIC IGNORES
+# ============================================================================
+
+# LaTeX compilation files
 latex/
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
 
-# PyTorch MNIST dataset and masked images after debate
-debate_mnist/data/MNIST/raw
+# ============================================================================
+# DEBATE_MNIST MODULE
+# ============================================================================
 
-# Ignorar imágenes generadas automáticamente
-debate_mnist/data/**/masked_images/
-debate_mnist/data/**/debate_images/
-debate_mnist/data/**/metadata/
-debate_mnist/data/**/original_images/
-#debate_mnist/data/**/random_masked_images/
-#debate_mnist/data/**/masked_images_after_debate/
+# PyTorch MNIST dataset (large files, can be re-downloaded)
+debate_mnist/data/MNIST/
 
-# Ignorar runs de outputs
-debate_mnist/outputs/**/
-debate_mnist/outputs/debates_old.csv
+# Virtual environment
+debate_mnist/.venv/
+debate_mnist/venv/
 
-# Incluir los archivos importantes explícitamente (aunque sus carpetas estén ignoradas)
-!debate_mnist/data/**/results.csv
-!debate_mnist/data/**/run_info.json
-!debate_mnist/data/**/confusion_matrix.png
-!debate_mnist/data/**/experiments_log.csv
+# Generated experiment data (preserve structure, ignore bulk data)
+debate_mnist/data/processed/
+debate_mnist/data/temp/
+debate_mnist/data/cache/
+
+# Experiment outputs (selective - keep important results)
+debate_mnist/outputs/experiments_*/
+debate_mnist/outputs/temp_*
+debate_mnist/outputs/*.tmp
+debate_mnist/outputs/*_backup_*
+
+# Individual debate run folders (massive amounts of images/JSON)
+debate_mnist/outputs/debate_*/
+debate_mnist/outputs/visualizations/debates/
+
+# All visualization outputs except figures directory
+debate_mnist/outputs/visualizations/
+!debate_mnist/outputs/visualizations/figures/
+
+# Large files recursively (images, JSON, etc.)
+debate_mnist/outputs/**/*.png
+debate_mnist/outputs/**/*.jpg
+debate_mnist/outputs/**/*.jpeg
+debate_mnist/outputs/**/*.json
+debate_mnist/outputs/**/*.svg
+debate_mnist/outputs/*.png
+debate_mnist/outputs/*.jpg
+debate_mnist/outputs/*.json
+
+# Backup files and scripts
+debate_mnist/scripts/backups/
+debate_mnist/scripts/temp_*
+debate_mnist/scripts/debug_*
+debate_mnist/scripts/demo_*
+debate_mnist/scripts/judge_analysis/
+
+# Model files (keep essential ones, ignore temporary)
+debate_mnist/models/temp_*.pth
+debate_mnist/models/debug_*.pth
+debate_mnist/models/backup_*.pth
+debate_mnist/models/test_*.pth
+
+# Test and development files (will be cleaned up)
+debate_mnist/test_*.py
+debate_mnist/demo_*.py
+debate_mnist/grafico_*.py
+debate_mnist/*test*.py
+debate_mnist/DEBATE_SYSTEM_ANALYSIS.md
+debate_mnist/JUDGE_ANALYSIS_PROPOSAL.md
+debate_mnist/METHODOLOGY_DOCUMENTATION.md
+
+# Private analysis module (thesis-specific, not for public repo)
+debate_mnist/.private_analysis/
+
+# ============================================================================
+# KEEP IMPORTANT FILES (override above ignores)
+# ============================================================================
+
+# Essential trained models
+!debate_mnist/models/16.pth
+!debate_mnist/models/28.pth
+!debate_mnist/models/16_4px.pth
+!debate_mnist/models/28_4px.pth
+
+# Essential output CSVs
+!debate_mnist/outputs/debates.csv
+!debate_mnist/outputs/debates_asimetricos.csv
+!debate_mnist/outputs/evaluations.csv
+!debate_mnist/outputs/evaluations_random.csv
+!debate_mnist/outputs/judges.csv
+
+# Essential visualizations
+!debate_mnist/outputs/visualizations/figures/
+
+# Core documentation
+!debate_mnist/README.md
+!README.md
+
+# ============================================================================
+# ARCHIVED/REFERENCE MATERIALS
+# ============================================================================
+
+# Reference papers (keep for thesis)
+# papers/ folder will be kept in repository
+
+# Old thesis materials (ignore, no longer needed)
+pdf/
+templates/
+latex_templates/
+prop_0039.pdf
+
+

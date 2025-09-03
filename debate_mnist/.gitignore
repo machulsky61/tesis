@@ -1,0 +1,288 @@
+# AI Safety via Debate - MNIST Experiment
+# .gitignore for Python ML research project
+
+# ============================================================================
+# Python
+# ============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+
+# ============================================================================
+# Jupyter Notebooks
+# ============================================================================
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# ============================================================================
+# Machine Learning / Data Science
+# ============================================================================
+
+# Model files (keep only essential pre-trained models)
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.hdf5
+*.onnx
+*.tflite
+
+# Keep essential judge models but ignore temporary ones
+models/temp_*.pth
+models/backup_*.pth
+models/test_*.pth
+models/*_temp.pth
+
+# Data files
+*.csv.tmp
+*.csv.backup
+data/temp/
+data/cache/
+data/processed/
+data/interim/
+
+# Large dataset files (keep MNIST raw data but ignore derived)
+data/*/processed/
+data/*/cache/
+
+# ============================================================================
+# Experiment Outputs (Selective)
+# ============================================================================
+
+# Keep main output CSVs but ignore temporary ones
+outputs/*.tmp
+outputs/*.temp
+outputs/*_backup_*
+outputs/temp_*
+
+# Keep essential visualizations but ignore temporary/test ones
+outputs/visualizations/temp_*
+outputs/visualizations/test_*
+outputs/visualizations/debug_*
+outputs/visualizations/*/temp_*
+
+# Individual debate folders (exclude large experimental runs, keep curated examples)
+outputs/visualizations/debates/debate_*_20*
+!outputs/visualizations/debates/debate_*_example/
+
+# Keep probability tracking JSONs as important metadata
+!outputs/debate_*/sample_*_probabilities.json
+
+# ============================================================================
+# Configuration & Logs
+# ============================================================================
+
+# Configuration backups
+configs/backup_*
+configs/temp_*
+configs/*_backup.json
+
+# Log files
+*.log
+logs/
+*.out
+*.err
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# ============================================================================
+# IDE & Editor Files
+# ============================================================================
+
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# PyCharm
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+
+# ============================================================================
+# Operating System
+# ============================================================================
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ============================================================================
+# Temporary Files
+# ============================================================================
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+
+# Backup files
+*~
+*.orig
+*.backup
+
+# ============================================================================
+# Specific to this project
+# ============================================================================
+
+# Private analysis module (not for public repository)
+.private_analysis/
+
+# Large experiment runs (keep samples but not full runs)
+outputs/experiments_*/
+!outputs/experiments_sample/
+
+# Scripts backup/temp files
+scripts/temp_*
+scripts/backup_*
+scripts/debug_*
+
+# CUDA cache
+.nv_fatb*
+
+# Weights & Biases
+wandb/
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# ============================================================================
+# Keep Important Files (Override above rules)
+# ============================================================================
+
+# Essential model files
+!models/28.pth
+!models/16.pth
+!models/28_4px.pth
+!models/16_4px.pth
+
+# Essential output CSVs
+!outputs/debates.csv
+!outputs/debates_asimetricos.csv
+!outputs/evaluations.csv
+!outputs/evaluations_random.csv
+!outputs/judges.csv
+
+# Essential visualizations
+!outputs/visualizations/figures/
+
+# Documentation (main README only)
+!README.md
+
+# Configuration templates (keep useful presets)
+!configs/ablation*.json
+!configs/paper_replication*.json
+!configs/quick_test*.json
+!configs/analysis_figures*.json
+
