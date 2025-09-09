@@ -13,15 +13,22 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  // Initialize theme from localStorage or default to dark (more modern)
+  // Initialize theme from localStorage or system preference
   const [isDark, setIsDark] = useState(() => {
     try {
       const saved = localStorage.getItem('debate-game-theme');
-      return saved ? JSON.parse(saved) : true; // Default to dark theme
+      if (saved !== null) {
+        return JSON.parse(saved);
+      }
+      // Default to system preference
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
     } catch {
-      return true;
+      return false; // Default to light theme for better consistency
     }
   });
+
+  // Track if theme is being initialized to prevent flash
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const theme = getTheme(isDark);
 
@@ -34,6 +41,13 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     const root = document.documentElement;
     
+    // Add/remove dark class for portfolio compatibility
+    if (isDark) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    
     // Set CSS custom properties for global access
     root.style.setProperty('--bg-primary', theme.background.primary);
     root.style.setProperty('--bg-surface', theme.background.surface);
@@ -41,16 +55,22 @@ export const ThemeProvider = ({ children }) => {
     root.style.setProperty('--text-secondary', theme.text.secondary);
     root.style.setProperty('--brand-primary', theme.brand.primary);
     
-    // Update meta theme-color for mobile browsers
+    // Update meta theme-color for mobile browsers (use theme colors)
     const metaTheme = document.querySelector('meta[name="theme-color"]');
     if (metaTheme) {
-      metaTheme.setAttribute('content', isDark ? '#1e1b4b' : '#667eea');
+      metaTheme.setAttribute('content', theme.background.primary);
     }
     
-    // Update body background
+    // Update body background immediately to prevent flash
     document.body.style.background = theme.background.primary;
     document.body.style.color = theme.text.primary;
-  }, [theme, isDark]);
+    document.body.style.transition = isInitialized ? 'background-color 0.3s ease, color 0.3s ease' : 'none';
+    
+    // Mark as initialized after first render
+    if (!isInitialized) {
+      setIsInitialized(true);
+    }
+  }, [theme, isDark, isInitialized]);
 
   const toggleTheme = () => setIsDark(prev => !prev);
 

@@ -83,7 +83,7 @@ const Label = styled.span`
   }
 `;
 
-const ThemeToggle = ({ showLabel = false, compact = false }) => {
+const ThemeToggle = React.memo(({ showLabel = false, compact = false }) => {
   const { isDark, toggleTheme } = useTheme();
 
   const handleToggle = () => {
@@ -164,6 +164,8 @@ const ThemeToggle = ({ showLabel = false, compact = false }) => {
       {showLabel && <Label>Dark</Label>}
     </ToggleContainer>
   );
-};
+});
+
+ThemeToggle.displayName = 'ThemeToggle';
 
 export default ThemeToggle;

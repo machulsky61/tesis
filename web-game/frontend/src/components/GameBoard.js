@@ -156,12 +156,11 @@ const Pixel = styled(motion.div)`
   box-sizing: border-box;
   transition: all 300ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
   
-  /* Base states - use semi-transparent overlays instead of solid backgrounds */
+  /* Base states - clean approach without opacity filters */
   ${props => !props.isRevealed && !props.canClick && `
-    background-color: ${props.theme.game.unrevealed};
-    opacity: 0.4; /* Slightly more visible */
+    background-color: transparent; /* Show underlying image */
     
-    /* Overlay to dim unavailable pixels */
+    /* Subtle overlay for unavailable pixels */
     &::before {
       content: '';
       position: absolute;
@@ -169,18 +168,17 @@ const Pixel = styled(motion.div)`
       left: 0;
       right: 0;
       bottom: 0;
-      background: ${props.theme.background.surface};
-      opacity: 0.7; /* Dim but still show underlying image */
+      background: ${props.theme.background.muted};
+      opacity: 0.4; /* Light overlay without affecting underlying pixel values */
       pointer-events: none;
       z-index: 1;
     }
   `}
   
   ${props => !props.isRevealed && props.canClick && `
-    background-color: transparent; /* Show underlying image */
-    opacity: 0.8; /* More visible for clickable pixels */
+    background-color: transparent; /* Show underlying image clearly */
     
-    /* Light overlay to indicate it's selectable */
+    /* Very light overlay to indicate it's selectable without dimming */
     &::before {
       content: '';
       position: absolute;
@@ -188,15 +186,13 @@ const Pixel = styled(motion.div)`
       left: 0;
       right: 0;
       bottom: 0;
-      background: ${props.theme.game.unrevealed};
-      opacity: 0.3; /* Light overlay */
+      background: transparent; /* No overlay on selectable pixels */
       pointer-events: none;
       z-index: 1;
-      transition: opacity 200ms ease;
+      transition: background 200ms ease;
     }
     
     &:hover {
-      opacity: 1;
       transform: scale(1.02);
       box-shadow: ${props.theme.shadows.md};
       z-index: 15;
@@ -204,52 +200,39 @@ const Pixel = styled(motion.div)`
       
       &::before {
         background: ${props.theme.game.hover};
-        opacity: 0.4;
+        opacity: 0.2; /* Light hover effect */
       }
     }
   `}
   
   ${props => props.isRevealed && `
-    background-color: transparent; /* Keep background transparent to show underlying image */
-    opacity: 1;
+    background-color: transparent; /* Keep fully transparent to show pixel values */
     border: 3px solid ${props.revealedBy === 'human' 
       ? props.theme.game.humanMove 
       : props.theme.game.aiMove
     };
     box-shadow: 
       0 0 0 1px ${props.revealedBy === 'human' 
-        ? props.theme.game.humanMove + '60'
-        : props.theme.game.aiMove + '60'
+        ? props.theme.game.humanMove + '40'
+        : props.theme.game.aiMove + '40'
       },
       ${props.theme.shadows.md};
     
-    /* Subtle overlay to indicate reveal status without hiding image */
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: ${props.revealedBy === 'human' 
-        ? props.theme.game.humanMove + '08'  /* Very subtle overlay */
-        : props.theme.game.aiMove + '08'
-      };
-      pointer-events: none;
-      z-index: 1;
-      border-radius: 1px;
-    }
+    /* No overlay on revealed pixels - show pure pixel values */
   `}
   
   ${props => props.isHovered && props.canClick && `
-    background-color: ${props.theme.game.hover} !important;
-    opacity: 0.9 !important;
     transform: scale(1.05) !important;
     z-index: 20 !important;
-    border-color: ${props.theme.brand.primary} !important;
+    border-color: ${props.theme.brand.secondary} !important;
     box-shadow: 
-      0 0 20px ${props.theme.brand.primary}40,
+      0 0 20px ${props.theme.brand.secondary}40,
       ${props.theme.shadows.lg} !important;
+      
+    &::before {
+      background: ${props.theme.game.hover} !important;
+      opacity: 0.3 !important;
+    }
   `}
 `;
 
@@ -398,7 +381,7 @@ const LoadingOverlay = styled(motion.div)`
   }
 `;
 
-const GameBoard = ({
+const GameBoard = React.memo(({
   gameState,
   imageData,
   hoveredPixel,
@@ -408,13 +391,15 @@ const GameBoard = ({
   onPixelHover,
   loading
 }) => {
-  // Debug and validation
-  console.log('GameBoard render:', { 
-    hasGameState: !!gameState, 
-    hasImageData: !!imageData,
-    isPlayerTurn,
-    loading
-  });
+  // Debug and validation (keep for development)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('GameBoard render:', { 
+      hasGameState: !!gameState, 
+      hasImageData: !!imageData,
+      isPlayerTurn,
+      loading
+    });
+  }
 
   // Calculate image statistics for contrast stretching
   let imageStats = null;
@@ -782,6 +767,8 @@ const GameBoard = ({
       </MoveLegend>
     </BoardContainer>
   );
-};
+});
+
+GameBoard.displayName = 'GameBoard';
 
 export default GameBoard;

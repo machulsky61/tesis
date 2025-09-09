@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 
-// Base button component
+// Professional button following portfolio design
 export const Button = styled(motion.button)`
   display: inline-flex;
   align-items: center;
@@ -15,20 +15,19 @@ export const Button = styled(motion.button)`
   font-family: inherit;
   text-decoration: none;
   cursor: pointer;
-  transition: all 200ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 200ms ease;
   position: relative;
-  overflow: hidden;
   
-  /* Base styles */
+  /* Base styles - Clean minimal approach */
   background: ${props => props.theme.brand.primary};
   color: ${props => props.theme.text.inverse};
   box-shadow: ${props => props.theme.shadows.md};
 
-  /* Hover effects */
+  /* Subtle hover effects */
   &:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: ${props => props.theme.shadows.lg};
     background: ${props => props.theme.brand.secondary};
+    transform: translateY(-1px);
+    box-shadow: ${props => props.theme.shadows.lg};
   }
 
   /* Active state */
@@ -48,40 +47,20 @@ export const Button = styled(motion.button)`
     cursor: not-allowed;
     transform: none;
   }
-
-  /* Shimmer effect on hover */
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.2),
-      transparent
-    );
-    transition: left 0.5s;
-  }
-
-  &:hover:not(:disabled)::before {
-    left: 100%;
-  }
 `;
 
-// Variant: Secondary button
+// Variant: Secondary button - Outline style
 export const SecondaryButton = styled(Button)`
   background: transparent;
   color: ${props => props.theme.brand.primary};
-  border: 2px solid ${props => props.theme.brand.primary};
+  border: 1px solid ${props => props.theme.background.border || props.theme.brand.primary};
   box-shadow: none;
 
   &:hover:not(:disabled) {
-    background: ${props => props.theme.brand.primary};
-    color: ${props => props.theme.text.inverse};
-    box-shadow: ${props => props.theme.shadows.md};
+    background: ${props => props.theme.brand.primary}10;
+    color: ${props => props.theme.brand.primary};
+    border-color: ${props => props.theme.brand.primary};
+    box-shadow: ${props => props.theme.shadows.sm};
   }
 `;
 

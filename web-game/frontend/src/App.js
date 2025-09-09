@@ -4,11 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'react-hot-toast';
 import { useGame } from './hooks/useGame';
 import GameBoard from './components/GameBoard';
-import GameConfig from './components/GameConfig';
 import GameResult from './components/GameResult';
 import ErrorBoundary from './components/ErrorBoundary';
 import DebugInfo from './components/DebugInfo';
-import Header from './components/ui/Header';
+import Navbar from './components/ui/Navbar';
+import CollapsibleSidebar from './components/ui/CollapsibleSidebar';
+import LandingPage from './components/LandingPage';
 import { Card, GlassCard } from './components/ui/Card';
 import ThemeProvider from './theme/ThemeProvider';
 import { GlobalStyles } from './theme/GlobalStyles';
@@ -36,18 +37,21 @@ const BackgroundPattern = styled.div`
 
 const MainContent = styled(motion.main)`
   padding: 2rem;
-  max-width: 1400px;
+  padding-top: 6rem; /* Account for fixed navbar */
+  padding-left: 4rem; /* Account for collapsed sidebar */
+  max-width: 1200px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 2rem;
-  align-items: start;
-  min-height: calc(100vh - 5rem);
+  min-height: 100vh;
   
-  @media (max-width: 1024px) {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
+  @media (max-width: 768px) {
     padding: 1rem;
+    padding-top: 5rem; /* Smaller top padding on mobile */
+    padding-left: 1rem; /* Normal padding on mobile */
+    gap: 1.5rem;
   }
 `;
 
@@ -56,16 +60,8 @@ const GameSection = styled.div`
   flex-direction: column;
   gap: 1.5rem;
   align-items: center;
-`;
-
-const ConfigSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  
-  @media (max-width: 1024px) {
-    order: -1;
-  }
+  width: 100%;
+  max-width: 800px;
 `;
 
 const WelcomeCard = styled(Card)`
@@ -160,7 +156,8 @@ const StatusCard = styled(GlassCard)`
 `;
 
 function AppContent() {
-  const [gameStats, setGameStats] = useState({ games: 0, accuracy: 0, streak: 0 });
+  const [gameStats] = useState({ games: 0, accuracy: 0, streak: 0 });
+  const [showLanding, setShowLanding] = useState(true);
   
   const {
     // Game state
@@ -176,11 +173,6 @@ function AppContent() {
     hoveredPixel,
     isPlayerTurn,
     isGameActive,
-    
-    // Computed values
-    currentTurn,
-    totalPixels,
-    pixelsRemaining,
     
     // Actions
     createGame,
@@ -212,7 +204,7 @@ function AppContent() {
   };
 
   const handleGithub = () => {
-    window.open('https://github.com/your-username/ai-debate-game', '_blank');
+    window.open('https://github.com/machulsky61/tesis', '_blank');
   };
 
   const handleThesis = () => {
@@ -221,11 +213,13 @@ function AppContent() {
   };
 
   const handleStartGame = () => {
+    setShowLanding(false);
     createGame(gameConfig);
   };
 
   const handleNewGame = () => {
     resetGame();
+    setShowLanding(true);
   };
 
   const gameIsOver = gameState && isGameOver(gameState);
@@ -234,127 +228,142 @@ function AppContent() {
     <AppContainer>
       <BackgroundPattern />
       
-      <Header
-        gameStats={gameStats}
-        onAbout={handleAbout}
-        onGithub={handleGithub}
-        onThesis={handleThesis}
-      />
-
-      <MainContent
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-      >
-        <GameSection>
-          <AnimatePresence mode="wait">
-            {/* Show loading only when creating game (no gameState yet) */}
-            {loading && !gameState && (
-              <StatusCard
-                key="loading"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-              >
-                <div className="status-content">
-                  <div className="spinner" />
-                  <span className="status-text">Creating game...</span>
-                </div>
-              </StatusCard>
-            )}
-
-            {/* Game Board - Always visible when game exists (handles its own loading overlay) */}
-            {isGameActive && !gameIsOver && (
-              <motion.div
-                key="game"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3 }}
-              >
-                <GameBoard
-                  gameState={gameState}
-                  imageData={imageData}
-                  hoveredPixel={hoveredPixel}
-                  selectedPixel={selectedPixel}
-                  isPlayerTurn={isPlayerTurn}
-                  onPixelClick={handlePixelClick}
-                  onPixelHover={handlePixelHover}
-                  loading={loading}
-                />
-              </motion.div>
-            )}
-
-            {/* Game Result */}
-            {gameIsOver && gameResult && (
-              <motion.div
-                key="result"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3 }}
-              >
-                <GameResult
-                  gameResult={gameResult}
-                  gameState={gameState}
-                  onNewGame={handleNewGame}
-                />
-              </motion.div>
-            )}
-
-            {/* Welcome Screen */}
-            {!gameState && !loading && (
-              <WelcomeCard
-                key="welcome"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-              >
-                <h2>Welcome to AI Pixel Debate!</h2>
-                <p className="description">
-                  This interactive game implements "AI Safety via Debate" methodology 
-                  on MNIST digit classification. Challenge AI agents by strategically 
-                  revealing pixels to convince a neural judge.
-                </p>
-                
-                <div className="roles-grid">
-                  <div className="role-card honest">
-                    <div className="role-title">Honest Player</div>
-                    <p className="role-desc">
-                      Help the judge classify the digit correctly by revealing 
-                      informative pixels
-                    </p>
-                  </div>
-                  <div className="role-card liar">
-                    <div className="role-title">Liar Player</div>
-                    <p className="role-desc">
-                      Try to mislead the judge into making wrong classifications 
-                      through strategic deception
-                    </p>
-                  </div>
-                </div>
-                
-                <p className="start-prompt">
-                  Configure your game settings and click "Start Game" to begin the debate!
-                </p>
-              </WelcomeCard>
-            )}
-          </AnimatePresence>
-        </GameSection>
-
-        <ConfigSection>
-          <GameConfig
-            config={gameConfig}
-            onConfigChange={updateConfig}
+      <AnimatePresence mode="wait">
+        {showLanding ? (
+          <LandingPage
+            key="landing"
             onStartGame={handleStartGame}
-            onResetGame={handleNewGame}
-            loading={loading}
-            error={null}
-            gameActive={isGameActive}
+            onAbout={handleAbout}
+            onGithub={handleGithub}
+            onThesis={handleThesis}
           />
-        </ConfigSection>
-      </MainContent>
+        ) : (
+          <motion.div
+            key="game-view"
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -100 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          >
+            {/* Game Navbar - consistent with landing page */}
+            <Navbar onStartGame={() => setShowLanding(true)} />
+            
+            {/* Collapsible Sidebar */}
+            <CollapsibleSidebar
+              config={gameConfig}
+              onConfigChange={updateConfig}
+              onStartGame={handleStartGame}
+              onResetGame={handleNewGame}
+              loading={loading}
+              error={null}
+              gameActive={isGameActive}
+            />
+
+            <MainContent
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            >
+              <GameSection>
+                <AnimatePresence mode="wait">
+                  {/* Show loading only when creating game (no gameState yet) */}
+                  {loading && !gameState && (
+                    <StatusCard
+                      key="loading"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                    >
+                      <div className="status-content">
+                        <div className="spinner" />
+                        <span className="status-text">Creating game...</span>
+                      </div>
+                    </StatusCard>
+                  )}
+
+                  {/* Game Board - Always visible when game exists (handles its own loading overlay) */}
+                  {isGameActive && !gameIsOver && (
+                    <motion.div
+                      key="game"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <GameBoard
+                        gameState={gameState}
+                        imageData={imageData}
+                        hoveredPixel={hoveredPixel}
+                        selectedPixel={selectedPixel}
+                        isPlayerTurn={isPlayerTurn}
+                        onPixelClick={handlePixelClick}
+                        onPixelHover={handlePixelHover}
+                        loading={loading}
+                      />
+                    </motion.div>
+                  )}
+
+                  {/* Game Result */}
+                  {gameIsOver && gameResult && (
+                    <motion.div
+                      key="result"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <GameResult
+                        gameResult={gameResult}
+                        gameState={gameState}
+                        onNewGame={handleNewGame}
+                      />
+                    </motion.div>
+                  )}
+
+                  {/* Welcome Screen */}
+                  {!gameState && !loading && (
+                    <WelcomeCard
+                      key="welcome"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <h2>Welcome to AI Pixel Debate!</h2>
+                      <p className="description">
+                        This interactive game implements "AI Safety via Debate" methodology 
+                        on MNIST digit classification. Challenge AI agents by strategically 
+                        revealing pixels to convince a neural judge.
+                      </p>
+                      
+                      <div className="roles-grid">
+                        <div className="role-card honest">
+                          <div className="role-title">Honest Player</div>
+                          <p className="role-desc">
+                            Help the judge classify the digit correctly by revealing 
+                            informative pixels
+                          </p>
+                        </div>
+                        <div className="role-card liar">
+                          <div className="role-title">Liar Player</div>
+                          <p className="role-desc">
+                            Try to mislead the judge into making wrong classifications 
+                            through strategic deception
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <p className="start-prompt">
+                        Configure your game settings and click "Start Game" to begin the debate!
+                      </p>
+                    </WelcomeCard>
+                  )}
+                </AnimatePresence>
+              </GameSection>
+            </MainContent>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AppContainer>
   );
 }

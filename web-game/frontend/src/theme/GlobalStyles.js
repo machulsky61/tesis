@@ -2,11 +2,17 @@ import { createGlobalStyle } from 'styled-components';
 import { typography, animations } from './theme';
 
 export const GlobalStyles = createGlobalStyle`
-  /* Import Inter font from Google Fonts */
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  /* Import Inter font for portfolio consistency */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  
+  /* Custom font properties for better rendering */
+  * {
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
 
-  /* CSS Custom Properties for dynamic theming */
+  /* CSS Custom Properties for portfolio compatibility */
   :root {
+    --radius: 0.625rem;
     --font-sans: ${typography.fontFamily.sans.join(', ')};
     --font-mono: ${typography.fontFamily.mono.join(', ')};
     
@@ -19,6 +25,50 @@ export const GlobalStyles = createGlobalStyle`
     /* Easing functions */
     --ease-spring: ${animations.easing.spring};
     --ease-bounce: ${animations.easing.bounce};
+  }
+
+  /* Light mode variables */
+  :root {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+  }
+
+  /* Dark mode variables */
+  .dark {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.922 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
   }
 
   /* Reset and base styles */
@@ -39,12 +89,15 @@ export const GlobalStyles = createGlobalStyle`
   body {
     font-family: var(--font-sans);
     font-weight: ${typography.fontWeight.normal};
-    background: ${props => props.theme.background.primary};
-    color: ${props => props.theme.text.primary};
-    transition: background-color var(--duration-normal) var(--ease-spring),
-                color var(--duration-normal) var(--ease-spring);
+    background: var(--background, ${props => props.theme.background.primary});
+    color: var(--foreground, ${props => props.theme.text.primary});
     min-height: 100vh;
     overflow-x: hidden;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    padding: 0;
   }
 
   /* Typography improvements */

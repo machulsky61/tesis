@@ -6,7 +6,9 @@ import { handleAPIError, isGameOver, DEFAULT_GAME_CONFIG } from '../utils/helper
  * Main game hook that manages game state and interactions
  */
 export const useGame = () => {
-  console.log('useGame hook initializing...');
+  if (process.env.NODE_ENV === 'development') {
+    console.log('useGame hook initializing...');
+  }
   
   // Game state
   const [gameState, setGameState] = useState(null);

@@ -1,59 +1,66 @@
-// Modern theme system with dark/light mode and glassmorphism
+// Professional theme system following portfolio design with OKLCH colors
 export const lightTheme = {
   name: 'light',
   
-  // Background colors
+  // Background colors - Portfolio OKLCH system
   background: {
-    primary: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    secondary: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    surface: 'rgba(255, 255, 255, 0.95)',
-    glass: 'rgba(255, 255, 255, 0.1)',
+    primary: 'oklch(1 0 0)', // Pure white #ffffff
+    surface: 'oklch(0.97 0 0)', // Very light gray cards #f8f8f8  
+    muted: 'oklch(0.97 0 0)', // Soft gray #f8f8f8
+    glass: 'rgba(255, 255, 255, 0.8)',
     overlay: 'rgba(0, 0, 0, 0.5)',
+    border: 'oklch(0.922 0 0)', // Light gray borders #e5e5e5
+    card: 'oklch(1 0 0)', // Card background white
+    popover: 'oklch(1 0 0)', // Popover background
+    secondary: 'oklch(0.97 0 0)', // Secondary elements
+    accent: 'oklch(0.97 0 0)', // Accent background
+    input: 'oklch(0.922 0 0)', // Input background
   },
   
-  // Text colors
+  // Text colors - Portfolio OKLCH system
   text: {
-    primary: '#1a1a1a',
-    secondary: '#6b7280',
-    accent: '#4c1d95',
-    inverse: '#ffffff',
-    muted: '#9ca3af',
+    primary: 'oklch(0.145 0 0)', // Dark text #171717
+    secondary: 'oklch(0.556 0 0)', // Secondary text #737373
+    muted: 'oklch(0.556 0 0)', // Muted text #737373
+    inverse: 'oklch(0.985 0 0)', // Inverse text #fafafa
+    accent: 'oklch(0.205 0 0)', // Accent text
+    ring: 'oklch(0.708 0 0)', // Focus rings
   },
   
-  // Brand colors
+  // Brand colors - AI/Research focused with portfolio consistency
   brand: {
-    primary: '#6366f1',
-    secondary: '#8b5cf6',
-    tertiary: '#06b6d4',
-    gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%)',
+    primary: 'oklch(0.205 0 0)', // Primary buttons #0a0a0a
+    secondary: 'oklch(0.556 0.15 280)', // AI Safety purple
+    tertiary: 'oklch(0.6 0.2 120)', // Success green
+    gradient: 'linear-gradient(135deg, oklch(0.556 0.15 280) 0%, oklch(0.6 0.2 240) 100%)',
   },
   
-  // Semantic colors
+  // Semantic colors - Portfolio compatible
   semantic: {
-    success: '#10b981',
-    warning: '#f59e0b',
-    error: '#ef4444',
-    info: '#3b82f6',
-    honest: '#10b981',
-    liar: '#ef4444',
+    success: 'oklch(0.6 0.2 120)', // Green success #10b981
+    warning: 'oklch(0.7 0.15 60)', // Warning yellow
+    error: 'oklch(0.577 0.245 27.325)', // Portfolio destructive color
+    info: 'oklch(0.6 0.2 240)', // Info blue
+    honest: 'oklch(0.6 0.2 120)', // Honest player green
+    liar: 'oklch(0.577 0.245 27.325)', // Liar player red
   },
   
-  // Interactive states
+  // Interactive states - Clean portfolio approach
   interactive: {
-    hover: 'rgba(99, 102, 241, 0.1)',
-    active: 'rgba(99, 102, 241, 0.2)',
-    disabled: 'rgba(156, 163, 175, 0.5)',
-    focus: 'rgba(99, 102, 241, 0.3)',
+    hover: 'oklch(0.97 0 0)', // Light hover
+    active: 'oklch(0.922 0 0)', // Active state
+    disabled: 'oklch(0.556 0 0 / 0.5)', // Disabled state
+    focus: 'oklch(0.708 0 0)', // Focus ring color
   },
   
-  // Game-specific colors
+  // Game-specific colors - Fixed for light mode
   game: {
-    unrevealed: 'rgba(255, 255, 255, 0.3)',
-    revealed: 'rgba(255, 255, 255, 0.9)',
-    humanMove: '#10b981',
-    aiMove: '#ef4444',
-    hover: 'rgba(251, 191, 36, 0.8)',
-    grid: 'rgba(255, 255, 255, 0.1)',
+    unrevealed: 'oklch(0.97 0 0 / 0.8)', // Light unrevealed overlay
+    revealed: 'transparent', // No overlay for revealed pixels
+    humanMove: 'oklch(0.6 0.2 120)', // Green for honest
+    aiMove: 'oklch(0.577 0.245 27.325)', // Red for liar
+    hover: 'oklch(0.8 0.15 60 / 0.5)', // Hover highlight
+    grid: 'oklch(0.922 0 0)', // Grid lines
   },
   
   // Shadows and effects
@@ -87,58 +94,65 @@ export const lightTheme = {
 export const darkTheme = {
   name: 'dark',
   
-  // Background colors
+  // Background colors - Portfolio dark mode
   background: {
-    primary: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
-    secondary: 'linear-gradient(135deg, #581c87 0%, #7c3aed 100%)',
-    surface: 'rgba(17, 24, 39, 0.95)',
-    glass: 'rgba(17, 24, 39, 0.3)',
+    primary: 'oklch(0.145 0 0)', // Dark background #0a0a0a
+    surface: 'oklch(0.205 0 0)', // Dark cards #262626
+    muted: 'oklch(0.269 0 0)', // Muted background #404040
+    glass: 'rgba(17, 24, 39, 0.8)',
     overlay: 'rgba(0, 0, 0, 0.7)',
+    border: 'oklch(1 0 0 / 10%)', // Border transparent
+    card: 'oklch(0.205 0 0)', // Card background
+    popover: 'oklch(0.205 0 0)', // Popover background
+    secondary: 'oklch(0.269 0 0)', // Secondary elements
+    accent: 'oklch(0.269 0 0)', // Accent background
+    input: 'oklch(1 0 0 / 15%)', // Input background
   },
   
-  // Text colors
+  // Text colors - Portfolio dark mode
   text: {
-    primary: '#f9fafb',
-    secondary: '#d1d5db',
-    accent: '#c7d2fe',
-    inverse: '#111827',
-    muted: '#6b7280',
+    primary: 'oklch(0.985 0 0)', // Light text #fafafa
+    secondary: 'oklch(0.708 0 0)', // Secondary text #a3a3a3
+    muted: 'oklch(0.708 0 0)', // Muted text #a3a3a3
+    inverse: 'oklch(0.145 0 0)', // Inverse text (dark)
+    accent: 'oklch(0.985 0 0)', // Accent text
+    ring: 'oklch(0.556 0 0)', // Focus rings
   },
   
-  // Brand colors (same as light for consistency)
+  // Brand colors - Portfolio dark mode compatible
   brand: {
-    primary: '#6366f1',
-    secondary: '#8b5cf6',
-    tertiary: '#06b6d4',
-    gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%)',
+    primary: 'oklch(0.922 0 0)', // Primary buttons light #e5e5e5
+    secondary: 'oklch(0.556 0.15 280)', // AI Safety purple
+    tertiary: 'oklch(0.6 0.2 120)', // Success green
+    gradient: 'linear-gradient(135deg, oklch(0.556 0.15 280) 0%, oklch(0.6 0.2 240) 100%)',
   },
   
-  // Semantic colors (slightly adjusted for dark mode)
+  // Semantic colors - Portfolio dark mode
   semantic: {
-    success: '#34d399',
-    warning: '#fbbf24',
-    error: '#f87171',
-    info: '#60a5fa',
-    honest: '#34d399',
-    liar: '#f87171',
+    success: 'oklch(0.704 0.191 141)', // Success green for dark
+    warning: 'oklch(0.7 0.15 60)', // Warning yellow
+    error: 'oklch(0.704 0.191 22.216)', // Portfolio destructive dark
+    info: 'oklch(0.6 0.2 240)', // Info blue
+    honest: 'oklch(0.704 0.191 141)', // Honest player green
+    liar: 'oklch(0.704 0.191 22.216)', // Liar player red
   },
   
-  // Interactive states
+  // Interactive states - Portfolio dark approach
   interactive: {
-    hover: 'rgba(99, 102, 241, 0.2)',
-    active: 'rgba(99, 102, 241, 0.3)',
-    disabled: 'rgba(75, 85, 99, 0.5)',
-    focus: 'rgba(99, 102, 241, 0.4)',
+    hover: 'oklch(0.269 0 0)', // Dark hover
+    active: 'oklch(0.205 0 0)', // Active state
+    disabled: 'oklch(0.556 0 0 / 0.5)', // Disabled state
+    focus: 'oklch(0.556 0 0)', // Focus ring color
   },
   
-  // Game-specific colors
+  // Game-specific colors - Fixed for dark mode
   game: {
-    unrevealed: 'rgba(17, 24, 39, 0.6)',
-    revealed: 'rgba(249, 250, 251, 0.9)',
-    humanMove: '#34d399',
-    aiMove: '#f87171',
-    hover: 'rgba(251, 191, 36, 0.9)',
-    grid: 'rgba(249, 250, 251, 0.1)',
+    unrevealed: 'oklch(0.145 0 0 / 0.6)', // Dark unrevealed overlay
+    revealed: 'transparent', // No overlay for revealed pixels
+    humanMove: 'oklch(0.704 0.191 141)', // Green for honest
+    aiMove: 'oklch(0.704 0.191 22.216)', // Red for liar
+    hover: 'oklch(0.8 0.15 60 / 0.5)', // Hover highlight
+    grid: 'oklch(1 0 0 / 10%)', // Grid lines
   },
   
   // Shadows and effects (enhanced for dark mode)
@@ -169,10 +183,10 @@ export const darkTheme = {
   },
 };
 
-// Typography system
+// Typography system - Portfolio compatible
 export const typography = {
   fontFamily: {
-    sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+    sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
     mono: ['Fira Code', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
   },
   

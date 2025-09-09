@@ -232,18 +232,18 @@ export const handleAPIError = (error) => {
       case 404:
         return ERROR_MESSAGES.GAME_NOT_FOUND;
       case 400:
-        return data.detail || ERROR_MESSAGES.INVALID_MOVE;
+        return (data && data.detail) || ERROR_MESSAGES.INVALID_MOVE;
       case 500:
         return ERROR_MESSAGES.API_ERROR;
       default:
-        return data.detail || ERROR_MESSAGES.API_ERROR;
+        return (data && data.detail) || ERROR_MESSAGES.API_ERROR;
     }
   } else if (error.request) {
-    // Network error
-    return ERROR_MESSAGES.NETWORK_ERROR;
+    // Network error - backend is not running
+    return 'Cannot connect to backend server. Make sure it\'s running on http://localhost:8000';
   } else {
     // Something else
-    return ERROR_MESSAGES.API_ERROR;
+    return error.message || ERROR_MESSAGES.API_ERROR;
   }
 };
 

@@ -32,8 +32,10 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",  # React development server
-        "http://127.0.0.1:3000",
+        "http://localhost:3000",   # Legacy port
+        "http://localhost:3001",   # Current React development server
+        "http://127.0.0.1:3000",   # Legacy
+        "http://127.0.0.1:3001",   # Current
         "https://*.cloudfront.net",  # CloudFront distribution
         "https://*.amazonaws.com",   # API Gateway
     ],
@@ -58,9 +60,11 @@ app.include_router(game_router, prefix="/api/game", tags=["game"])
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Global exception handler with better logging"""
-    print(f"Global exception handler caught: {exc}")
-    print(f"Request: {request.method} {request.url}")
-    print(f"Traceback: {traceback.format_exc()}")
+    # Log errors in development only
+    if os.getenv("DEBUG", "false").lower() == "true":
+        print(f"Global exception handler caught: {exc}")
+        print(f"Request: {request.method} {request.url}")
+        print(f"Traceback: {traceback.format_exc()}")
     
     return JSONResponse(
         status_code=500,
@@ -68,7 +72,7 @@ async def global_exception_handler(request: Request, exc: Exception):
             "detail": "Internal server error",
             "type": "server_error",
             "timestamp": time.time(),
-            "error": str(exc) if os.getenv("DEBUG") else "Something went wrong"
+            "error": str(exc) if os.getenv("DEBUG", "false").lower() == "true" else "Something went wrong"
         }
     )
 
@@ -98,7 +102,7 @@ try:
     from mangum import Mangum
     handler = Mangum(app, lifespan="off")
 except ImportError:
-    print("Mangum not available - running in standard mode")
+    # Mangum not available - running in standard mode
     handler = None
 
 if __name__ == "__main__":

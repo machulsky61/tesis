@@ -1,28 +1,27 @@
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 
-// Base card with glassmorphism effect
+// Professional card following portfolio design
 export const Card = styled(motion.div)`
   background: ${props => props.theme.background.surface};
-  backdrop-filter: ${props => props.theme.blur.md};
-  border: 1px solid ${props => props.theme.background.glass};
+  border: 1px solid ${props => props.theme.background.border || props.theme.background.glass};
   border-radius: ${props => props.theme.radius.lg};
-  box-shadow: ${props => props.theme.shadows.glass};
-  padding: ${props => props.padding || '1.5rem'};
-  transition: all 300ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: ${props => props.theme.shadows.lg};
+  padding: ${props => props.padding || '2rem'};
+  transition: all 300ms ease;
 
   &:hover {
     transform: ${props => props.hoverable !== false ? 'translateY(-2px)' : 'none'};
     box-shadow: ${props => props.theme.shadows.xl};
-    border-color: ${props => props.theme.brand.primary}40;
+    border-color: ${props => props.theme.brand.primary}20;
   }
 `;
 
-// Glass card with more transparency
+// Subtle glass card for feature highlights
 export const GlassCard = styled(Card)`
   background: ${props => props.theme.background.glass};
-  backdrop-filter: ${props => props.theme.blur.lg};
-  border: 1px solid ${props => props.theme.background.glass};
+  backdrop-filter: blur(8px);
+  border: 1px solid ${props => props.theme.background.border || 'rgba(255, 255, 255, 0.1)'};
 `;
 
 // Gradient card for special emphasis
