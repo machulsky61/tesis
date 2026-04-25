@@ -54,6 +54,12 @@ Based on recent advances in AI safety and alignment:
 - Framework for evaluating judge bias in AI systems
 - Recommendations for debate-based alignment techniques
 
+## 🌐 Interactive Demo
+
+The debate protocol from this thesis is available as a playable web game:
+
+**[aisafety.joaquinmachulsky.com](https://aisafety.joaquinmachulsky.com)** — play pixel-revealing debates against AI agents and experience the framework firsthand.
+
 ## 📬 Contact
 
 **Joaquín Salvador Machulsky**
